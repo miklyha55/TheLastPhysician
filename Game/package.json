@@ -1,0 +1,19 @@
+{
+  "name": "playable-ads",
+  "uuid": "e5ff508f-c58e-40d3-8b2d-eb4e838e5dc7",
+  "creator": {
+    "version": "3.8.8"
+  },
+  "main": "start.js",
+  "devDependencies": {
+    "@types/clean-css": "^4.2.1",
+    "@types/uglify-js": "^3.0.4",
+    "jszip": "^3.10.1",
+    "uglify-js": "^3.6.0",
+    "clean-css": "^5.3.3"
+  },
+  "scripts": {
+    "build": "node ./builder/start.js",
+    "zip": "node builder/zipper.js"
+  }
+}
