@@ -1,0 +1,222 @@
+{
+  "ver": "2.3.14",
+  "importer": "gltf",
+  "imported": true,
+  "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b",
+  "files": [],
+  "subMetas": {
+    "89801": {
+      "importer": "gltf-mesh",
+      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@89801",
+      "displayName": "",
+      "id": "89801",
+      "name": "Tile_Floor_B.mesh",
+      "userData": {
+        "gltfIndex": 1,
+        "triangleCount": 84
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "6dbe3": {
+      "importer": "gltf-mesh",
+      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@6dbe3",
+      "displayName": "",
+      "id": "6dbe3",
+      "name": "Tile_Floor_A.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 108
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "53f9f": {
+      "importer": "gltf-mesh",
+      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@53f9f",
+      "displayName": "",
+      "id": "53f9f",
+      "name": "Tile_Floor_C.mesh",
+      "userData": {
+        "gltfIndex": 2,
+        "triangleCount": 108
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "31cc2": {
+      "importer": "gltf-mesh",
+      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@31cc2",
+      "displayName": "",
+      "id": "31cc2",
+      "name": "Tile_Wall_A.mesh",
+      "userData": {
+        "gltfIndex": 3,
+        "triangleCount": 228
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f0b37": {
+      "importer": "gltf-mesh",
+      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@f0b37",
+      "displayName": "",
+      "id": "f0b37",
+      "name": "Tile_Wall_B.mesh",
+      "userData": {
+        "gltfIndex": 4,
+        "triangleCount": 192
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "7ec5b": {
+      "importer": "gltf-mesh",
+      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@7ec5b",
+      "displayName": "",
+      "id": "7ec5b",
+      "name": "Tile_Wall_C.mesh",
+      "userData": {
+        "gltfIndex": 5,
+        "triangleCount": 216
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "9e80c": {
+      "importer": "gltf-material",
+      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@9e80c",
+      "displayName": "",
+      "id": "9e80c",
+      "name": "DStone.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "79e7e": {
+      "importer": "gltf-material",
+      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@79e7e",
+      "displayName": "",
+      "id": "79e7e",
+      "name": "DStoneDark.material",
+      "userData": {
+        "gltfIndex": 1
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "e2f0c": {
+      "importer": "gltf-material",
+      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@e2f0c",
+      "displayName": "",
+      "id": "e2f0c",
+      "name": "DMetal.material",
+      "userData": {
+        "gltfIndex": 2
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "fd3ef": {
+      "importer": "gltf-scene",
+      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@fd3ef",
+      "displayName": "",
+      "id": "fd3ef",
+      "name": "Tiles.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@6dbe3",
+        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@89801",
+        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@53f9f",
+        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@31cc2",
+        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@f0b37",
+        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@7ec5b"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@9e80c",
+        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@79e7e",
+        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@e2f0c"
+      ],
+      "scenes": [
+        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@fd3ef"
+      ]
+    }
+  }
+}
