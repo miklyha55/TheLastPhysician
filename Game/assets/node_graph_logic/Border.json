@@ -1,0 +1,54 @@
+{
+    "version": 3,
+    "name": "Border",
+    "view": {
+        "x": 549,
+        "y": 297,
+        "scale": 1
+    },
+    "nodes": [
+        {
+            "id": "n1",
+            "name": "Node 1",
+            "x": -475,
+            "y": -180,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "folder",
+                "uuid": "015329e8-deb2-4243-b675-379bbe686f55",
+                "name": "walls",
+                "type": "Folder",
+                "importer": "directory",
+                "url": "db://assets/prefabs/tiles/walls",
+                "path": "db://assets/prefabs/tiles/walls"
+            }
+        },
+        {
+            "id": "n2",
+            "name": "Node 2",
+            "x": -110,
+            "y": -165,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Ограничение для передвижения плеера являются префабы из папки, т.е. те которые на сцене",
+            "payload": {
+                "kind": "node",
+                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
+                "name": "Player",
+                "type": "cc.Node",
+                "path": "Main/World/Player"
+            }
+        }
+    ],
+    "links": [
+        {
+            "id": "l3",
+            "from": "n1",
+            "to": "n2"
+        }
+    ]
+}

@@ -1,0 +1,129 @@
+{
+    "version": 3,
+    "name": "PlayerAnimation",
+    "view": {
+        "x": 1285,
+        "y": 485,
+        "scale": 0.679
+    },
+    "nodes": [
+        {
+            "id": "n1",
+            "name": "Node 1",
+            "x": 310,
+            "y": -294,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "node",
+                "uuid": "3e06N/wWhFXYCkq154S7G0",
+                "name": "Skeleton",
+                "type": "cc.Node",
+                "path": "Main/World/Player/Skeleton"
+            }
+        },
+        {
+            "id": "n2",
+            "name": "Node 2",
+            "x": -150,
+            "y": -534,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "asset",
+                "uuid": "1cff94cc-953b-40e6-a69c-732613810b75",
+                "name": "Fast Run.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/player/Fast Run.fbx",
+                "path": "db://assets/models/player/Fast Run.fbx"
+            }
+        },
+        {
+            "id": "n3",
+            "name": "Node 3",
+            "x": -121,
+            "y": 255,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "asset",
+                "uuid": "f66305b1-8926-4f1e-b4fd-c12ad42856cd",
+                "name": "Breathing Idle.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/player/Breathing Idle.fbx",
+                "path": "db://assets/models/player/Breathing Idle.fbx"
+            }
+        },
+        {
+            "id": "n4",
+            "name": "Node 4",
+            "x": -712,
+            "y": -230,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Отслеживать события инпут. Если пользователь топнул по экрану и начал водить пальцем тот персонаж воспроизводит анимацию бега если палец отжал то анимация айдл.",
+            "payload": {
+                "kind": "component",
+                "uuid": "",
+                "name": "AnimationController",
+                "type": "AnimationController",
+                "builtin": false,
+                "isNew": true,
+                "path": "Scripts/AnimationController"
+            }
+        },
+        {
+            "id": "n10",
+            "name": "Node 6",
+            "x": -1249,
+            "y": -282,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "node",
+                "uuid": "57P+WUxI9IA5avMRQCxNjX",
+                "name": "Input",
+                "type": "cc.Node",
+                "path": "Main/Canvas/Ui/Hiddable/Input"
+            }
+        }
+    ],
+    "links": [
+        {
+            "id": "l13",
+            "from": "n4",
+            "to": "n2"
+        },
+        {
+            "id": "l14",
+            "from": "n4",
+            "to": "n3"
+        },
+        {
+            "id": "l15",
+            "from": "n2",
+            "to": "n1"
+        },
+        {
+            "id": "l16",
+            "from": "n3",
+            "to": "n1"
+        },
+        {
+            "id": "l17",
+            "from": "n10",
+            "to": "n4"
+        }
+    ]
+}

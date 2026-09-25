@@ -1,0 +1,99 @@
+{
+  "ver": "2.3.14",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "a11a2862-2cf8-4372-b010-155b483b1eeb",
+  "files": [
+    "__original-animation-0.bin"
+  ],
+  "subMetas": {
+    "18d6f": {
+      "importer": "gltf-animation",
+      "uuid": "a11a2862-2cf8-4372-b010-155b483b1eeb@18d6f",
+      "displayName": "",
+      "id": "18d6f",
+      "name": "mixamo.com.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 0,
+          "to": 1.899999976158142
+        },
+        "events": []
+      },
+      "ver": "1.0.18",
+      "imported": true,
+      "files": [
+        ".bin"
+      ],
+      "subMetas": {}
+    },
+    "11b97": {
+      "importer": "gltf-scene",
+      "uuid": "a11a2862-2cf8-4372-b010-155b483b1eeb@11b97",
+      "displayName": "",
+      "id": "11b97",
+      "name": "Jumping.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "fbx": {
+      "smartMaterialEnabled": true
+    },
+    "animationImportSettings": [
+      {
+        "name": "mixamo.com",
+        "duration": 1.899999976158142,
+        "fps": 30,
+        "splits": [
+          {
+            "name": "mixamo.com",
+            "from": 0,
+            "to": 1.899999976158142,
+            "wrapMode": 2,
+            "previousId": "18d6f"
+          }
+        ]
+      }
+    ],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [],
+      "skeletons": [],
+      "textures": [],
+      "materials": [],
+      "scenes": [
+        "a11a2862-2cf8-4372-b010-155b483b1eeb@11b97"
+      ]
+    }
+  }
+}

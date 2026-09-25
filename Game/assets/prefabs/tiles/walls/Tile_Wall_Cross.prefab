@@ -1,7 +1,7 @@
 [
   {
     "__type__": "cc.Prefab",
-    "_name": "Tile_Wall_B",
+    "_name": "Tile_Wall_Cross",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_native": "",
@@ -13,7 +13,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "Tile_Wall_B",
+    "_name": "Tile_Wall_Cross",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": null,
@@ -34,7 +34,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": 0.099,
+      "y": 0,
       "z": 0
     },
     "_lrot": {
@@ -62,7 +62,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "Tile_Floor_B",
+    "_name": "Floor_Tile_Wall_Cross",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -121,11 +121,11 @@
     },
     "_materials": [
       {
-        "__uuid__": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@9e80c",
+        "__uuid__": "2581c147-0119-4e7a-989c-5dd42669b400@9e80c",
         "__expectedType__": "cc.Material"
       },
       {
-        "__uuid__": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@79e7e",
+        "__uuid__": "2581c147-0119-4e7a-989c-5dd42669b400@79e7e",
         "__expectedType__": "cc.Material"
       }
     ],
@@ -134,7 +134,7 @@
       "__id__": 5
     },
     "_mesh": {
-      "__uuid__": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@89801",
+      "__uuid__": "2581c147-0119-4e7a-989c-5dd42669b400@f68b7",
       "__expectedType__": "cc.Mesh"
     },
     "_shadowCastingMode": 0,
@@ -150,7 +150,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "3eCZ5nSrxIuasaD7y/cZWY"
+    "fileId": "1ci4iit8RJmoW7LgyvXEbu"
   },
   {
     "__type__": "cc.ModelBakeSettings",
@@ -180,7 +180,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "4f+SZmPDFDFYe16JpXG9AJ",
+    "fileId": "7eAm991oZMQ4bqA5s0eOS5",
     "instance": null,
     "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
@@ -199,11 +199,11 @@
     },
     "_materials": [
       {
-        "__uuid__": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@9e80c",
+        "__uuid__": "2581c147-0119-4e7a-989c-5dd42669b400@9e80c",
         "__expectedType__": "cc.Material"
       },
       {
-        "__uuid__": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@79e7e",
+        "__uuid__": "2581c147-0119-4e7a-989c-5dd42669b400@79e7e",
         "__expectedType__": "cc.Material"
       }
     ],
@@ -212,11 +212,11 @@
       "__id__": 9
     },
     "_mesh": {
-      "__uuid__": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@f0b37",
+      "__uuid__": "2581c147-0119-4e7a-989c-5dd42669b400@d8aa6",
       "__expectedType__": "cc.Mesh"
     },
-    "_shadowCastingMode": 0,
-    "_shadowReceivingMode": 1,
+    "_shadowCastingMode": 1,
+    "_shadowReceivingMode": 0,
     "_shadowBias": 0,
     "_shadowNormalBias": 0,
     "_reflectionProbeId": -1,
@@ -228,7 +228,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "08G0wzGJ1Gl40pufXjXpUs"
+    "fileId": "b8Eb8559ZJfKuE7+00oT4/"
   },
   {
     "__type__": "cc.ModelBakeSettings",
@@ -258,7 +258,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "eeAZ0XIH5LnYN33HoKigwK",
+    "fileId": "84T1WkxstPYoGzDjaNBgml",
     "instance": null,
     "targetOverrides": null
   }

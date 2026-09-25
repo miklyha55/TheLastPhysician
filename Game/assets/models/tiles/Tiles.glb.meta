@@ -2,12 +2,48 @@
   "ver": "2.3.14",
   "importer": "gltf",
   "imported": true,
-  "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b",
+  "uuid": "2581c147-0119-4e7a-989c-5dd42669b400",
   "files": [],
   "subMetas": {
+    "28248": {
+      "importer": "gltf-mesh",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@28248",
+      "displayName": "",
+      "id": "28248",
+      "name": "Floor_Tile_Wall_A.mesh",
+      "userData": {
+        "gltfIndex": 4,
+        "triangleCount": 108
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "43334": {
+      "importer": "gltf-mesh",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@43334",
+      "displayName": "",
+      "id": "43334",
+      "name": "Floor_Tile_Wall_Door.mesh",
+      "userData": {
+        "gltfIndex": 14,
+        "triangleCount": 108
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
     "89801": {
       "importer": "gltf-mesh",
-      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@89801",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@89801",
       "displayName": "",
       "id": "89801",
       "name": "Tile_Floor_B.mesh",
@@ -25,7 +61,7 @@
     },
     "6dbe3": {
       "importer": "gltf-mesh",
-      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@6dbe3",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@6dbe3",
       "displayName": "",
       "id": "6dbe3",
       "name": "Tile_Floor_A.mesh",
@@ -43,7 +79,7 @@
     },
     "53f9f": {
       "importer": "gltf-mesh",
-      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@53f9f",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@53f9f",
       "displayName": "",
       "id": "53f9f",
       "name": "Tile_Floor_C.mesh",
@@ -61,13 +97,13 @@
     },
     "31cc2": {
       "importer": "gltf-mesh",
-      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@31cc2",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@31cc2",
       "displayName": "",
       "id": "31cc2",
       "name": "Tile_Wall_A.mesh",
       "userData": {
         "gltfIndex": 3,
-        "triangleCount": 228
+        "triangleCount": 444
       },
       "ver": "1.1.1",
       "imported": true,
@@ -79,13 +115,31 @@
     },
     "f0b37": {
       "importer": "gltf-mesh",
-      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@f0b37",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@f0b37",
       "displayName": "",
       "id": "f0b37",
       "name": "Tile_Wall_B.mesh",
       "userData": {
-        "gltfIndex": 4,
-        "triangleCount": 192
+        "gltfIndex": 5,
+        "triangleCount": 384
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "3547b": {
+      "importer": "gltf-mesh",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@3547b",
+      "displayName": "",
+      "id": "3547b",
+      "name": "Floor_Tile_Wall_B.mesh",
+      "userData": {
+        "gltfIndex": 6,
+        "triangleCount": 84
       },
       "ver": "1.1.1",
       "imported": true,
@@ -97,13 +151,175 @@
     },
     "7ec5b": {
       "importer": "gltf-mesh",
-      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@7ec5b",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@7ec5b",
       "displayName": "",
       "id": "7ec5b",
       "name": "Tile_Wall_C.mesh",
       "userData": {
-        "gltfIndex": 5,
-        "triangleCount": 216
+        "gltfIndex": 7,
+        "triangleCount": 408
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "cddf8": {
+      "importer": "gltf-mesh",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@cddf8",
+      "displayName": "",
+      "id": "cddf8",
+      "name": "Floor_Tile_Wall_C.mesh",
+      "userData": {
+        "gltfIndex": 8,
+        "triangleCount": 108
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "94e96": {
+      "importer": "gltf-mesh",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@94e96",
+      "displayName": "",
+      "id": "94e96",
+      "name": "Tile_Wall_Corner.mesh",
+      "userData": {
+        "gltfIndex": 9,
+        "triangleCount": 608
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "c1749": {
+      "importer": "gltf-mesh",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@c1749",
+      "displayName": "",
+      "id": "c1749",
+      "name": "Floor_Tile_Wall_Corner.mesh",
+      "userData": {
+        "gltfIndex": 10,
+        "triangleCount": 108
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "d8aa6": {
+      "importer": "gltf-mesh",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@d8aa6",
+      "displayName": "",
+      "id": "d8aa6",
+      "name": "Tile_Wall_Cross.mesh",
+      "userData": {
+        "gltfIndex": 11,
+        "triangleCount": 1204
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f68b7": {
+      "importer": "gltf-mesh",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@f68b7",
+      "displayName": "",
+      "id": "f68b7",
+      "name": "Floor_Tile_Wall_Cross.mesh",
+      "userData": {
+        "gltfIndex": 12,
+        "triangleCount": 84
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "88c27": {
+      "importer": "gltf-mesh",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@88c27",
+      "displayName": "",
+      "id": "88c27",
+      "name": "Tile_Wall_Door.mesh",
+      "userData": {
+        "gltfIndex": 13,
+        "triangleCount": 228
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "9dbad": {
+      "importer": "gltf-mesh",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@9dbad",
+      "displayName": "",
+      "id": "9dbad",
+      "name": "Tile_Wall_Window.mesh",
+      "userData": {
+        "gltfIndex": 15,
+        "triangleCount": 432
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "853ab": {
+      "importer": "gltf-mesh",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@853ab",
+      "displayName": "",
+      "id": "853ab",
+      "name": "Floor_Tile_Wall_Window.mesh",
+      "userData": {
+        "gltfIndex": 16,
+        "triangleCount": 108
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "1d359": {
+      "importer": "gltf-mesh",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@1d359",
+      "displayName": "",
+      "id": "1d359",
+      "name": "Tile_Door.mesh",
+      "userData": {
+        "gltfIndex": 17,
+        "triangleCount": 48
       },
       "ver": "1.1.1",
       "imported": true,
@@ -115,7 +331,7 @@
     },
     "9e80c": {
       "importer": "gltf-material",
-      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@9e80c",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@9e80c",
       "displayName": "",
       "id": "9e80c",
       "name": "DStone.material",
@@ -131,7 +347,7 @@
     },
     "79e7e": {
       "importer": "gltf-material",
-      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@79e7e",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@79e7e",
       "displayName": "",
       "id": "79e7e",
       "name": "DStoneDark.material",
@@ -147,7 +363,7 @@
     },
     "e2f0c": {
       "importer": "gltf-material",
-      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@e2f0c",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@e2f0c",
       "displayName": "",
       "id": "e2f0c",
       "name": "DMetal.material",
@@ -161,9 +377,25 @@
       ],
       "subMetas": {}
     },
+    "24c78": {
+      "importer": "gltf-material",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@24c78",
+      "displayName": "",
+      "id": "24c78",
+      "name": "DWood.material",
+      "userData": {
+        "gltfIndex": 3
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
     "fd3ef": {
       "importer": "gltf-scene",
-      "uuid": "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@fd3ef",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@fd3ef",
       "displayName": "",
       "id": "fd3ef",
       "name": "Tiles.prefab",
@@ -200,23 +432,229 @@
     },
     "assetFinder": {
       "meshes": [
-        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@6dbe3",
-        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@89801",
-        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@53f9f",
-        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@31cc2",
-        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@f0b37",
-        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@7ec5b"
+        "2581c147-0119-4e7a-989c-5dd42669b400@6dbe3",
+        "2581c147-0119-4e7a-989c-5dd42669b400@89801",
+        "2581c147-0119-4e7a-989c-5dd42669b400@53f9f",
+        "2581c147-0119-4e7a-989c-5dd42669b400@31cc2",
+        "2581c147-0119-4e7a-989c-5dd42669b400@28248",
+        "2581c147-0119-4e7a-989c-5dd42669b400@f0b37",
+        "2581c147-0119-4e7a-989c-5dd42669b400@3547b",
+        "2581c147-0119-4e7a-989c-5dd42669b400@7ec5b",
+        "2581c147-0119-4e7a-989c-5dd42669b400@cddf8",
+        "2581c147-0119-4e7a-989c-5dd42669b400@94e96",
+        "2581c147-0119-4e7a-989c-5dd42669b400@c1749",
+        "2581c147-0119-4e7a-989c-5dd42669b400@d8aa6",
+        "2581c147-0119-4e7a-989c-5dd42669b400@f68b7",
+        "2581c147-0119-4e7a-989c-5dd42669b400@88c27",
+        "2581c147-0119-4e7a-989c-5dd42669b400@43334",
+        "2581c147-0119-4e7a-989c-5dd42669b400@9dbad",
+        "2581c147-0119-4e7a-989c-5dd42669b400@853ab",
+        "2581c147-0119-4e7a-989c-5dd42669b400@1d359"
       ],
       "skeletons": [],
       "textures": [],
       "materials": [
-        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@9e80c",
-        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@79e7e",
-        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@e2f0c"
+        "2581c147-0119-4e7a-989c-5dd42669b400@9e80c",
+        "2581c147-0119-4e7a-989c-5dd42669b400@79e7e",
+        "2581c147-0119-4e7a-989c-5dd42669b400@e2f0c",
+        "2581c147-0119-4e7a-989c-5dd42669b400@24c78"
       ],
       "scenes": [
-        "1290cd11-f8c4-4808-88ac-db95c1ef3f9b@fd3ef"
+        "2581c147-0119-4e7a-989c-5dd42669b400@fd3ef"
       ]
+    },
+    "materials": {
+      "2581c147-0119-4e7a-989c-5dd42669b400@9e80c": {
+        "__type__": "cc.Material",
+        "_name": "",
+        "_objFlags": 0,
+        "__editorExtras__": {},
+        "_native": "",
+        "_effectAsset": {
+          "__uuid__": "c8f66d17-351a-48da-a12c-0212d28575c4",
+          "__expectedType__": "cc.EffectAsset"
+        },
+        "_techIdx": 0,
+        "_defines": [
+          {},
+          {},
+          {},
+          {},
+          {},
+          {}
+        ],
+        "_states": [
+          {
+            "rasterizerState": {
+              "cullMode": 0
+            },
+            "depthStencilState": {},
+            "blendState": {
+              "targets": [
+                {}
+              ]
+            }
+          },
+          {
+            "rasterizerState": {},
+            "depthStencilState": {},
+            "blendState": {
+              "targets": [
+                {}
+              ]
+            }
+          },
+          {
+            "rasterizerState": {},
+            "depthStencilState": {},
+            "blendState": {
+              "targets": [
+                {}
+              ]
+            }
+          },
+          {
+            "rasterizerState": {},
+            "depthStencilState": {},
+            "blendState": {
+              "targets": [
+                {}
+              ]
+            }
+          },
+          {
+            "rasterizerState": {},
+            "depthStencilState": {},
+            "blendState": {
+              "targets": [
+                {}
+              ]
+            }
+          },
+          {
+            "rasterizerState": {},
+            "depthStencilState": {},
+            "blendState": {
+              "targets": [
+                {}
+              ]
+            }
+          }
+        ],
+        "_props": [
+          {
+            "mainColor": {
+              "__type__": "cc.Color",
+              "r": 103,
+              "g": 121,
+              "b": 126,
+              "a": 255
+            },
+            "roughness": 0.800000011920929,
+            "specularIntensity": 0.394
+          },
+          {},
+          {},
+          {},
+          {},
+          {}
+        ]
+      },
+      "2581c147-0119-4e7a-989c-5dd42669b400@79e7e": {
+        "__type__": "cc.Material",
+        "_name": "",
+        "_objFlags": 0,
+        "__editorExtras__": {},
+        "_native": "",
+        "_effectAsset": {
+          "__uuid__": "c8f66d17-351a-48da-a12c-0212d28575c4",
+          "__expectedType__": "cc.EffectAsset"
+        },
+        "_techIdx": 0,
+        "_defines": [
+          {},
+          {},
+          {},
+          {},
+          {},
+          {}
+        ],
+        "_states": [
+          {
+            "rasterizerState": {
+              "cullMode": 0
+            },
+            "depthStencilState": {},
+            "blendState": {
+              "targets": [
+                {}
+              ]
+            }
+          },
+          {
+            "rasterizerState": {},
+            "depthStencilState": {},
+            "blendState": {
+              "targets": [
+                {}
+              ]
+            }
+          },
+          {
+            "rasterizerState": {},
+            "depthStencilState": {},
+            "blendState": {
+              "targets": [
+                {}
+              ]
+            }
+          },
+          {
+            "rasterizerState": {},
+            "depthStencilState": {},
+            "blendState": {
+              "targets": [
+                {}
+              ]
+            }
+          },
+          {
+            "rasterizerState": {},
+            "depthStencilState": {},
+            "blendState": {
+              "targets": [
+                {}
+              ]
+            }
+          },
+          {
+            "rasterizerState": {},
+            "depthStencilState": {},
+            "blendState": {
+              "targets": [
+                {}
+              ]
+            }
+          }
+        ],
+        "_props": [
+          {
+            "mainColor": {
+              "__type__": "cc.Color",
+              "r": 70,
+              "g": 88,
+              "b": 94,
+              "a": 255
+            },
+            "roughness": 0.8199999928474426
+          },
+          {},
+          {},
+          {},
+          {},
+          {}
+        ]
+      }
     }
   }
 }

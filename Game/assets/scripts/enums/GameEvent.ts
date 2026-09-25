@@ -8,6 +8,10 @@ const GameEvent = Enum({
 	SET_AUDIO_VOLUME: 40,
 	FIRST_TAP: 60,
 	TOGGLE_HIDABLE: 70,
+	JOYSTICK_DOWN: 80,
+	JOYSTICK_MOVE: 90,
+	JOYSTICK_UP: 100,
+	MOVE_DIRECTION: 110,
 });
 
 export default GameEvent;
