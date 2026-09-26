@@ -1,0 +1,54 @@
+{
+    "version": 4,
+    "name": "SolidObjects",
+    "view": {
+        "x": 551,
+        "y": 286,
+        "scale": 1
+    },
+    "nodes": [
+        {
+            "id": "n1",
+            "name": "Node 1",
+            "x": -377,
+            "y": -188,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Все объекты прикрепленный к плееру солид объекты который нельзя пройти сквозь. Расчитывать по мэши.",
+            "payload": {
+                "kind": "node",
+                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
+                "name": "Player",
+                "type": "cc.Node",
+                "path": "Main/World/Player"
+            }
+        },
+        {
+            "id": "n2",
+            "name": "Node 2",
+            "x": 34,
+            "y": -180,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "asset",
+                "uuid": "475847b0-dc37-47a5-a7fc-83d8fb3e8259",
+                "name": "Chest.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/props/Chest.prefab",
+                "path": "db://assets/prefabs/props/Chest.prefab"
+            }
+        }
+    ],
+    "links": [
+        {
+            "id": "l3",
+            "from": "n1",
+            "to": "n2"
+        }
+    ]
+}

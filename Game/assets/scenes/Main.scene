@@ -30873,6 +30873,12 @@
         "__expectedType__": "cc.Prefab"
       }
     ],
+    "solidPrefabs": [
+      {
+        "__uuid__": "475847b0-dc37-47a5-a7fc-83d8fb3e8259",
+        "__expectedType__": "cc.Prefab"
+      }
+    ],
     "root": {
       "__id__": 43
     },
@@ -30985,6 +30991,19 @@
     "keyStep": 0.05,
     "jitter": 8,
     "popTime": 0.12,
+    "scatterSpeed": {
+      "__type__": "cc.Vec3",
+      "x": 0.5,
+      "y": 1.5,
+      "z": 0
+    },
+    "scatterLift": {
+      "__type__": "cc.Vec3",
+      "x": 1,
+      "y": 2.2,
+      "z": 0
+    },
+    "scatterSpin": 10,
     "shiftTime": 0.15,
     "_id": "f6ZkjmfHhER4iFlZoBP8Ki"
   },
@@ -31189,7 +31208,7 @@
       "__uuid__": "c96bb1b1-bbcf-4071-8cc3-965e33fbc5ee@18d6f",
       "__expectedType__": "cc.AnimationClip"
     },
-    "throwSpeed": 3,
+    "throwSpeed": 6,
     "throwPickup": 0.2,
     "throwRelease": 0.493,
     "throwPower": 5,

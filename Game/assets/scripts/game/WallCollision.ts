@@ -19,11 +19,14 @@ const NORMAL_SNAP = 0.15;
 // so corners, crosses and doorways block exactly where they stand. After the player moves,
 // a step into a wall is undone along the blocked axis only, which lets it slide along.
 // A door leaf is kept on a layer of its own, laid out shut, and blocks only while its door
-// is closed.
+// is closed. Solid things (solidPrefabs) get a layer each too, from all their meshes, and block
+// only while they exist — a chest that has vanished frees its place.
 @ccclass("WallCollision")
 export class WallCollision extends Component {
 	@property({ type: [Prefab], tooltip: "Prefabs whose instances block the player" })
 	wallPrefabs: Prefab[] = [];
+	@property({ type: [Prefab], tooltip: "Solid things: their instances block by their own meshes while they exist, and free their place once gone" })
+	solidPrefabs: Prefab[] = [];
 	@property({ type: Node, tooltip: "Where to look for wall instances; empty — the whole scene" })
 	root: Node = null;
 	@property({ tooltip: "Player radius on the floor" })
@@ -38,8 +41,10 @@ export class WallCollision extends Component {
 	cornerAssist: number = 0.3;
 
 	private _cells: Uint8Array = null;
-	private _doors: { door: Door; cells: Uint8Array }[] = [];
-	// Cells any door leaf covers, so the common case — no door here — is one lookup.
+	// Layers that block only at times: a door leaf while its door is shut, a solid thing while
+	// it exists.
+	private _doors: { door: Door; node: Node; cells: Uint8Array }[] = [];
+	// Cells any such layer covers, so the common case — none here — is one lookup.
 	private _doorCells: Uint8Array = null;
 	private _cols: number = 0;
 	private _rows: number = 0;
@@ -218,9 +223,13 @@ export class WallCollision extends Component {
 
 	/** Walls found under the root: prefab instances of the listed assets, or nodes named like them. */
 	private _wallInstances(): Node[] {
+		return this._instancesOf(this.wallPrefabs);
+	}
+
+	private _instancesOf(prefabs: Prefab[]): Node[] {
 		const uuids = new Set<string>();
 		const names = new Set<string>();
-		for (const prefab of this.wallPrefabs) {
+		for (const prefab of prefabs) {
 			if (!prefab) {
 				continue;
 			}
@@ -268,7 +277,16 @@ export class WallCollision extends Component {
 				leaf.setRotation(now);
 			}
 		}
-		const all = walls.concat(...doors.map((group) => group.triangles));
+		// Solid things, each a layer of its own, laid out by all their meshes as they stand now.
+		const solids: { node: Node; triangles: number[] }[] = [];
+		for (const solid of this._instancesOf(this.solidPrefabs)) {
+			const group = { node: solid, triangles: [] as number[] };
+			for (const renderer of solid.getComponentsInChildren(MeshRenderer)) {
+				this._collect(renderer, group.triangles);
+			}
+			group.triangles.length && solids.push(group);
+		}
+		const all = walls.concat(...doors.map((group) => group.triangles), ...solids.map((group) => group.triangles));
 		if (!all.length) {
 			return;
 		}
@@ -287,7 +305,9 @@ export class WallCollision extends Component {
 		this._rows = Math.ceil((maxZ - minZ + pad * 2) / this.cellSize) + 1;
 
 		this._cells = this._rasterize(walls);
-		this._doors = doors.map((group) => ({ door: group.door, cells: this._rasterize(group.triangles) }));
+		this._doors = doors
+			.map((group) => ({ door: group.door, node: null as Node, cells: this._rasterize(group.triangles) }))
+			.concat(solids.map((group) => ({ door: null as Door, node: group.node, cells: this._rasterize(group.triangles) })));
 		this._doorCells = new Uint8Array(this._cols * this._rows);
 		for (const layer of this._doors) {
 			for (let i = 0; i < layer.cells.length; i++) {
@@ -511,7 +531,7 @@ export class WallCollision extends Component {
 	get doorState(): number {
 		let state = 0;
 		this._doors.forEach((layer, i) => {
-			if (!layer.door.isOpen) {
+			if (this._blocks(layer)) {
 				state += 1 << (i % 30);
 			}
 		});
@@ -523,11 +543,16 @@ export class WallCollision extends Component {
 			return false;
 		}
 		for (const layer of this._doors) {
-			if (layer.cells[at] && !layer.door.isOpen) {
+			if (layer.cells[at] && this._blocks(layer)) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	/** Does a layer stand in the way now: a door while shut, a solid thing while it is there. */
+	private _blocks(layer: { door: Door; node: Node }): boolean {
+		return layer.door ? !layer.door.isOpen : layer.node.isValid && layer.node.activeInHierarchy;
 	}
 
 	/** Would a circle of the player's radius at this point touch a blocked cell? */

@@ -47,7 +47,7 @@ export class PlayerActions extends Component {
 
 	@property(AnimationClip) throwClip: AnimationClip = null;
 	@property({ tooltip: "Playback speed of the throw clip" })
-	throwSpeed: number = 3;
+	throwSpeed: number = 6;
 	@property({ tooltip: "Point of the throw clip, 0..1, where the hand takes the piece off the floor — its lowest reach" })
 	throwPickup: number = 0.2;
 	@property({ tooltip: "Point of the throw clip, 0..1, where the piece leaves the hand — the fastest swing forward" })

@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Quat, v3, Vec3 } from "cc";
+import { _decorator, Component, MeshRenderer, Node, Quat, v3, Vec3 } from "cc";
 import { Furniture } from "./Furniture";
 import { PlayerAttack } from "./PlayerAttack";
 import { WallCollision } from "./WallCollision";
@@ -124,11 +124,26 @@ export class Debris extends Component {
 		}
 	}
 
-	/** Puts a holder at the thing's centre of mass and hangs the thing under it: rotation turns it about its middle. */
+	/**
+	 * Any node with a mesh made a loose thing — say, what falls off the player's back. Its box
+	 * comes from its mesh at its world size. It starts asleep; `launch` sends it flying.
+	 */
+	addLoose(node: Node, parent: Node): Body {
+		const renderer = node.getComponent(MeshRenderer) || node.getComponentInChildren(MeshRenderer);
+		const struct = renderer && renderer.mesh && renderer.mesh.struct;
+		const scale = node.worldScale;
+		const min = struct && struct.minPosition ? Vec3.multiply(v3(), struct.minPosition, scale) : v3(-0.03, -0.03, -0.03);
+		const max = struct && struct.maxPosition ? Vec3.multiply(v3(), struct.maxPosition, scale) : v3(0.03, 0.03, 0.03);
+		node.setParent(parent, true);
+		return this._addBody(node, min, max, null);
+	}
+
 	private _add(furniture: Furniture): void {
-		const node = furniture.node;
-		const min = furniture.boxMin;
-		const max = furniture.boxMax;
+		this._addBody(furniture.node, furniture.boxMin, furniture.boxMax, furniture);
+	}
+
+	/** Puts a holder at the thing's centre of mass and hangs the thing under it: rotation turns it about its middle. */
+	private _addBody(node: Node, min: Vec3, max: Vec3, furniture: Furniture): Body {
 		const centre = v3((min.x + max.x) / 2, (min.y + max.y) / 2, (min.z + max.z) / 2);
 		const holder = new Node(`${node.name} body`);
 		node.parent.addChild(holder);
@@ -143,7 +158,7 @@ export class Debris extends Component {
 		const ix = (mass / 12) * (size.y * size.y + size.z * size.z);
 		const iy = (mass / 12) * (size.x * size.x + size.z * size.z);
 		const iz = (mass / 12) * (size.x * size.x + size.y * size.y);
-		this.bodies.push({
+		const body: Body = {
 			node: holder,
 			furniture,
 			mass,
@@ -161,7 +176,9 @@ export class Debris extends Component {
 			ignoreFor: 0,
 			safeX: null,
 			safeZ: null,
-		});
+		};
+		this.bodies.push(body);
+		return body;
 	}
 
 	/** Into the hand: physics lets go of it until it is launched. */

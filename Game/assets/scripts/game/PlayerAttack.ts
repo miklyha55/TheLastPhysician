@@ -346,6 +346,8 @@ export class PlayerAttack extends Component {
 		this._dead = true;
 		this._throwIn = -1;
 		this._occlusion && this._occlusion.setTarget(null);
+		// What the player carried falls off their back and scatters over the floor.
+		this.stack && this.stack.scatter(this.node.parent);
 		// Potions in the air are gone with the thrower.
 		for (const shot of this._shots) {
 			this._release(shot.node);

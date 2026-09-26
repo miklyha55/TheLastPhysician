@@ -1,4 +1,5 @@
 import { _decorator, Component, instantiate, math, Node, Prefab, tween, Tween, v3, Vec3 } from "cc";
+import { Debris } from "./Debris";
 
 const { ccclass, property } = _decorator;
 
@@ -30,6 +31,12 @@ export class PotionStack extends Component {
 	jitter: number = 8;
 	@property({ tooltip: "Seconds a potion takes to vanish off the top" })
 	popTime: number = 0.12;
+	@property({ tooltip: "When the player dies: slowest and fastest a piece flies off, along the floor" })
+	scatterSpeed: Vec3 = v3(0.5, 1.5, 0);
+	@property({ tooltip: "When the player dies: least and most of that speed upwards — how high each arcs" })
+	scatterLift: Vec3 = v3(1, 2.2, 0);
+	@property({ tooltip: "When the player dies: tumble of a piece, radians per second either way" })
+	scatterSpin: number = 10;
 	@property({ tooltip: "Seconds the items above take to settle when a potion under them is shot" })
 	shiftTime: number = 0.15;
 
@@ -112,6 +119,36 @@ export class PotionStack extends Component {
 			.to(this.popTime, { scale: v3() })
 			.call(() => node.destroy())
 			.start();
+	}
+
+	/**
+	 * Everything on the stack falls off — the player died: each piece flies its own arc, random
+	 * in direction, height and tumble, and comes down on the floor under the loose-thing physics.
+	 */
+	scatter(parent: Node): void {
+		const debris = Debris.instance;
+		const items = this._items.splice(0);
+		for (const entry of items) {
+			const node = entry.node;
+			if (!node.isValid) {
+				continue;
+			}
+			Tween.stopAllByTarget(node);
+			if (!debris) {
+				node.destroy();
+				continue;
+			}
+			const body = debris.addLoose(node, parent);
+			const angle = Math.random() * Math.PI * 2;
+			debris.launch(
+				body,
+				Math.sin(angle),
+				Math.cos(angle),
+				math.randomRange(this.scatterSpeed.x, this.scatterSpeed.y),
+				math.randomRange(this.scatterLift.x, this.scatterLift.y),
+				math.randomRange(-this.scatterSpin, this.scatterSpin),
+			);
+		}
 	}
 
 	/** Where the next potion will lie, in the world — what a potion flying in aims at. */
