@@ -1,11 +1,17 @@
 import { _decorator, Component, Mat4, MeshRenderer, Node, Prefab, v3, Vec3 } from "cc";
+import { Door } from "./Door";
 
 const { ccclass, property } = _decorator;
+
+// How many times a step into a wall is pushed back out before falling back to axis sliding.
+const PUSH_ITERATIONS = 4;
 
 // Keeps the player out of the walls: every instance of a wall prefab found in the scene is
 // flattened onto the floor as a grid of blocked cells, built from the walls' own geometry,
 // so corners, crosses and doorways block exactly where they stand. After the player moves,
 // a step into a wall is undone along the blocked axis only, which lets it slide along.
+// A door leaf is kept on a layer of its own, laid out shut, and blocks only while its door
+// is closed.
 @ccclass("WallCollision")
 export class WallCollision extends Component {
 	@property({ type: [Prefab], tooltip: "Prefabs whose instances block the player" })
@@ -18,8 +24,13 @@ export class WallCollision extends Component {
 	cellSize: number = 0.05;
 	@property({ tooltip: "Geometry lower than this (the floor under a wall) does not block" })
 	minHeight: number = 0.05;
+	@property({ tooltip: "Geometry entirely higher than this (a lintel over a doorway) does not block" })
+	maxHeight: number = 0.9;
+	@property({ tooltip: "How far to the side a blocked step looks for a way through — steers the player into a doorway it just missed; 0 — off" })
+	cornerAssist: number = 0.3;
 
 	private _cells: Uint8Array = null;
+	private _doors: { door: Door; cells: Uint8Array }[] = [];
 	private _cols: number = 0;
 	private _rows: number = 0;
 	private _originX: number = 0;
@@ -41,8 +52,25 @@ export class WallCollision extends Component {
 		if (current.equals(previous)) {
 			return;
 		}
-		if (this._blocked(current.x, current.z)) {
-			// Keep whichever axis is still free, so the player slides along the wall.
+		// Caught inside when a door shut on the player: let them walk out.
+		if (this._blocked(current.x, current.z) && !this._blocked(previous.x, previous.z)) {
+			// First push the player back out along the walls' normal: at a door jamb or any
+			// corner that normal leans sideways, so the player slips round it into the
+			// opening instead of stopping dead against it.
+			this._next.set(current);
+			for (let i = 0; i < PUSH_ITERATIONS && this._pushOut(this._next); i++) {}
+			if (!this._blocked(this._next.x, this._next.z)) {
+				this.node.setWorldPosition(this._next);
+				previous.set(this._next);
+				return;
+			}
+			// Head-on into a jamb: if the way through is just to one side, step towards it.
+			if (this._assist(previous, current, this._next)) {
+				this.node.setWorldPosition(this._next);
+				previous.set(this._next);
+				return;
+			}
+			// Otherwise keep whichever axis is still free, so the player slides along the wall.
 			if (!this._blocked(current.x, previous.z)) {
 				this._next.set(current.x, current.y, previous.z);
 			} else if (!this._blocked(previous.x, current.z)) {
@@ -82,65 +110,108 @@ export class WallCollision extends Component {
 	}
 
 	private _build(): void {
-		const triangles: number[] = [];
-		const matrix = new Mat4();
-		const a = v3();
+		const walls: number[] = [];
+		const doors: { door: Door; triangles: number[] }[] = [];
 		for (const wall of this._wallInstances()) {
-			for (const renderer of wall.getComponentsInChildren(MeshRenderer)) {
-				const mesh = renderer.mesh;
-				if (!mesh) {
-					continue;
-				}
-				renderer.node.getWorldMatrix(matrix);
-				for (const sub of mesh.renderingSubMeshes) {
-					const info = sub.geometricInfo;
-					if (!info || !info.positions) {
-						continue;
-					}
-					const positions = info.positions;
-					const indices = info.indices;
-					const count = indices ? indices.length : positions.length / 3;
-					for (let i = 0; i + 2 < count; i += 3) {
-						const tri: number[] = [];
-						let top = -Infinity;
-						for (let k = 0; k < 3; k++) {
-							const at = (indices ? indices[i + k] : i + k) * 3;
-							Vec3.transformMat4(a, a.set(positions[at], positions[at + 1], positions[at + 2]), matrix);
-							tri.push(a.x, a.z);
-							top = Math.max(top, a.y);
-						}
-						if (top > this.minHeight) {
-							triangles.push(...tri);
-						}
-					}
+			const leaves = new Map<Node, number[]>();
+			for (const door of wall.getComponentsInChildren(Door)) {
+				if (door.leaf) {
+					const group = { door, triangles: [] as number[] };
+					doors.push(group);
+					leaves.set(door.leaf, group.triangles);
 				}
 			}
+			for (const renderer of wall.getComponentsInChildren(MeshRenderer)) {
+				const leaf = this._leafOf(renderer.node, leaves);
+				if (!leaf) {
+					this._collect(renderer, walls);
+					continue;
+				}
+				// Laid out shut, whatever the door is doing right now.
+				const door = doors.find((group) => group.door.leaf === leaf).door;
+				const now = leaf.rotation.clone();
+				leaf.setRotation(door.closedRotation);
+				this._collect(renderer, leaves.get(leaf));
+				leaf.setRotation(now);
+			}
 		}
-		if (!triangles.length) {
+		const all = walls.concat(...doors.map((group) => group.triangles));
+		if (!all.length) {
 			return;
 		}
 
 		let minX = Infinity, minZ = Infinity, maxX = -Infinity, maxZ = -Infinity;
-		for (let i = 0; i < triangles.length; i += 2) {
-			minX = Math.min(minX, triangles[i]);
-			maxX = Math.max(maxX, triangles[i]);
-			minZ = Math.min(minZ, triangles[i + 1]);
-			maxZ = Math.max(maxZ, triangles[i + 1]);
+		for (let i = 0; i < all.length; i += 2) {
+			minX = Math.min(minX, all[i]);
+			maxX = Math.max(maxX, all[i]);
+			minZ = Math.min(minZ, all[i + 1]);
+			maxZ = Math.max(maxZ, all[i + 1]);
 		}
 		const pad = this.radius + this.cellSize * 2;
 		this._originX = minX - pad;
 		this._originZ = minZ - pad;
 		this._cols = Math.ceil((maxX - minX + pad * 2) / this.cellSize) + 1;
 		this._rows = Math.ceil((maxZ - minZ + pad * 2) / this.cellSize) + 1;
-		this._cells = new Uint8Array(this._cols * this._rows);
 
-		for (let i = 0; i < triangles.length; i += 6) {
-			this._fill(triangles[i], triangles[i + 1], triangles[i + 2], triangles[i + 3], triangles[i + 4], triangles[i + 5]);
+		this._cells = this._rasterize(walls);
+		this._doors = doors.map((group) => ({ door: group.door, cells: this._rasterize(group.triangles) }));
+	}
+
+	/** The door leaf a renderer belongs to — the leaf itself or a node under it — or null. */
+	private _leafOf(node: Node, leaves: Map<Node, number[]>): Node {
+		for (let at = node; at; at = at.parent) {
+			if (leaves.has(at)) {
+				return at;
+			}
+		}
+		return null;
+	}
+
+	/** A renderer's triangles on the floor, as x,z pairs, leaving out the floor under the walls and what is overhead. */
+	private _collect(renderer: MeshRenderer, out: number[]): void {
+		const mesh = renderer.mesh;
+		if (!mesh) {
+			return;
+		}
+		const matrix = new Mat4();
+		const a = v3();
+		renderer.node.getWorldMatrix(matrix);
+		for (const sub of mesh.renderingSubMeshes) {
+			const info = sub.geometricInfo;
+			if (!info || !info.positions) {
+				continue;
+			}
+			const positions = info.positions;
+			const indices = info.indices;
+			const count = indices ? indices.length : positions.length / 3;
+			for (let i = 0; i + 2 < count; i += 3) {
+				const tri: number[] = [];
+				let top = -Infinity;
+				let bottom = Infinity;
+				for (let k = 0; k < 3; k++) {
+					const at = (indices ? indices[i + k] : i + k) * 3;
+					Vec3.transformMat4(a, a.set(positions[at], positions[at + 1], positions[at + 2]), matrix);
+					tri.push(a.x, a.z);
+					top = Math.max(top, a.y);
+					bottom = Math.min(bottom, a.y);
+				}
+				if (top > this.minHeight && bottom < this.maxHeight) {
+					out.push(...tri);
+				}
+			}
 		}
 	}
 
+	private _rasterize(triangles: number[]): Uint8Array {
+		const cells = new Uint8Array(this._cols * this._rows);
+		for (let i = 0; i < triangles.length; i += 6) {
+			this._fill(cells, triangles[i], triangles[i + 1], triangles[i + 2], triangles[i + 3], triangles[i + 4], triangles[i + 5]);
+		}
+		return cells;
+	}
+
 	/** Marks every cell a triangle covers on the floor. A wall's side is a line there, so its edges are traced too. */
-	private _fill(ax: number, az: number, bx: number, bz: number, cx: number, cz: number): void {
+	private _fill(cells: Uint8Array, ax: number, az: number, bx: number, bz: number, cx: number, cz: number): void {
 		const size = this.cellSize;
 		const c0 = Math.floor((Math.min(ax, bx, cx) - this._originX) / size);
 		const c1 = Math.floor((Math.max(ax, bx, cx) - this._originX) / size);
@@ -156,31 +227,114 @@ export class WallCollision extends Component {
 					const w1 = (cx - bx) * (pz - bz) - (cz - bz) * (px - bx);
 					const w2 = (ax - cx) * (pz - cz) - (az - cz) * (px - cx);
 					if ((w0 >= 0 && w1 >= 0 && w2 >= 0) || (w0 <= 0 && w1 <= 0 && w2 <= 0)) {
-						this._mark(c, r);
+						this._mark(cells, c, r);
 					}
 				}
 			}
 		}
-		this._trace(ax, az, bx, bz);
-		this._trace(bx, bz, cx, cz);
-		this._trace(cx, cz, ax, az);
+		this._trace(cells, ax, az, bx, bz);
+		this._trace(cells, bx, bz, cx, cz);
+		this._trace(cells, cx, cz, ax, az);
 	}
 
-	private _trace(x0: number, z0: number, x1: number, z1: number): void {
+	private _trace(cells: Uint8Array, x0: number, z0: number, x1: number, z1: number): void {
 		const steps = Math.max(1, Math.ceil(Math.hypot(x1 - x0, z1 - z0) / (this.cellSize * 0.5)));
 		for (let i = 0; i <= steps; i++) {
 			const t = i / steps;
 			this._mark(
+				cells,
 				Math.floor((x0 + (x1 - x0) * t - this._originX) / this.cellSize),
 				Math.floor((z0 + (z1 - z0) * t - this._originZ) / this.cellSize),
 			);
 		}
 	}
 
-	private _mark(c: number, r: number): void {
+	private _mark(cells: Uint8Array, c: number, r: number): void {
 		if (c >= 0 && r >= 0 && c < this._cols && r < this._rows) {
-			this._cells[r * this._cols + c] = 1;
+			cells[r * this._cols + c] = 1;
 		}
+	}
+
+	/**
+	 * A blocked step whose way forward opens up a little to the side: finds the nearest side
+	 * offset, within cornerAssist, from which the step would be free, and moves one step's
+	 * length sideways towards it. False when there is no such way nearby.
+	 */
+	private _assist(from: Vec3, to: Vec3, out: Vec3): boolean {
+		if (this.cornerAssist <= 0) {
+			return false;
+		}
+		const dx = to.x - from.x;
+		const dz = to.z - from.z;
+		const step = Math.hypot(dx, dz);
+		if (step < 1e-6) {
+			return false;
+		}
+		const px = -dz / step;
+		const pz = dx / step;
+		for (let offset = this.cellSize; offset <= this.cornerAssist + 1e-6; offset += this.cellSize) {
+			for (const side of [1, -1]) {
+				if (this._blocked(to.x + px * side * offset, to.z + pz * side * offset)) {
+					continue;
+				}
+				const move = Math.min(step, offset);
+				out.set(from.x + px * side * move, to.y, from.z + pz * side * move);
+				if (!this._blocked(out.x, out.z)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Moves the point out of the blocked cells it overlaps, along the average direction away
+	 * from them, by the deepest overlap. Returns false when nothing overlaps.
+	 */
+	private _pushOut(point: Vec3): boolean {
+		const size = this.cellSize;
+		const reach = this.radius + size * 0.5;
+		const c0 = Math.max(0, Math.floor((point.x - reach - this._originX) / size));
+		const c1 = Math.min(this._cols - 1, Math.floor((point.x + reach - this._originX) / size));
+		const r0 = Math.max(0, Math.floor((point.z - reach - this._originZ) / size));
+		const r1 = Math.min(this._rows - 1, Math.floor((point.z + reach - this._originZ) / size));
+		let nx = 0;
+		let nz = 0;
+		let depth = 0;
+		for (let r = r0; r <= r1; r++) {
+			for (let c = c0; c <= c1; c++) {
+				const at = r * this._cols + c;
+				if (!this._cells[at] && !this._closedDoorAt(at)) {
+					continue;
+				}
+				const dx = point.x - (this._originX + (c + 0.5) * size);
+				const dz = point.z - (this._originZ + (r + 0.5) * size);
+				const distance = Math.hypot(dx, dz);
+				const overlap = reach - distance;
+				if (overlap <= 0 || distance < 1e-6) {
+					continue;
+				}
+				nx += (dx / distance) * overlap;
+				nz += (dz / distance) * overlap;
+				depth = Math.max(depth, overlap);
+			}
+		}
+		const length = Math.hypot(nx, nz);
+		if (depth <= 0 || length < 1e-6) {
+			return false;
+		}
+		point.x += (nx / length) * depth;
+		point.z += (nz / length) * depth;
+		return true;
+	}
+
+	private _closedDoorAt(at: number): boolean {
+		for (const layer of this._doors) {
+			if (layer.cells[at] && !layer.door.isOpen) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** Would a circle of the player's radius at this point touch a blocked cell? */
@@ -193,7 +347,8 @@ export class WallCollision extends Component {
 		const r1 = Math.floor((z + reach - this._originZ) / size);
 		for (let r = Math.max(0, r0); r <= Math.min(this._rows - 1, r1); r++) {
 			for (let c = Math.max(0, c0); c <= Math.min(this._cols - 1, c1); c++) {
-				if (!this._cells[r * this._cols + c]) {
+				const at = r * this._cols + c;
+				if (!this._cells[at] && !this._closedDoorAt(at)) {
 					continue;
 				}
 				const dx = this._originX + (c + 0.5) * size - x;

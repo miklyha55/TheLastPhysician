@@ -12,6 +12,8 @@ const GameEvent = Enum({
 	JOYSTICK_MOVE: 90,
 	JOYSTICK_UP: 100,
 	MOVE_DIRECTION: 110,
+	DOOR_OPEN: 120,
+	DOOR_CLOSE: 130,
 });
 
 export default GameEvent;

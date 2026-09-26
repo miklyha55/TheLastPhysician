@@ -1,0 +1,78 @@
+{
+    "version": 3,
+    "name": "Door",
+    "view": {
+        "x": 569,
+        "y": 330,
+        "scale": 0.728
+    },
+    "nodes": [
+        {
+            "id": "n1",
+            "name": "Node 1",
+            "x": -153,
+            "y": -268,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Нода Tile_Door должна открываться/закрываться по эвенту.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "da39a363-a91a-4e52-ad68-0c21bf6fcee5",
+                "name": "Tile_Wall_Door.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/tiles/walls/Tile_Wall_Door.prefab",
+                "path": "db://assets/prefabs/tiles/walls/Tile_Wall_Door.prefab"
+            }
+        },
+        {
+            "id": "n2",
+            "name": "Node 2",
+            "x": -505,
+            "y": -180,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "asset",
+                "uuid": "7d1fb337-9e75-4744-813a-b3cd2c9e1e67",
+                "name": "GameEvent.ts",
+                "type": "cc.Script",
+                "importer": "typescript",
+                "url": "db://assets/scripts/enums/GameEvent.ts",
+                "path": "db://assets/scripts/enums/GameEvent.ts"
+            }
+        },
+        {
+            "id": "n4",
+            "name": "Node 3",
+            "x": 278,
+            "y": -451,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Проходит в дверь если она открыта, стенка если закрыта.\n\nПри проходе что бы не застревал в косяках.",
+            "payload": {
+                "kind": "node",
+                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
+                "name": "Player",
+                "type": "cc.Node",
+                "path": "Main/World/Player"
+            }
+        }
+    ],
+    "links": [
+        {
+            "id": "l3",
+            "from": "n2",
+            "to": "n1"
+        },
+        {
+            "id": "l5",
+            "from": "n1",
+            "to": "n4"
+        }
+    ]
+}
