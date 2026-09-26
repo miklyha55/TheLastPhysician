@@ -7,6 +7,7 @@ import { Blood } from "./Blood";
 import { FaceDirection } from "./FaceDirection";
 import { GunEffects } from "./GunEffects";
 import { OcclusionFade } from "./OcclusionFade";
+import { PotionStack } from "./PotionStack";
 import { GunSocket } from "./GunSocket";
 import { PlayerMovement } from "./PlayerMovement";
 import { WallCollision } from "./WallCollision";
@@ -46,6 +47,8 @@ export class PlayerAttack extends Component {
 	projectile: Prefab = null;
 	@property({ type: Node, tooltip: "Where the potion leaves from — the gun's muzzle, a child of the gun" })
 	muzzle: Node = null;
+	@property({ type: PotionStack, tooltip: "The potions on the back: one for every shot left" })
+	stack: PotionStack = null;
 	@property({ type: GunEffects, tooltip: "Flash, sparks and smoke at the muzzle on every shot" })
 	gunEffects: GunEffects = null;
 	@property({ type: Blood, tooltip: "Splash where a potion hits a zombie" })
@@ -141,9 +144,32 @@ export class PlayerAttack extends Component {
 		this._pressed = false;
 	}
 
-	/** Potions handed to the player — from a chest. */
-	addAmmo(count: number): void {
+	protected start(): void {
+		this.stack && this.stack.fill(this.ammo);
+	}
+
+	/**
+	 * Potions handed to the player — from a chest. `visual`, a potion that has flown in, goes
+	 * onto the stack on the back as it is; the rest are laid there fresh.
+	 */
+	addAmmo(count: number, visual: Node = null): void {
 		this.ammo += count;
+		for (let i = 0; i < count; i++) {
+			if (this.stack) {
+				this.stack.push(i === 0 ? visual : null);
+			} else if (i === 0 && visual) {
+				visual.destroy();
+			}
+		}
+	}
+
+	/** Where a potion flying to the player should go: the top of the stack, or the chest. */
+	catchPoint(out: Vec3, height: number): Vec3 {
+		if (this.stack) {
+			return this.stack.nextSlot(out);
+		}
+		const at = this.node.worldPosition;
+		return out.set(at.x, at.y + height, at.z);
 	}
 
 	/** A zombie's blow, struck from `from`. */
@@ -195,6 +221,7 @@ export class PlayerAttack extends Component {
 		}
 		this._cooldown = this.fireInterval;
 		this.ammo--;
+		this.stack && this.stack.pop();
 		const duration = this.animationController ? this.animationController.shoot() : 0;
 		this._throwAt = this._target;
 		this._throwIn = duration * this.shotMoment;

@@ -13,8 +13,8 @@ interface Flight {
 // A chest of potions. It stands open with its potions inside, in sight. When the player comes
 // within `giveRadius` they start flying out one after another in an arc to the player — each
 // one that arrives is a potion more to shoot with — for as long as the player stays there;
-// walking off stops the stream, coming back resumes it. Once the last has arrived the lid shuts, and
-// after that it is only a chest.
+// walking off stops the stream, coming back resumes it. Once the last has arrived the lid
+// shuts, the chest shrinks away and is gone.
 @ccclass("Chest")
 export class Chest extends Component {
 	@property({ type: Node, tooltip: "The lid, turning on its hinge around X" })
@@ -29,12 +29,14 @@ export class Chest extends Component {
 	openAngle: number = -105;
 	@property({ tooltip: "Seconds the lid takes to shut" })
 	closeTime: number = 0.3;
+	@property({ tooltip: "Seconds the chest takes to fade away once shut; then it is gone" })
+	vanishTime: number = 0.5;
 	@property({ tooltip: "Potions fly to the player while they are within this distance; outside it the flying stops until they come back" })
 	giveRadius: number = 1.5;
 	@property({ tooltip: "Seconds between potions" })
 	interval: number = 0.2;
 	@property({ tooltip: "Potion speed along the ground, units per second" })
-	speed: number = 2.5;
+	speed: number = 3.75;
 	@property({ tooltip: "How high the arc rises" })
 	arcHeight: number = 0.45;
 	@property({ tooltip: "Height above the chest's base the potions leave from" })
@@ -108,22 +110,24 @@ export class Chest extends Component {
 		this._flights.push({ node, start, time: 0, duration: 0.1 });
 	}
 
-	/** Each potion arcs to where the player is now; on arrival it is theirs. */
+	/** Each potion arcs to the top of the player's stack as it is now; on arrival it lies there. */
 	private _fly(player: PlayerAttack, dt: number): void {
 		for (let i = this._flights.length - 1; i >= 0; i--) {
 			const flight = this._flights[i];
 			if (player) {
-				const them = player.node.worldPosition;
-				this._to.set(them.x, them.y + this.catchHeight, them.z);
+				player.catchPoint(this._to, this.catchHeight);
 			}
 			const distance = Math.hypot(this._to.x - flight.start.x, this._to.z - flight.start.z);
 			flight.duration = Math.max(0.15, distance / Math.max(this.speed, 0.01));
 			flight.time += dt;
 			const t = Math.min(1, flight.time / flight.duration);
 			if (t >= 1) {
-				flight.node.destroy();
 				this._flights.splice(i, 1);
-				player && !player.isDead && player.addAmmo(1);
+				if (player && !player.isDead) {
+					player.addAmmo(1, flight.node);
+				} else {
+					flight.node.destroy();
+				}
 				this._closeWhenDone();
 				continue;
 			}
@@ -141,6 +145,15 @@ export class Chest extends Component {
 		if (this._left > 0 || this._flights.length || !this.lid) {
 			return;
 		}
-		tween(this.lid).to(this.closeTime, { eulerAngles: v3(0, 0, 0) }, { easing: "backIn" }).start();
+		// Shut, then it shrinks away and the node goes, with everything in it.
+		tween(this.lid)
+			.to(this.closeTime, { eulerAngles: v3(0, 0, 0) }, { easing: "backIn" })
+			.call(() => {
+				tween(this.node)
+					.to(this.vanishTime, { scale: v3(0, 0, 0) }, { easing: "quadIn" })
+					.call(() => this.node.destroy())
+					.start();
+			})
+			.start();
 	}
 }
