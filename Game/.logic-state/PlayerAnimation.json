@@ -1,24 +1,28 @@
 {
     "cards": {
         "n1": {
-            "hash": "0c1316ac0fad",
-            "label": "Skeleton"
+            "hash": "87e0ef1bb764",
+            "label": "SkeletalAnimation"
         },
         "n10": {
-            "hash": "3395fb8ed312",
+            "hash": "829a7faacb81",
             "label": "Input"
         },
         "n2": {
-            "hash": "2e52ee18d017",
-            "label": "Fast Run.fbx"
+            "hash": "1721c3c1ace1",
+            "label": "state «Бег»"
         },
         "n3": {
-            "hash": "e9e1b4e5f494",
-            "label": "Breathing Idle.fbx"
+            "hash": "67024ae45d6b",
+            "label": "state «Покой»"
         },
         "n4": {
-            "hash": "3c519b593721",
+            "hash": "b8907b62e160",
             "label": "AnimationController"
+        },
+        "n5": {
+            "hash": "4c920a36bdd4",
+            "label": "state «Выстрел»"
         }
     },
     "graph": "PlayerAnimation"

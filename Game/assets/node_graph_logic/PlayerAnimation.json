@@ -1,65 +1,27 @@
 {
-    "version": 3,
+    "version": 4,
     "name": "PlayerAnimation",
     "view": {
-        "x": 1285,
-        "y": 485,
-        "scale": 0.679
+        "x": 705,
+        "y": 134,
+        "scale": 0.447
     },
     "nodes": [
         {
-            "id": "n1",
-            "name": "Node 1",
-            "x": 310,
-            "y": -294,
+            "id": "n10",
+            "name": "Node 6",
+            "x": -1249,
+            "y": -282,
             "width": 220,
             "height": 330,
             "previewHeight": 96,
-            "prompt": "",
+            "prompt": "Ловит касания экрана (InputCatcher), события приходят как JOYSTICK_DOWN / MOVE / UP.",
             "payload": {
                 "kind": "node",
-                "uuid": "3e06N/wWhFXYCkq154S7G0",
-                "name": "Skeleton",
+                "uuid": "57P+WUxI9IA5avMRQCxNjX",
+                "name": "Input",
                 "type": "cc.Node",
-                "path": "Main/World/Player/Skeleton"
-            }
-        },
-        {
-            "id": "n2",
-            "name": "Node 2",
-            "x": -150,
-            "y": -534,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "",
-            "payload": {
-                "kind": "asset",
-                "uuid": "1cff94cc-953b-40e6-a69c-732613810b75",
-                "name": "Fast Run.fbx",
-                "type": "cc.Asset",
-                "importer": "fbx",
-                "url": "db://assets/models/player/Fast Run.fbx",
-                "path": "db://assets/models/player/Fast Run.fbx"
-            }
-        },
-        {
-            "id": "n3",
-            "name": "Node 3",
-            "x": -121,
-            "y": 255,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "",
-            "payload": {
-                "kind": "asset",
-                "uuid": "f66305b1-8926-4f1e-b4fd-c12ad42856cd",
-                "name": "Breathing Idle.fbx",
-                "type": "cc.Asset",
-                "importer": "fbx",
-                "url": "db://assets/models/player/Breathing Idle.fbx",
-                "path": "db://assets/models/player/Breathing Idle.fbx"
+                "path": "Main/Canvas/Ui/Hiddable/Input"
             }
         },
         {
@@ -70,7 +32,7 @@
             "width": 220,
             "height": 330,
             "previewHeight": 96,
-            "prompt": "Отслеживать события инпут. Если пользователь топнул по экрану и начал водить пальцем тот персонаж воспроизводит анимацию бега если палец отжал то анимация айдл.",
+            "prompt": "Переключает анимации плеера: пока палец нажат и ведёт — бег, отпустил — покой. Выстрел по команде PlayerAttack проигрывается один раз, только стоя. Клипы из Mixamo называются одинаково, поэтому у каждого своё состояние.",
             "payload": {
                 "kind": "component",
                 "uuid": "",
@@ -79,51 +41,146 @@
                 "builtin": false,
                 "isNew": true,
                 "path": "Scripts/AnimationController"
-            }
+            },
+            "params": [
+                {
+                    "name": "crossFade",
+                    "value": "0.2 с"
+                },
+                {
+                    "name": "shootingSpeed",
+                    "value": "2"
+                }
+            ]
         },
         {
-            "id": "n10",
-            "name": "Node 6",
-            "x": -1249,
-            "y": -282,
+            "id": "n3",
+            "name": "Покой",
+            "x": -168,
+            "y": 318,
             "width": 220,
             "height": 330,
             "previewHeight": 96,
-            "prompt": "",
+            "prompt": "Стоит, дышит; клип по кругу.",
             "payload": {
-                "kind": "node",
-                "uuid": "57P+WUxI9IA5avMRQCxNjX",
-                "name": "Input",
-                "type": "cc.Node",
-                "path": "Main/Canvas/Ui/Hiddable/Input"
+                "kind": "asset",
+                "uuid": "f66305b1-8926-4f1e-b4fd-c12ad42856cd",
+                "name": "Breathing Idle.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/player/Breathing Idle.fbx",
+                "path": "db://assets/models/player/Breathing Idle.fbx"
+            },
+            "state": true
+        },
+        {
+            "id": "n2",
+            "name": "Бег",
+            "x": -150,
+            "y": -534,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Бежит; клип по кругу.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "1cff94cc-953b-40e6-a69c-732613810b75",
+                "name": "Fast Run.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/player/Fast Run.fbx",
+                "path": "db://assets/models/player/Fast Run.fbx"
+            },
+            "state": true
+        },
+        {
+            "id": "n5",
+            "name": "Выстрел",
+            "x": 321,
+            "y": 573,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Один выстрел, клип один раз в 2 раза быстрее; пушка в это время в руках (граф GunSocket).",
+            "payload": {
+                "kind": "asset",
+                "uuid": "5f6b0fb7-0ca1-4c9d-88dd-5570efe10a4a",
+                "name": "Shooting.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/player/Shooting.fbx",
+                "path": "db://assets/models/player/Shooting.fbx"
+            },
+            "state": true
+        },
+        {
+            "id": "n1",
+            "name": "Node 1",
+            "x": -423,
+            "y": -429,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Анимация на Skeleton плеера (baked); на ней играют состояния.",
+            "payload": {
+                "kind": "component",
+                "uuid": "",
+                "name": "SkeletalAnimation",
+                "type": "cc.SkeletalAnimation",
+                "builtin": true,
+                "group": "Animation",
+                "path": "Animation/SkeletalAnimation"
             }
         }
     ],
     "links": [
         {
-            "id": "l13",
-            "from": "n4",
-            "to": "n2"
-        },
-        {
-            "id": "l14",
-            "from": "n4",
-            "to": "n3"
-        },
-        {
-            "id": "l15",
-            "from": "n2",
-            "to": "n1"
-        },
-        {
-            "id": "l16",
-            "from": "n3",
-            "to": "n1"
-        },
-        {
-            "id": "l17",
+            "id": "l100",
             "from": "n10",
-            "to": "n4"
+            "to": "n4",
+            "label": "JOYSTICK_DOWN / MOVE / UP"
+        },
+        {
+            "id": "l101",
+            "from": "n4",
+            "to": "n3",
+            "label": "старт"
+        },
+        {
+            "id": "l102",
+            "from": "n3",
+            "to": "n2",
+            "label": "палец нажат и ведёт"
+        },
+        {
+            "id": "l103",
+            "from": "n2",
+            "to": "n3",
+            "label": "палец отпущен"
+        },
+        {
+            "id": "l104",
+            "from": "n3",
+            "to": "n5",
+            "label": "PlayerAttack: выстрел"
+        },
+        {
+            "id": "l105",
+            "from": "n5",
+            "to": "n3",
+            "label": "клип доигран"
+        },
+        {
+            "id": "l106",
+            "from": "n5",
+            "to": "n2",
+            "label": "палец нажат и ведёт"
+        },
+        {
+            "id": "l107",
+            "from": "n4",
+            "to": "n1",
+            "label": "играет клипы"
         }
     ]
 }

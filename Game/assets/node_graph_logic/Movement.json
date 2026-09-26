@@ -1,29 +1,7 @@
 {
-    "version": 3,
+    "version": 4,
     "name": "Movement",
-    "view": {
-        "x": -155,
-        "y": 483,
-        "scale": 1.221
-    },
     "nodes": [
-        {
-            "id": "n1",
-            "name": "Node 1",
-            "x": -233,
-            "y": -602,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "",
-            "payload": {
-                "kind": "node",
-                "uuid": "efopnmTgRGxqN5rzXmZphp",
-                "name": "MovementTutorial",
-                "type": "cc.Node",
-                "path": "Main/Canvas/Ui/Hiddable/MovementTutorial"
-            }
-        },
         {
             "id": "n2",
             "name": "Node 2",
@@ -32,7 +10,7 @@
             "width": 220,
             "height": 330,
             "previewHeight": 96,
-            "prompt": "",
+            "prompt": "Ловит касания по всему экрану.",
             "payload": {
                 "kind": "node",
                 "uuid": "57P+WUxI9IA5avMRQCxNjX",
@@ -49,18 +27,52 @@
             "width": 220,
             "height": 330,
             "previewHeight": 96,
-            "prompt": "",
+            "prompt": "Превращает касания в события ввода; по настройке в сцене они приходят как JOYSTICK_DOWN / MOVE / UP.",
             "payload": {
                 "kind": "component",
                 "uuid": "59a7a4c1-f66a-4636-8f83-384f2c8b36a3",
                 "name": "InputCatcher",
                 "type": "InputCatcher",
-                "cid": "59a7aTB9mpGNo+DOE8sizaj",
                 "builtin": false,
-                "group": "Scripts",
-                "importer": "typescript",
+                "cid": "59a7aTB9mpGNo+DOE8sizaj",
                 "url": "db://assets/scripts/managers/input/InputCatcher.ts",
-                "path": "Scripts/InputCatcher"
+                "path": "db://assets/scripts/managers/input/InputCatcher.ts"
+            }
+        },
+        {
+            "id": "n13",
+            "name": "Node 7",
+            "x": -497,
+            "y": -326,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "События ввода и движения: JOYSTICK_DOWN / MOVE / UP, MOVE_DIRECTION.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "7d1fb337-9e75-4744-813a-b3cd2c9e1e67",
+                "name": "GameEvent.ts",
+                "type": "cc.Script",
+                "importer": "typescript",
+                "url": "db://assets/scripts/enums/GameEvent.ts",
+                "path": "db://assets/scripts/enums/GameEvent.ts"
+            }
+        },
+        {
+            "id": "n1",
+            "name": "Node 1",
+            "x": -233,
+            "y": -602,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Нода джойстика в UI; на ней компонент Joystic.",
+            "payload": {
+                "kind": "node",
+                "uuid": "efopnmTgRGxqN5rzXmZphp",
+                "name": "MovementTutorial",
+                "type": "cc.Node",
+                "path": "Main/Canvas/Ui/Hiddable/MovementTutorial"
             }
         },
         {
@@ -71,16 +83,23 @@
             "width": 220,
             "height": 330,
             "previewHeight": 96,
-            "prompt": "Показывает джойстик при нажатии пальцем на экран и скрывает при отпускании пальца.",
+            "prompt": "Появляется под пальцем при нажатии и прячется при отпускании. Направление — смещение ручки от центра, 0..1 по radius; уходит событием MOVE_DIRECTION.",
             "payload": {
                 "kind": "component",
-                "uuid": "",
+                "uuid": "7bc20b49-8abc-443e-99e3-0c5b86cdc6f1",
                 "name": "Joystic",
                 "type": "Joystic",
                 "builtin": false,
-                "isNew": true,
-                "path": "Scripts/Joystic"
-            }
+                "cid": "7bc20tJirxEPpnjDFuGzcbx",
+                "url": "db://assets/scripts/game/Joystic.ts",
+                "path": "db://assets/scripts/game/Joystic.ts"
+            },
+            "params": [
+                {
+                    "name": "radius",
+                    "value": "0 (половина ширины плашки), px"
+                }
+            ]
         },
         {
             "id": "n9",
@@ -90,7 +109,7 @@
             "width": 220,
             "height": 330,
             "previewHeight": 96,
-            "prompt": "Скрипту сдаётся направление движения.",
+            "prompt": "Ручка джойстика: ходит за пальцем, не дальше radius от центра.",
             "payload": {
                 "kind": "node",
                 "uuid": "816HpFPx1ImbYQIdZjqLmy",
@@ -107,33 +126,23 @@
             "width": 220,
             "height": 330,
             "previewHeight": 96,
-            "prompt": "Отправление передается на движение плеера. Движение с линейной скоростью в зависимости от направления. Скорость не зависит от длинны вектора хендлера.",
+            "prompt": "Движет плеера по полу с постоянной скоростью в сторону джойстика; сила нажатия на скорость не влияет. Вверх по экрану — от камеры. Шаг перед установкой проверяется WallCollision (граф Border).",
             "payload": {
-                "kind": "node",
-                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
-                "name": "Player",
-                "type": "cc.Node",
-                "path": "Main/World/Player"
-            }
-        },
-        {
-            "id": "n13",
-            "name": "Node 7",
-            "x": -497,
-            "y": -326,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "",
-            "payload": {
-                "kind": "asset",
-                "uuid": "7d1fb337-9e75-4744-813a-b3cd2c9e1e67",
-                "name": "GameEvent.ts",
-                "type": "cc.Script",
-                "importer": "typescript",
-                "url": "db://assets/scripts/enums/GameEvent.ts",
-                "path": "db://assets/scripts/enums/GameEvent.ts"
-            }
+                "kind": "component",
+                "uuid": "2a196319-01d0-4df6-9e6e-429e9cd662dd",
+                "name": "PlayerMovement",
+                "type": "PlayerMovement",
+                "builtin": false,
+                "cid": "2a196MZAdBN9p5uQp6c1mLd",
+                "url": "db://assets/scripts/game/PlayerMovement.ts",
+                "path": "db://assets/scripts/game/PlayerMovement.ts"
+            },
+            "params": [
+                {
+                    "name": "speed",
+                    "value": "2 ед/с"
+                }
+            ]
         },
         {
             "id": "n16",
@@ -143,51 +152,66 @@
             "width": 220,
             "height": 330,
             "previewHeight": 96,
-            "prompt": "Поворачивать ноду в зависимости от направления",
+            "prompt": "Поворачивает Skeleton плеера в сторону джойстика относительно камеры; отпустил палец — остаётся повёрнутым как был.",
             "payload": {
-                "kind": "node",
-                "uuid": "3e06N/wWhFXYCkq154S7G0",
-                "name": "Skeleton",
-                "type": "cc.Node",
-                "path": "Main/World/Player/Skeleton"
-            }
+                "kind": "component",
+                "uuid": "d9ae22bd-ab1c-4449-9d85-5740bc67a370",
+                "name": "FaceDirection",
+                "type": "FaceDirection",
+                "builtin": false,
+                "cid": "d9ae2K9qxxESZ2FV0C8Z6Nw",
+                "url": "db://assets/scripts/game/FaceDirection.ts",
+                "path": "db://assets/scripts/game/FaceDirection.ts"
+            },
+            "params": [
+                {
+                    "name": "turnSpeed",
+                    "value": "0 — мгновенно"
+                }
+            ]
         }
     ],
     "links": [
         {
-            "id": "l5",
+            "id": "l100",
             "from": "n2",
-            "to": "n4"
+            "to": "n4",
+            "label": "касания"
         },
         {
-            "id": "l8",
+            "id": "l101",
+            "from": "n4",
+            "to": "n13",
+            "label": "JOYSTICK_DOWN / MOVE / UP"
+        },
+        {
+            "id": "l102",
+            "from": "n13",
+            "to": "n1",
+            "label": "JOYSTICK_DOWN / MOVE / UP"
+        },
+        {
+            "id": "l103",
             "from": "n1",
             "to": "n7"
         },
         {
-            "id": "l10",
+            "id": "l104",
             "from": "n7",
-            "to": "n9"
+            "to": "n9",
+            "label": "двигает ручку"
         },
         {
-            "id": "l12",
+            "id": "l105",
             "from": "n9",
-            "to": "n11"
+            "to": "n11",
+            "label": "MOVE_DIRECTION"
         },
         {
-            "id": "l14",
-            "from": "n4",
-            "to": "n13"
-        },
-        {
-            "id": "l15",
-            "from": "n13",
-            "to": "n1"
-        },
-        {
-            "id": "l17",
+            "id": "l106",
             "from": "n9",
-            "to": "n16"
+            "to": "n16",
+            "label": "MOVE_DIRECTION"
         }
     ]
 }

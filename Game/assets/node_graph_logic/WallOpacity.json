@@ -1,29 +1,7 @@
 {
-    "version": 3,
+    "version": 4,
     "name": "WallOpacity",
-    "view": {
-        "x": 486,
-        "y": 277,
-        "scale": 0.679
-    },
     "nodes": [
-        {
-            "id": "n1",
-            "name": "Node 1",
-            "x": -28,
-            "y": -217,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "Любые модели 3D которые на 70% скрывают плеера становится прозрачными, но так что бы не было видно внутренностей. Можно скрывать из черезстрочным рендерингом. И возвращались обратно к не прозрачному материалу когда плеер вышел.",
-            "payload": {
-                "kind": "node",
-                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
-                "name": "Player",
-                "type": "cc.Node",
-                "path": "Main/World/Player"
-            }
-        },
         {
             "id": "n4",
             "name": "Node 4",
@@ -32,7 +10,7 @@
             "width": 220,
             "height": 330,
             "previewHeight": 96,
-            "prompt": "",
+            "prompt": "Модели стен и тайлов с материалом standard-dither — только их можно растворять.",
             "payload": {
                 "kind": "folder",
                 "uuid": "39b7b99d-b646-4f57-935f-3f0f42a58851",
@@ -42,13 +20,79 @@
                 "url": "db://assets/models",
                 "path": "db://assets/models"
             }
+        },
+        {
+            "id": "n1",
+            "name": "Node 1",
+            "x": -28,
+            "y": -217,
+            "width": 220,
+            "height": 560,
+            "previewHeight": 96,
+            "prompt": "Перенос SeeThrough из ThroughTheDeadCity. Каждый кадр луч от камеры к плееру на aimHeight: всё, что он задевает до плеера, растворяется целиком — весь поставленный префаб. Растворение шумовым дизерингом, не прозрачностью: материал остаётся непрозрачным, внутренностей не видно. Растворяется быстро, возвращается медленнее. Пол не растворяется. Так же — для текущей цели плеера (граф Relationship).",
+            "payload": {
+                "kind": "component",
+                "uuid": "11d51336-1fe3-4fb8-a24d-259bcbaf3e97",
+                "name": "OcclusionFade",
+                "type": "OcclusionFade",
+                "builtin": false,
+                "cid": "11d51M2H+NPuKJNJZvLrz6X",
+                "url": "db://assets/scripts/game/OcclusionFade.ts",
+                "path": "db://assets/scripts/game/OcclusionFade.ts"
+            },
+            "params": [
+                {
+                    "name": "aimHeight",
+                    "value": "0.4"
+                },
+                {
+                    "name": "fadeAmount",
+                    "value": "0.78"
+                },
+                {
+                    "name": "fadeOutSpeed",
+                    "value": "6 /с"
+                },
+                {
+                    "name": "fadeInSpeed",
+                    "value": "2.5 /с"
+                },
+                {
+                    "name": "grain",
+                    "value": "1 px"
+                }
+            ]
+        },
+        {
+            "id": "n5",
+            "name": "Node 5",
+            "x": 332,
+            "y": -217,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Плеер; на нём OcclusionFade.",
+            "payload": {
+                "kind": "node",
+                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
+                "name": "Player",
+                "type": "cc.Node",
+                "path": "Main/World/Player"
+            }
         }
     ],
     "links": [
         {
-            "id": "l5",
+            "id": "l100",
             "from": "n4",
-            "to": "n1"
+            "to": "n1",
+            "label": "между камерой и плеером"
+        },
+        {
+            "id": "l101",
+            "from": "n1",
+            "to": "n5",
+            "label": "держит плеера в виду"
         }
     ]
 }

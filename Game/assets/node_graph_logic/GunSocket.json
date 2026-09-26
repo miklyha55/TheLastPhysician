@@ -1,12 +1,98 @@
 {
-    "version": 3,
+    "version": 4,
     "name": "GunSocket",
-    "view": {
-        "x": 507,
-        "y": 151,
-        "scale": 0.638
-    },
     "nodes": [
+        {
+            "id": "n7",
+            "name": "Node 5",
+            "x": -336,
+            "y": -122,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Пушка. На ней компонент GunSocket; дочерняя нода Muzzle — дуло, откуда летит склянка.",
+            "payload": {
+                "kind": "node",
+                "uuid": "ac4H+CEPtJuaW2IbKh1cJS",
+                "name": "PotionBlaster",
+                "type": "cc.Node",
+                "path": "Main/World/Player/Skeleton/mixamorig:RightHand Socket/PotionBlaster"
+            }
+        },
+        {
+            "id": "n10",
+            "name": "Node 6",
+            "x": -671,
+            "y": 375,
+            "width": 220,
+            "height": 480,
+            "previewHeight": 96,
+            "prompt": "Переносит пушку между сокетами кости: в руке, пока играет Shooting, за спиной — всё остальное время. В каждом сокете у пушки своя поза.",
+            "payload": {
+                "kind": "component",
+                "uuid": "9f222e95-9139-49f1-a0bc-59b811000019",
+                "name": "GunSocket",
+                "type": "GunSocket",
+                "builtin": false,
+                "cid": "9f2226VkTlJ8aC8WbgRAAAZ",
+                "url": "db://assets/scripts/game/GunSocket.ts",
+                "path": "db://assets/scripts/game/GunSocket.ts"
+            },
+            "params": [
+                {
+                    "name": "handPosition",
+                    "value": "(-0.003, 0.114, 0.174)"
+                },
+                {
+                    "name": "handEuler",
+                    "value": "(-62.6, -116.2, 70.4)"
+                },
+                {
+                    "name": "backPosition",
+                    "value": "(0, 0, -0.37)"
+                },
+                {
+                    "name": "backEuler",
+                    "value": "(0, 0, 45)"
+                }
+            ]
+        },
+        {
+            "id": "n3",
+            "name": "За спиной",
+            "x": -12,
+            "y": 238,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Пушка в сокете Spine2, за спиной, по диагонали.",
+            "payload": {
+                "kind": "node",
+                "uuid": "73A7JK2UFBA5A4lCzV5qb4",
+                "name": "mixamorig:Spine2 Socket",
+                "type": "cc.Node",
+                "path": "Main/World/Player/Skeleton/mixamorig:Spine2 Socket"
+            },
+            "state": true
+        },
+        {
+            "id": "n5",
+            "name": "В руках",
+            "x": -27,
+            "y": -141,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Пушка в сокете правой руки, рукоять между ладонями, ствол вперёд.",
+            "payload": {
+                "kind": "node",
+                "uuid": "b8/3jOa7hHl6MOipSU+Wnt",
+                "name": "mixamorig:RightHand Socket",
+                "type": "cc.Node",
+                "path": "Main/World/Player/Skeleton/mixamorig:RightHand Socket"
+            },
+            "state": true
+        },
         {
             "id": "n2",
             "name": "Node 2",
@@ -15,7 +101,7 @@
             "width": 180,
             "height": 475,
             "previewHeight": 96,
-            "prompt": "",
+            "prompt": "Анимация выстрела.",
             "payload": {
                 "kind": "asset",
                 "uuid": "5f6b0fb7-0ca1-4c9d-88dd-5570efe10a4a",
@@ -25,111 +111,38 @@
                 "url": "db://assets/models/player/Shooting.fbx",
                 "path": "db://assets/models/player/Shooting.fbx"
             }
-        },
-        {
-            "id": "n3",
-            "name": "Node 3",
-            "x": -12,
-            "y": 238,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "Сзади спины",
-            "payload": {
-                "kind": "node",
-                "uuid": "9e4pMSo89JWqvEgigMPjES",
-                "name": "mixamorig:Spine2",
-                "type": "cc.Node",
-                "path": "Main/World/Player/Skeleton/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2"
-            }
-        },
-        {
-            "id": "n5",
-            "name": "Node 4",
-            "x": -27,
-            "y": -141,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "",
-            "payload": {
-                "kind": "node",
-                "uuid": "ca700H6jVLp5feS9xmXxV5",
-                "name": "mixamorig:RightHand",
-                "type": "cc.Node",
-                "path": "Main/World/Player/Skeleton/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand"
-            }
-        },
-        {
-            "id": "n7",
-            "name": "Node 5",
-            "x": -336,
-            "y": -122,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "Привязать к кости сокетом",
-            "payload": {
-                "kind": "asset",
-                "uuid": "c67b90f5-9782-44a5-bb7c-06503dc01279",
-                "name": "PotionBlaster.glb",
-                "type": "cc.Asset",
-                "importer": "gltf",
-                "url": "db://assets/models/weapons/PotionBlaster.glb",
-                "path": "db://assets/models/weapons/PotionBlaster.glb"
-            }
-        },
-        {
-            "id": "n10",
-            "name": "Node 6",
-            "x": -671,
-            "y": 375,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "Все остальные анимации плеера",
-            "payload": null
-        },
-        {
-            "id": "n12",
-            "name": "Node 7",
-            "x": -317,
-            "y": 314,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "Привязать к кости сокетом",
-            "payload": {
-                "kind": "asset",
-                "uuid": "c67b90f5-9782-44a5-bb7c-06503dc01279",
-                "name": "PotionBlaster.glb",
-                "type": "cc.Asset",
-                "importer": "gltf",
-                "url": "db://assets/models/weapons/PotionBlaster.glb",
-                "path": "db://assets/models/weapons/PotionBlaster.glb"
-            }
         }
     ],
     "links": [
         {
-            "id": "l8",
-            "from": "n2",
-            "to": "n7"
-        },
-        {
-            "id": "l13",
-            "from": "n10",
-            "to": "n12"
-        },
-        {
-            "id": "l15",
+            "id": "l100",
             "from": "n7",
-            "to": "n5"
+            "to": "n10",
+            "label": "висит на пушке"
         },
         {
-            "id": "l16",
-            "from": "n12",
-            "to": "n3"
+            "id": "l101",
+            "from": "n10",
+            "to": "n3",
+            "label": "старт"
+        },
+        {
+            "id": "l102",
+            "from": "n3",
+            "to": "n5",
+            "label": "играет Shooting (вес ≥ 0.5)"
+        },
+        {
+            "id": "l103",
+            "from": "n5",
+            "to": "n3",
+            "label": "Shooting не играет или плеер умер"
+        },
+        {
+            "id": "l104",
+            "from": "n2",
+            "to": "n5",
+            "label": "пока играет"
         }
     ]
 }

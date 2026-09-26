@@ -1,11 +1,6 @@
 {
-    "version": 3,
+    "version": 4,
     "name": "Border",
-    "view": {
-        "x": 549,
-        "y": 297,
-        "scale": 1
-    },
     "nodes": [
         {
             "id": "n1",
@@ -15,7 +10,7 @@
             "width": 220,
             "height": 330,
             "previewHeight": 96,
-            "prompt": "",
+            "prompt": "Префабы стен из этой папки. Препятствия — их экземпляры на сцене (WallCollision.wallPrefabs).",
             "payload": {
                 "kind": "folder",
                 "uuid": "015329e8-deb2-4243-b675-379bbe686f55",
@@ -32,9 +27,51 @@
             "x": -110,
             "y": -165,
             "width": 220,
+            "height": 520,
+            "previewHeight": 96,
+            "prompt": "Плеер не заходит в стены. Геометрия стен раскладывается на полу в сетку занятых клеток (пол под стеной и перемычки над проёмами не считаются). Шаг в стену — скольжение вдоль неё, без дрожания в углах; у косяка подталкивает в проём. Створки дверей — отдельный слой (граф Door). По этой же сетке зомби ищут путь.",
+            "payload": {
+                "kind": "component",
+                "uuid": "8d340d59-159e-4334-9fb5-70b86b5397bb",
+                "name": "WallCollision",
+                "type": "WallCollision",
+                "builtin": false,
+                "cid": "8d3401ZFZ5DNJ+1cLhrU5e7",
+                "url": "db://assets/scripts/game/WallCollision.ts",
+                "path": "db://assets/scripts/game/WallCollision.ts"
+            },
+            "params": [
+                {
+                    "name": "radius",
+                    "value": "0.2"
+                },
+                {
+                    "name": "cellSize",
+                    "value": "0.05"
+                },
+                {
+                    "name": "minHeight",
+                    "value": "0.05"
+                },
+                {
+                    "name": "maxHeight",
+                    "value": "0.9"
+                },
+                {
+                    "name": "cornerAssist",
+                    "value": "0.1"
+                }
+            ]
+        },
+        {
+            "id": "n3",
+            "name": "Node 3",
+            "x": 250,
+            "y": -165,
+            "width": 220,
             "height": 330,
             "previewHeight": 96,
-            "prompt": "Ограничение для передвижения плеера являются префабы из папки, т.е. те которые на сцене",
+            "prompt": "Плеер; на нём WallCollision, PlayerMovement проверяет каждый шаг через него.",
             "payload": {
                 "kind": "node",
                 "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
@@ -46,9 +83,16 @@
     ],
     "links": [
         {
-            "id": "l3",
+            "id": "l100",
             "from": "n1",
-            "to": "n2"
+            "to": "n2",
+            "label": "экземпляры на сцене — препятствия"
+        },
+        {
+            "id": "l101",
+            "from": "n2",
+            "to": "n3",
+            "label": "шаг плеера"
         }
     ]
 }

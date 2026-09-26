@@ -1,31 +1,7 @@
 {
-    "version": 3,
+    "version": 4,
     "name": "Door",
-    "view": {
-        "x": 569,
-        "y": 330,
-        "scale": 0.728
-    },
     "nodes": [
-        {
-            "id": "n1",
-            "name": "Node 1",
-            "x": -153,
-            "y": -268,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "Нода Tile_Door должна открываться/закрываться по эвенту.",
-            "payload": {
-                "kind": "asset",
-                "uuid": "da39a363-a91a-4e52-ad68-0c21bf6fcee5",
-                "name": "Tile_Wall_Door.prefab",
-                "type": "cc.Prefab",
-                "importer": "prefab",
-                "url": "db://assets/prefabs/tiles/walls/Tile_Wall_Door.prefab",
-                "path": "db://assets/prefabs/tiles/walls/Tile_Wall_Door.prefab"
-            }
-        },
         {
             "id": "n2",
             "name": "Node 2",
@@ -34,7 +10,7 @@
             "width": 220,
             "height": 330,
             "previewHeight": 96,
-            "prompt": "",
+            "prompt": "DOOR_OPEN / DOOR_CLOSE; можно передать ноду двери — иначе событие для всех дверей.",
             "payload": {
                 "kind": "asset",
                 "uuid": "7d1fb337-9e75-4744-813a-b3cd2c9e1e67",
@@ -46,6 +22,59 @@
             }
         },
         {
+            "id": "n1",
+            "name": "Node 1",
+            "x": -153,
+            "y": -268,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "На корне компонент Door: створка Tile_Door поворачивается вокруг петли на openAngle за duration.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "da39a363-a91a-4e52-ad68-0c21bf6fcee5",
+                "name": "Tile_Wall_Door.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/tiles/walls/Tile_Wall_Door.prefab",
+                "path": "db://assets/prefabs/tiles/walls/Tile_Wall_Door.prefab"
+            },
+            "params": [
+                {
+                    "name": "openAngle",
+                    "value": "90°"
+                },
+                {
+                    "name": "duration",
+                    "value": "0.3 с"
+                },
+                {
+                    "name": "startOpen",
+                    "value": "true у двери на сцене"
+                }
+            ]
+        },
+        {
+            "id": "n5",
+            "name": "Node 4",
+            "x": 207,
+            "y": -588,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Открывает и закрывает створку по событию; isOpen — можно ли пройти (true с начала открытия).",
+            "payload": {
+                "kind": "component",
+                "uuid": "04438e8c-96bf-4c20-a076-bb9e34078d2c",
+                "name": "Door",
+                "type": "Door",
+                "builtin": false,
+                "cid": "044386Mlr9MIKB2u540B40s",
+                "url": "db://assets/scripts/game/Door.ts",
+                "path": "db://assets/scripts/game/Door.ts"
+            }
+        },
+        {
             "id": "n4",
             "name": "Node 3",
             "x": 278,
@@ -53,26 +82,37 @@
             "width": 220,
             "height": 330,
             "previewHeight": 96,
-            "prompt": "Проходит в дверь если она открыта, стенка если закрыта.\n\nПри проходе что бы не застревал в косяках.",
+            "prompt": "Створка — отдельный слой стен, разложенный в закрытом положении: блокирует, только пока дверь закрыта. В косяках не застревает — скольжение и подталкивание в проём (граф Border).",
             "payload": {
-                "kind": "node",
-                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
-                "name": "Player",
-                "type": "cc.Node",
-                "path": "Main/World/Player"
+                "kind": "component",
+                "uuid": "8d340d59-159e-4334-9fb5-70b86b5397bb",
+                "name": "WallCollision",
+                "type": "WallCollision",
+                "builtin": false,
+                "cid": "8d3401ZFZ5DNJ+1cLhrU5e7",
+                "url": "db://assets/scripts/game/WallCollision.ts",
+                "path": "db://assets/scripts/game/WallCollision.ts"
             }
         }
     ],
     "links": [
         {
-            "id": "l3",
+            "id": "l100",
             "from": "n2",
-            "to": "n1"
+            "to": "n5",
+            "label": "DOOR_OPEN / DOOR_CLOSE"
         },
         {
-            "id": "l5",
+            "id": "l101",
             "from": "n1",
-            "to": "n4"
+            "to": "n5",
+            "label": "на корне префаба"
+        },
+        {
+            "id": "l102",
+            "from": "n5",
+            "to": "n4",
+            "label": "открыта — проход, закрыта — стена"
         }
     ]
 }

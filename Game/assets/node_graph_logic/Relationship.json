@@ -1,21 +1,16 @@
 {
-    "version": 3,
+    "version": 4,
     "name": "Relationship",
-    "view": {
-        "x": 344,
-        "y": 282,
-        "scale": 0.332
-    },
     "nodes": [
         {
             "id": "n3",
             "name": "Node 3",
-            "x": -971,
-            "y": -204,
-            "width": 246,
-            "height": 436,
+            "x": -2150,
+            "y": -300,
+            "width": 220,
+            "height": 330,
             "previewHeight": 96,
-            "prompt": "",
+            "prompt": "Префаб зомби. На корне компонент Zombie, клипы и параметры хранятся в префабе.",
             "payload": {
                 "kind": "asset",
                 "uuid": "6b60ec55-a1cd-4eaa-8de9-0171a4ccdcea",
@@ -27,14 +22,266 @@
             }
         },
         {
-            "id": "n4",
-            "name": "Node 4",
-            "x": 305,
-            "y": -399,
+            "id": "n6",
+            "name": "Node 5",
+            "x": -1800,
+            "y": -420,
+            "width": 220,
+            "height": 640,
+            "previewHeight": 96,
+            "prompt": "Мозг зомби: автомат состояний ниже. Не пересекается с другими зомби (radius). Путь к плееру и домой ищется в обход стен. Видимость — прямая линия без стен.",
+            "payload": {
+                "kind": "component",
+                "uuid": "6235dfcf-21b5-4bf1-814d-5114cbf013c0",
+                "name": "Zombie",
+                "type": "Zombie",
+                "builtin": false,
+                "cid": "6235d/PIbVL8YFNURTL8BPA",
+                "url": "db://assets/scripts/game/Zombie.ts",
+                "path": "db://assets/scripts/game/Zombie.ts"
+            },
+            "params": [
+                {
+                    "name": "lives",
+                    "value": "3"
+                },
+                {
+                    "name": "wanderSpeed",
+                    "value": "0.5"
+                },
+                {
+                    "name": "chaseSpeed",
+                    "value": "1"
+                },
+                {
+                    "name": "wanderRadius",
+                    "value": "1.5"
+                },
+                {
+                    "name": "wanderDistance",
+                    "value": "0.5–1.5"
+                },
+                {
+                    "name": "idleTime",
+                    "value": "1–3 с"
+                },
+                {
+                    "name": "detectRadius",
+                    "value": "3"
+                },
+                {
+                    "name": "loseRadius",
+                    "value": "3.5"
+                },
+                {
+                    "name": "attackDistance",
+                    "value": "0.45"
+                },
+                {
+                    "name": "radius",
+                    "value": "0.2"
+                },
+                {
+                    "name": "turnSpeed",
+                    "value": "540"
+                },
+                {
+                    "name": "repathInterval",
+                    "value": "0.4"
+                }
+            ]
+        },
+        {
+            "id": "n15",
+            "name": "Прогулка: стоит",
+            "x": -1350,
+            "y": -1000,
             "width": 220,
             "height": 330,
             "previewHeight": 96,
-            "prompt": "",
+            "prompt": "Стоит на месте прогулки.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "e4577c96-f838-4cdf-864d-b2fef53ae47b",
+                "name": "Idle.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/zombie/Idle.fbx",
+                "path": "db://assets/models/zombie/Idle.fbx"
+            },
+            "state": true
+        },
+        {
+            "id": "n17",
+            "name": "Прогулка: бежит",
+            "x": -950,
+            "y": -1000,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Бежит в случайную сторону на wanderDistance, не дальше wanderRadius от своего места; если ушёл дальше — назад к месту.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "cb272375-d9f8-4eee-9254-6c77658e157f",
+                "name": "Zombie Running.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/zombie/Zombie Running.fbx",
+                "path": "db://assets/models/zombie/Zombie Running.fbx"
+            },
+            "state": true
+        },
+        {
+            "id": "n45",
+            "name": "Возврат на место",
+            "x": -1150,
+            "y": -420,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Бежит к своему месту прогулки по кратчайшему пути в обход стен; упёрся — ищет путь заново, до 3 раз.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "cb272375-d9f8-4eee-9254-6c77658e157f",
+                "name": "Zombie Running.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/zombie/Zombie Running.fbx",
+                "path": "db://assets/models/zombie/Zombie Running.fbx"
+            },
+            "state": true
+        },
+        {
+            "id": "n23",
+            "name": "Погоня",
+            "x": -550,
+            "y": -700,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Бежит к плееру по кратчайшему пути в обход стен, путь пересчитывается каждые repathInterval.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "cb272375-d9f8-4eee-9254-6c77658e157f",
+                "name": "Zombie Running.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/zombie/Zombie Running.fbx",
+                "path": "db://assets/models/zombie/Zombie Running.fbx"
+            },
+            "state": true
+        },
+        {
+            "id": "n29",
+            "name": "Удар",
+            "x": -150,
+            "y": -700,
+            "width": 220,
+            "height": 400,
+            "previewHeight": 96,
+            "prompt": "Удар по плееру, клип в 2 раза быстрее. Попадание склянки во время удара снимает жизнь, но удар всё равно доходит.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "2c59d7d6-d405-40c2-adf2-7b780197ce8d",
+                "name": "Zombie Headbutt.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/zombie/Zombie Headbutt.fbx",
+                "path": "db://assets/models/zombie/Zombie Headbutt.fbx"
+            },
+            "state": true,
+            "params": [
+                {
+                    "name": "attackSpeed",
+                    "value": "2"
+                },
+                {
+                    "name": "hitMoment",
+                    "value": "0.5"
+                }
+            ]
+        },
+        {
+            "id": "n24",
+            "name": "Оглушение",
+            "x": -550,
+            "y": -150,
+            "width": 220,
+            "height": 400,
+            "previewHeight": 96,
+            "prompt": "Реакция на попадание склянкой: клип в 2 раза быстрее, зомби стоит hurtTime.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "76a17b43-4870-40bd-9130-e150e74a11a4",
+                "name": "Hit To Body.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/zombie/Hit To Body.fbx",
+                "path": "db://assets/models/zombie/Hit To Body.fbx"
+            },
+            "state": true,
+            "params": [
+                {
+                    "name": "hurtSpeed",
+                    "value": "2"
+                },
+                {
+                    "name": "hurtTime",
+                    "value": "0.6"
+                }
+            ]
+        },
+        {
+            "id": "n11",
+            "name": "Смерть",
+            "x": -150,
+            "y": 250,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Падает. Вся логика зомби отключается, он пропадает из целей плеера.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "7f6ec83d-f9cc-4211-8a6b-4e568e7d3217",
+                "name": "Death From Right.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/zombie/Death From Right.fbx",
+                "path": "db://assets/models/zombie/Death From Right.fbx"
+            },
+            "state": true
+        },
+        {
+            "id": "n13",
+            "name": "Провал под пол",
+            "x": 250,
+            "y": 250,
+            "width": 220,
+            "height": 300,
+            "previewHeight": 96,
+            "prompt": "Медленно проваливается под пол, потом нода удаляется целиком — со скелетом и всем прочим.",
+            "payload": null,
+            "state": true,
+            "params": [
+                {
+                    "name": "sinkDepth",
+                    "value": "0.6"
+                },
+                {
+                    "name": "sinkDuration",
+                    "value": "2 с"
+                }
+            ]
+        },
+        {
+            "id": "n4",
+            "name": "Node 4",
+            "x": 650,
+            "y": -1250,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Плеер. На нём PlayerAttack, GunEffects, два Blood (зелёная кровь зомби, розовая плеера) и OcclusionFade.",
             "payload": {
                 "kind": "node",
                 "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
@@ -44,188 +291,98 @@
             }
         },
         {
-            "id": "n6",
-            "name": "Node 5",
-            "x": -382,
-            "y": -301,
-            "width": 221,
-            "height": 489,
-            "previewHeight": 96,
-            "prompt": "Ожидает плеера, прогуливаясь в рандомном направлении туда сюда, зацикленно. Не пересекаясь с другими зомби. При обнаружении плеера в заданном радиусе бегут к нему, высчитывая короткий путь.  Могут терять фокус если плеер вышел из радиуса. У зомби 3 жизни.",
-            "payload": {
-                "kind": "component",
-                "uuid": "",
-                "name": "Zombie",
-                "type": "Zombie",
-                "builtin": false,
-                "isNew": true,
-                "path": "Scripts/Zombie"
-            }
-        },
-        {
             "id": "n9",
             "name": "Node 6",
-            "x": 783,
-            "y": -333,
+            "x": 1050,
+            "y": -1250,
             "width": 220,
-            "height": 330,
+            "height": 620,
             "previewHeight": 96,
-            "prompt": "При вхождении зомби или группу зомби в радиус выстрела азначает цель фильтруя по мин. дистанции. При потери цели во время смерти, переключается на другую. У плеера одна жизнь. При потере ее он умирает.",
+            "prompt": "Бой плеера. Стреляет только стоя. Цель — ближайший зомби в shootRadius при прямой видимости, выбирается заново перед каждым выстрелом; между выстрелами плеер смотрит на цель. У плеера одна жизнь.",
             "payload": {
                 "kind": "component",
-                "uuid": "",
+                "uuid": "1ff8a393-e5d8-40e2-b54e-0671670f9ad5",
                 "name": "PlayerAttack",
                 "type": "PlayerAttack",
                 "builtin": false,
-                "isNew": true,
-                "path": "Scripts/PlayerAttack"
-            }
+                "cid": "1ff8aOT5dhA4rVOBnFnD5rV",
+                "url": "db://assets/scripts/game/PlayerAttack.ts",
+                "path": "db://assets/scripts/game/PlayerAttack.ts"
+            },
+            "params": [
+                {
+                    "name": "lives",
+                    "value": "1"
+                },
+                {
+                    "name": "shootRadius",
+                    "value": "3"
+                },
+                {
+                    "name": "fireInterval",
+                    "value": "0.75 с"
+                },
+                {
+                    "name": "shotMoment",
+                    "value": "0.4"
+                },
+                {
+                    "name": "projectileSpeed",
+                    "value": "6"
+                },
+                {
+                    "name": "arcHeight",
+                    "value": "0.5"
+                },
+                {
+                    "name": "spinSpeed",
+                    "value": "720°/с"
+                },
+                {
+                    "name": "orbitSpeed",
+                    "value": "20°/с"
+                },
+                {
+                    "name": "killSplash",
+                    "value": "1.6"
+                }
+            ]
         },
         {
-            "id": "n11",
-            "name": "Node 7",
-            "x": 678,
-            "y": 304,
-            "width": 230,
-            "height": 396,
+            "id": "n46",
+            "name": "Выстрел",
+            "x": 1050,
+            "y": -560,
+            "width": 220,
+            "height": 380,
             "previewHeight": 96,
-            "prompt": "При  потере всех жизней проигрывается анимация. ",
+            "prompt": "Анимация стрельбы один раз на выстрел, в 2 раза быстрее; пушка в это время в руках (GunSocket).",
             "payload": {
                 "kind": "asset",
-                "uuid": "7f6ec83d-f9cc-4211-8a6b-4e568e7d3217",
-                "name": "Death From Right.fbx",
+                "uuid": "5f6b0fb7-0ca1-4c9d-88dd-5570efe10a4a",
+                "name": "Shooting.fbx",
                 "type": "cc.Asset",
                 "importer": "fbx",
-                "url": "db://assets/models/zombie/Death From Right.fbx",
-                "path": "db://assets/models/zombie/Death From Right.fbx"
-            }
-        },
-        {
-            "id": "n13",
-            "name": "Node 8",
-            "x": 1088,
-            "y": 404,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "По окончанию зомби проваливается под пол медленно, а потом нода удаляется. Высвобождая скелет и все прочее. Оптимизированно.",
-            "payload": null
-        },
-        {
-            "id": "n15",
-            "name": "Node 9",
-            "x": -157,
-            "y": -1146,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "Цикл анимаций, во время прогулки.",
-            "payload": {
-                "kind": "asset",
-                "uuid": "e4577c96-f838-4cdf-864d-b2fef53ae47b",
-                "name": "Idle.fbx",
-                "type": "cc.Asset",
-                "importer": "fbx",
-                "url": "db://assets/models/zombie/Idle.fbx",
-                "path": "db://assets/models/zombie/Idle.fbx"
-            }
-        },
-        {
-            "id": "n17",
-            "name": "Node 10",
-            "x": 193,
-            "y": -1228,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "",
-            "payload": {
-                "kind": "asset",
-                "uuid": "cb272375-d9f8-4eee-9254-6c77658e157f",
-                "name": "Zombie Running.fbx",
-                "type": "cc.Asset",
-                "importer": "fbx",
-                "url": "db://assets/models/zombie/Zombie Running.fbx",
-                "path": "db://assets/models/zombie/Zombie Running.fbx"
-            }
-        },
-        {
-            "id": "n23",
-            "name": "Node 11",
-            "x": -672,
-            "y": 571,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "",
-            "payload": {
-                "kind": "asset",
-                "uuid": "cb272375-d9f8-4eee-9254-6c77658e157f",
-                "name": "Zombie Running.fbx",
-                "type": "cc.Asset",
-                "importer": "fbx",
-                "url": "db://assets/models/zombie/Zombie Running.fbx",
-                "path": "db://assets/models/zombie/Zombie Running.fbx"
-            }
-        },
-        {
-            "id": "n24",
-            "name": "Node 12",
-            "x": -336,
-            "y": 594,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "",
-            "payload": {
-                "kind": "asset",
-                "uuid": "76a17b43-4870-40bd-9130-e150e74a11a4",
-                "name": "Hit To Body.fbx",
-                "type": "cc.Asset",
-                "importer": "fbx",
-                "url": "db://assets/models/zombie/Hit To Body.fbx",
-                "path": "db://assets/models/zombie/Hit To Body.fbx"
-            }
-        },
-        {
-            "id": "n29",
-            "name": "Node 13",
-            "x": -993,
-            "y": -882,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "Если еще не все жизни истрачены",
-            "payload": {
-                "kind": "asset",
-                "uuid": "2c59d7d6-d405-40c2-adf2-7b780197ce8d",
-                "name": "Zombie Headbutt.fbx",
-                "type": "cc.Asset",
-                "importer": "fbx",
-                "url": "db://assets/models/zombie/Zombie Headbutt.fbx",
-                "path": "db://assets/models/zombie/Zombie Headbutt.fbx"
-            }
-        },
-        {
-            "id": "n33",
-            "name": "Node 15",
-            "x": -617,
-            "y": -879,
-            "width": 220,
-            "height": 330,
-            "previewHeight": 96,
-            "prompt": "Проверка радиуса есть ли плеер в приближении",
-            "payload": null
+                "url": "db://assets/models/player/Shooting.fbx",
+                "path": "db://assets/models/player/Shooting.fbx"
+            },
+            "state": true,
+            "params": [
+                {
+                    "name": "shootingSpeed",
+                    "value": "2"
+                }
+            ]
         },
         {
             "id": "n39",
-            "name": "Node 16",
-            "x": 1219,
-            "y": -384,
+            "name": "Смерть плеера",
+            "x": 1450,
+            "y": -560,
             "width": 220,
-            "height": 546,
+            "height": 330,
             "previewHeight": 96,
-            "prompt": "Анимация смерти когда плеера ударили зомби. После просто лежит и камера начинает вращаться по орбиту вокруг плеера смотря на него.",
+            "prompt": "Плеер падает и лежит. Вся его логика отключена: движение, поворот, стрельба, пушка за спиной. Камера вращается по орбите вокруг него, глядя на него.",
             "payload": {
                 "kind": "asset",
                 "uuid": "44fe73e5-6756-4843-80c8-ff3a00624a57",
@@ -234,89 +391,269 @@
                 "importer": "fbx",
                 "url": "db://assets/models/player/Death.fbx",
                 "path": "db://assets/models/player/Death.fbx"
+            },
+            "state": true
+        },
+        {
+            "id": "n41",
+            "name": "Node 17",
+            "x": 650,
+            "y": -150,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Склянка-снаряд: вылетает из дула, летит по дуге к цели и кувыркается. Одна в полёте, переиспользуется. Розовая жидкость.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "a9cb6f9f-42ef-44e0-aa45-0b2d7631f151",
+                "name": "Potion.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/weapons/Potion.prefab",
+                "path": "db://assets/prefabs/weapons/Potion.prefab"
+            }
+        },
+        {
+            "id": "n42",
+            "name": "Node 18",
+            "x": 1450,
+            "y": -1250,
+            "width": 220,
+            "height": 400,
+            "previewHeight": 96,
+            "prompt": "Эффект выстрела как в ThroughTheDeadCity: вспышка у дула, подсветка светом плеера, искры по линии огня, дымок.",
+            "payload": {
+                "kind": "component",
+                "uuid": "b74d6640-6717-427e-a455-d2d6823af517",
+                "name": "GunEffects",
+                "type": "GunEffects",
+                "builtin": false,
+                "cid": "b74d6ZAZxdCfqRV0taCOvUX",
+                "url": "db://assets/scripts/game/GunEffects.ts",
+                "path": "db://assets/scripts/game/GunEffects.ts"
+            },
+            "params": [
+                {
+                    "name": "flashSize",
+                    "value": "0.045"
+                },
+                {
+                    "name": "sparks",
+                    "value": "5–9"
+                },
+                {
+                    "name": "lightBoost",
+                    "value": "4"
+                }
+            ]
+        },
+        {
+            "id": "n43",
+            "name": "Node 19",
+            "x": 1850,
+            "y": -1250,
+            "width": 220,
+            "height": 420,
+            "previewHeight": 96,
+            "prompt": "Брызги крови кубиками как в ThroughTheDeadCity. От смертельного удара брызг больше (killSplash).",
+            "payload": {
+                "kind": "component",
+                "uuid": "788e3035-011b-4ac3-9c38-cd7f50b72165",
+                "name": "Blood",
+                "type": "Blood",
+                "builtin": false,
+                "cid": "788e3A1ARtKw5w4zX9QtyFl",
+                "url": "db://assets/scripts/game/Blood.ts",
+                "path": "db://assets/scripts/game/Blood.ts"
+            },
+            "params": [
+                {
+                    "name": "zombieColor",
+                    "value": "#6FBF3A"
+                },
+                {
+                    "name": "playerColor",
+                    "value": "#FF69B4"
+                },
+                {
+                    "name": "size",
+                    "value": "0.012–0.026"
+                },
+                {
+                    "name": "drops",
+                    "value": "16–24"
+                }
+            ]
+        },
+        {
+            "id": "n44",
+            "name": "Node 20",
+            "x": 1850,
+            "y": -800,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Дизеринг стен между камерой и текущей целью — с теми же параметрами, что и для плеера.",
+            "payload": {
+                "kind": "component",
+                "uuid": "11d51336-1fe3-4fb8-a24d-259bcbaf3e97",
+                "name": "OcclusionFade",
+                "type": "OcclusionFade",
+                "builtin": false,
+                "cid": "11d51M2H+NPuKJNJZvLrz6X",
+                "url": "db://assets/scripts/game/OcclusionFade.ts",
+                "path": "db://assets/scripts/game/OcclusionFade.ts"
             }
         }
     ],
     "links": [
         {
-            "id": "l7",
+            "id": "l100",
             "from": "n3",
             "to": "n6"
         },
         {
-            "id": "l10",
+            "id": "l101",
+            "from": "n6",
+            "to": "n15",
+            "label": "старт"
+        },
+        {
+            "id": "l102",
+            "from": "n15",
+            "to": "n17",
+            "label": "простоял idleTime"
+        },
+        {
+            "id": "l103",
+            "from": "n17",
+            "to": "n15",
+            "label": "дошёл до точки или упёрся"
+        },
+        {
+            "id": "l104",
+            "from": "n15",
+            "to": "n23",
+            "label": "плеер в detectRadius и виден"
+        },
+        {
+            "id": "l105",
+            "from": "n17",
+            "to": "n23",
+            "label": "плеер в detectRadius и виден"
+        },
+        {
+            "id": "l106",
+            "from": "n45",
+            "to": "n23",
+            "label": "плеер в detectRadius и виден"
+        },
+        {
+            "id": "l107",
+            "from": "n45",
+            "to": "n15",
+            "label": "дошёл до своего места"
+        },
+        {
+            "id": "l108",
+            "from": "n23",
+            "to": "n29",
+            "label": "ближе attackDistance"
+        },
+        {
+            "id": "l109",
+            "from": "n23",
+            "to": "n45",
+            "label": "плеер дальше loseRadius или умер"
+        },
+        {
+            "id": "l110",
+            "from": "n29",
+            "to": "n9",
+            "label": "в hitMoment, плеер ещё рядом — удар"
+        },
+        {
+            "id": "l111",
+            "from": "n29",
+            "to": "n23",
+            "label": "удар кончился, плеер виден"
+        },
+        {
+            "id": "l112",
+            "from": "n29",
+            "to": "n45",
+            "label": "удар кончился, плеера не видно или он умер"
+        },
+        {
+            "id": "l113",
+            "from": "n41",
+            "to": "n24",
+            "label": "попала, жизни остались"
+        },
+        {
+            "id": "l114",
+            "from": "n41",
+            "to": "n11",
+            "label": "попала в последнюю жизнь"
+        },
+        {
+            "id": "l115",
+            "from": "n24",
+            "to": "n23",
+            "label": "оглушение прошло, плеер виден"
+        },
+        {
+            "id": "l116",
+            "from": "n24",
+            "to": "n45",
+            "label": "оглушение прошло, плеера не видно"
+        },
+        {
+            "id": "l117",
+            "from": "n11",
+            "to": "n13",
+            "label": "падение закончилось"
+        },
+        {
+            "id": "l118",
             "from": "n4",
             "to": "n9"
         },
         {
-            "id": "l14",
-            "from": "n11",
-            "to": "n13"
-        },
-        {
-            "id": "l18",
-            "from": "n15",
-            "to": "n17"
-        },
-        {
-            "id": "l19",
-            "from": "n17",
-            "to": "n15"
-        },
-        {
-            "id": "l21",
-            "from": "n6",
-            "to": "n11"
-        },
-        {
-            "id": "l25",
-            "from": "n6",
-            "to": "n23"
-        },
-        {
-            "id": "l26",
-            "from": "n23",
-            "to": "n24"
-        },
-        {
-            "id": "l28",
+            "id": "l119",
             "from": "n9",
-            "to": "n6"
+            "to": "n46",
+            "label": "стоит, есть цель, прошла пауза и прошлая склянка упала"
         },
         {
-            "id": "l30",
-            "from": "n6",
-            "to": "n29"
+            "id": "l120",
+            "from": "n46",
+            "to": "n41",
+            "label": "в shotMoment — бросок в цель"
         },
         {
-            "id": "l34",
-            "from": "n29",
-            "to": "n33"
+            "id": "l121",
+            "from": "n46",
+            "to": "n42",
+            "label": "в момент броска"
         },
         {
-            "id": "l35",
-            "from": "n6",
-            "to": "n33"
-        },
-        {
-            "id": "l36",
-            "from": "n33",
-            "to": "n15"
-        },
-        {
-            "id": "l37",
-            "from": "n33",
-            "to": "n23"
-        },
-        {
-            "id": "l38",
-            "from": "n24",
-            "to": "n9"
-        },
-        {
-            "id": "l40",
+            "id": "l122",
             "from": "n9",
-            "to": "n39"
+            "to": "n39",
+            "label": "удар зомби: жизней 0"
+        },
+        {
+            "id": "l123",
+            "from": "n9",
+            "to": "n43",
+            "label": "попадание склянки — зелёная; удар зомби — розовая"
+        },
+        {
+            "id": "l124",
+            "from": "n9",
+            "to": "n44",
+            "label": "текущая цель"
         }
     ]
 }
