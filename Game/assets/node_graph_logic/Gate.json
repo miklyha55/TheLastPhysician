@@ -15,7 +15,7 @@
             "width": 238,
             "height": 485,
             "previewHeight": 96,
-            "prompt": "При соприкосновении с плеером, и через 1 секунду переход на следующий уровень или финал. Открываются анимацией \n(Tile_Gate_L)[MeshRenderer]\n (Tile_Gate_R)[MeshRenderer]",
+            "prompt": "Открываются рычагом (Lever.isOn): створки плавно разворачиваются анимацией\n(Tile_Gate_L)[MeshRenderer]\n (Tile_Gate_R)[MeshRenderer]\nОткрытые не держат проход (WallCollision), порог перешагивается.\nЗа створками снаружи уровня — зона выхода (Exit), коробка exitSize. Плеер проходит сквозь ворота в неё — ворота сразу закрываются за ним, и через 1 секунду (delay) уровень пройден: GameState ведёт на следующий уровень или в финал.",
             "payload": {
                 "kind": "asset",
                 "uuid": "0c8b38ea-817d-46c3-89af-40734311ba5a",
@@ -35,7 +35,7 @@
             "width": 227,
             "height": 401,
             "previewHeight": 96,
-            "prompt": "Со старта.",
+            "prompt": "Со старта. Держат проход как стена. Рычаг, выключенный обратно, закрывает их снова.",
             "payload": {
                 "kind": "asset",
                 "uuid": "0c8b38ea-817d-46c3-89af-40734311ba5a",
@@ -55,13 +55,51 @@
             "width": 220,
             "height": 330,
             "previewHeight": 96,
-            "prompt": "",
+            "prompt": "Входит в зону выхода за открытыми воротами. Уносит с собой стек — склянки и ключи.",
             "payload": {
                 "kind": "node",
                 "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
                 "name": "Player",
                 "type": "cc.Node",
-                "path": "Main/World/Player"
+                "path": "Level_1/World/Player"
+            }
+        },
+        {
+            "id": "n6",
+            "name": "Рычаг",
+            "x": -400,
+            "y": 260,
+            "width": 220,
+            "height": 260,
+            "previewHeight": 96,
+            "prompt": "Единственное, что открывает и закрывает ворота: включён — открыты, выключен — закрыты.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "c1f597bc-fcbc-43f3-9dc5-6e0f7b05912a",
+                "name": "Tile_Floor_Lever.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/tiles/floor/Tile_Floor_Lever.prefab",
+                "path": "db://assets/prefabs/tiles/floor/Tile_Floor_Lever.prefab"
+            }
+        },
+        {
+            "id": "n7",
+            "name": "GameState",
+            "x": 330,
+            "y": 260,
+            "width": 240,
+            "height": 300,
+            "previewHeight": 96,
+            "prompt": "Глобальный статический класс переходов: уровни — сцены Level_1…Level_10 по порядку. Уход через ворота переносит стек в следующий уровень; после последнего — GAME_COMPLETE. Смерть — уровень заново с тем, с чем в него вошли.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "b5f33a6a-7269-4d93-9658-80e99bd9575a",
+                "name": "GameState.ts",
+                "type": "cc.Script",
+                "importer": "typescript",
+                "url": "db://assets/scripts/managers/GameState.ts",
+                "path": "db://assets/scripts/managers/GameState.ts"
             }
         }
     ],
@@ -70,6 +108,21 @@
             "id": "l6",
             "from": "n5",
             "to": "n2"
+        },
+        {
+            "id": "l7",
+            "from": "n6",
+            "to": "n2"
+        },
+        {
+            "id": "l8",
+            "from": "n6",
+            "to": "n3"
+        },
+        {
+            "id": "l9",
+            "from": "n2",
+            "to": "n7"
         }
     ]
 }

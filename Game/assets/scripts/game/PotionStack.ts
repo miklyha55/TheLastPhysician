@@ -1,4 +1,5 @@
 import { _decorator, Component, instantiate, math, Node, Prefab, tween, Tween, v3, Vec3 } from "cc";
+import { StackItem } from "../managers/GameState";
 import { Debris } from "./Debris";
 
 const { ccclass, property } = _decorator;
@@ -19,6 +20,8 @@ export class PotionStack extends Component {
 	anchor: Node = null;
 	@property({ type: Prefab, tooltip: "What lies in the stack" })
 	item: Prefab = null;
+	@property({ type: [Prefab], tooltip: "Keys by colour (KeyColor), for laying back the keys brought from the last level" })
+	keyPrefabs: Prefab[] = [];
 	@property({ tooltip: "World size of a potion in the stack" })
 	itemScale: number = 1;
 	@property({ tooltip: "World height each potion adds to the stack" })
@@ -46,6 +49,34 @@ export class PotionStack extends Component {
 	/** Potions in the stack. */
 	get count(): number {
 		return this._items.filter((entry) => !entry.key).length;
+	}
+
+	/** What lies in the stack, bottom to top — what goes on to the next level. */
+	contents(): StackItem[] {
+		return this._items.map((entry) => ({ key: entry.key, color: entry.color }));
+	}
+
+	/** The stack as it was brought from the last level, laid at once. */
+	restore(items: StackItem[]): void {
+		for (const item of items) {
+			if (!item.key) {
+				this.push();
+				continue;
+			}
+			const prefab = this.keyPrefabs[item.color];
+			if (!prefab) {
+				continue;
+			}
+			// A key pickup is made only for its mesh; the pickup itself is not needed.
+			const pickup = instantiate(prefab);
+			const holder = pickup.getComponent("KeyPickup") as Component & { visual: Node };
+			const visual = holder && holder.visual;
+			if (visual) {
+				holder.visual = null;
+				this.pushKey(visual, item.color);
+			}
+			pickup.destroy();
+		}
 	}
 
 	/** As many potions as the player has, made at once — the start. */

@@ -19,6 +19,28 @@ interface Throw {
 	released: boolean;
 }
 
+/** A thrown barrel on its arc to the zombie, to be shot in the air over it. */
+interface Blast {
+	body: Body;
+	/** The zombie it was thrown at: the arc ends on it, and follows it. */
+	target: Zombie;
+	/** Seconds since it left the hand. */
+	time: number;
+	/** Seconds the arc takes. */
+	duration: number;
+	from: Vec3;
+	to: Vec3;
+	/** How high the arc rises over the straight line from the hand to the target. */
+	height: number;
+	spin: Vec3;
+	/** Seconds until the potion leaves the gun, once the shooting clip plays on; below zero — not yet fired. */
+	fireIn: number;
+	/** The potion is on its way. */
+	shot: boolean;
+	/** Seconds left of standing still after the blast; below zero — not yet. */
+	settle: number;
+}
+
 interface Jump {
 	from: Vec3;
 	to: Vec3;
@@ -36,6 +58,10 @@ interface Jump {
 // it: the jump clip runs twice as fast, the arc starts where the hips leave the ground and ends
 // where they touch it again, rises over the piece's height, and lands just past its far edge —
 // or there is no jump when that spot is a wall or the piece is too tall or too deep.
+// An explosive piece — a barrel — is taken even standing next to it. With potions left it goes
+// on an arc of its own onto the zombie, tumbling, and the player, the gun already up, shoots it
+// over it — the way ThroughTheDeadCity finishes the throw; its blast spares the player.
+// Without potions it just flies like any other piece.
 @ccclass("PlayerActions")
 export class PlayerActions extends Component {
 	static instance: PlayerActions = null;
@@ -62,6 +88,32 @@ export class PlayerActions extends Component {
 	throwCooldown: number = 0.45;
 	@property({ tooltip: "Seconds a thrown piece does not touch the thrower" })
 	throwGrace: number = 0.5;
+	@property({ tooltip: "A barrel this close, gap between it and the player, is taken even standing still" })
+	grabNear: number = 0.38;
+	@property({ tooltip: "Playback speed of the throw clip when it is a barrel" })
+	barrelThrowSpeed: number = 9;
+	@property({ tooltip: "Point of the shooting clip, 0..1, the aim is held at while a barrel flies — the gun at the shoulder, just short of the shot" })
+	aimMoment: number = 0.3;
+	@property({ tooltip: "How many times faster than a plain shot the shot at a thrown barrel plays" })
+	barrelShotRate: number = 2;
+	@property({ tooltip: "Seconds a barrel's arc takes, and how much longer per unit of distance" })
+	barrelFlight: number = 0.45;
+	@property({ tooltip: "Extra seconds of a barrel's arc per unit of distance" })
+	barrelFlightPerUnit: number = 0.08;
+	@property({ tooltip: "How high a barrel's arc rises over the straight line to the target" })
+	barrelArc: number = 0.9;
+	@property({ tooltip: "Height above the zombie's feet the arc ends at" })
+	barrelAimHeight: number = 0.35;
+	@property({ tooltip: "Tumble of a thrown barrel, degrees per second" })
+	barrelSpin: number = 540;
+	@property({ tooltip: "Seconds after a barrel leaves the hand before the shot at it may come" })
+	shootAfter: number = 0.15;
+	@property({ tooltip: "Without potions: speed a barrel leaves the hand at along the floor, and share of it upwards — thrown like any piece" })
+	barrelPower: number = 4;
+	@property({ tooltip: "Share of that speed upwards" })
+	barrelLift: number = 0.5;
+	@property({ tooltip: "Seconds the player stands still after the blast" })
+	settleAfter: number = 0.5;
 	@property({ tooltip: "Where a held piece sits against the hand, world units" })
 	holdOffset: Vec3 = v3(0, -0.05, 0);
 
@@ -90,14 +142,15 @@ export class PlayerActions extends Component {
 	private _walls: WallCollision = null;
 	private _throw: Throw = null;
 	private _jump: Jump = null;
+	private _blast: Blast = null;
 	private _cooldown = 0;
 	private _dir = v3();
 	private _probe = v3();
 	private _at = v3();
 
-	/** Throwing or in the air. */
+	/** Throwing, shooting a thrown barrel, or in the air. */
 	get busy(): boolean {
-		return !!(this._throw || this._jump);
+		return !!(this._throw || this._jump || this._blast);
 	}
 
 	protected onLoad(): void {
@@ -121,6 +174,12 @@ export class PlayerActions extends Component {
 	}
 
 	protected update(dt: number): void {
+		// A barrel in the air: its shot is timed from the moment it left the hand, while the
+		// throw clip may still be playing out.
+		if (this._blast) {
+			this._blastStep(dt);
+			return;
+		}
 		if (this._throw) {
 			this._throwStep(dt);
 			return;
@@ -135,6 +194,8 @@ export class PlayerActions extends Component {
 		}
 		if (this._movement && this._movement.moveDirection(this._dir)) {
 			this._tryVault();
+		} else {
+			this._grabNearby();
 		}
 	}
 
@@ -159,7 +220,8 @@ export class PlayerActions extends Component {
 			return false;
 		}
 		Debris.instance.hold(body);
-		const length = this.animationController ? this.animationController.override(this.throwClip, "throw", this.throwSpeed) : 0;
+		const speed = this._explosive(body) ? this.barrelThrowSpeed : this.throwSpeed;
+		const length = this.animationController ? this.animationController.override(this.throwClip, "throw", speed) : 0;
 		this._throw = { body, target, time: 0, length, picked: false, released: false };
 		this._lock(true);
 		return true;
@@ -187,7 +249,10 @@ export class PlayerActions extends Component {
 		}
 		this._throw = null;
 		this._cooldown = this.throwCooldown;
-		this._lock(false);
+		// Hands free; a barrel still to be shot keeps the player where they are.
+		if (!this._blast) {
+			this._lock(false);
+		}
 	}
 
 	/** The hand opens: off it goes at the target — or straight ahead if the target is gone. */
@@ -209,7 +274,160 @@ export class PlayerActions extends Component {
 			dirZ = at.z - from.z;
 		}
 		const length = Math.hypot(dirX, dirZ) || 1;
-		Debris.instance.launch(toss.body, dirX / length, dirZ / length, this.throwPower, this.throwLift, this.throwSpin, this.node, this.throwGrace);
+		const barrel = this._explosive(toss.body);
+		// With a potion to spare, a barrel goes on an arc of its own onto the zombie, to be shot
+		// over it; the player brings the gun up at once and has it covered all the way.
+		if (barrel && this._attack.ammo > 0 && toss.target.isValid && !toss.target.isDead) {
+			const to = this._arcEnd(toss.target, v3());
+			const distance = Vec3.distance(from, to);
+			const spin = v3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().multiplyScalar(this.barrelSpin);
+			this._blast = {
+				body: toss.body,
+				target: toss.target,
+				time: 0,
+				duration: this.barrelFlight + distance * this.barrelFlightPerUnit,
+				from: from.clone(),
+				to,
+				height: this.barrelArc,
+				spin,
+				fireIn: -1,
+				shot: false,
+				settle: -1,
+			};
+			this.animationController && this.animationController.aim(this.aimMoment);
+			return;
+		}
+		Debris.instance.launch(
+			toss.body,
+			dirX / length,
+			dirZ / length,
+			barrel ? this.barrelPower : this.throwPower,
+			barrel ? this.barrelLift : this.throwLift,
+			this.throwSpin,
+			this.node,
+			this.throwGrace,
+		);
+	}
+
+	// --- a thrown barrel, shot in the air
+
+	private _blastStep(dt: number): void {
+		const blast = this._blast;
+		// The throw's own timing plays out alongside; the aim is already over its clip.
+		if (this._throw) {
+			this._throwStep(dt);
+		}
+		blast.time += dt;
+		if (blast.settle >= 0) {
+			if ((blast.settle -= dt) <= 0) {
+				this._endBlast();
+			}
+			return;
+		}
+		const node = blast.body.node;
+		const debris = Debris.instance;
+		if (!node.isValid || !debris || debris.bodies.indexOf(blast.body) < 0) {
+			// Gone off — the potion caught it, or another blast reached it first.
+			blast.settle = this.settleAfter;
+			return;
+		}
+		if (this._attack.isDead) {
+			this._dropBarrel();
+			this._endBlast();
+			return;
+		}
+		this._fly(blast, dt);
+		this.faceDirection && this.faceDirection.faceTowards(node.worldPosition);
+		if (blast.shot) {
+			return;
+		}
+		if (blast.fireIn >= 0) {
+			// The clip is playing the shot: the potion leaves at the same point of it as any other.
+			if ((blast.fireIn -= dt) < 0) {
+				blast.shot = this._attack.shootBarrel(blast.body);
+				!blast.shot && this._dropBarrel();
+			}
+			return;
+		}
+		// The shot is let go early enough for the potion to catch the barrel at the end of its
+		// arc: the clip's run-up to the shot, then the potion's flight to where the arc ends.
+		const muzzle = this._attack.muzzle ? this._attack.muzzle.worldPosition : this.node.worldPosition;
+		const catchUp = this._shotDelay() + Vec3.distance(muzzle, blast.to) / Math.max(this._attack.barrelShotSpeed, 0.01);
+		if (blast.time >= this.shootAfter && blast.time >= blast.duration - catchUp) {
+			blast.fireIn = this.animationController ? this.animationController.fire(this.barrelShotRate, this._attack.shotMoment) : 0;
+		}
+	}
+
+	/** Along the arc: a straight line from the hand to the zombie, lifted by a parabola, tumbling; it waits at the end for the potion. */
+	private _fly(blast: Blast, dt: number): void {
+		if (blast.target.isValid && !blast.target.isDead) {
+			this._arcEnd(blast.target, blast.to);
+		}
+		const t = Math.min(1, blast.time / Math.max(blast.duration, 0.05));
+		Vec3.lerp(this._at, blast.from, blast.to, t);
+		this._at.y += blast.height * 4 * t * (1 - t);
+		const node = blast.body.node;
+		node.setWorldPosition(this._at);
+		if (t < 1) {
+			const euler = node.eulerAngles;
+			node.setRotationFromEuler(euler.x + blast.spin.x * dt, euler.y + blast.spin.y * dt, euler.z + blast.spin.z * dt);
+		}
+	}
+
+	private _arcEnd(target: Zombie, out: Vec3): Vec3 {
+		const at = target.node.worldPosition;
+		return out.set(at.x, at.y + this.barrelAimHeight, at.z);
+	}
+
+	/** No shot after all: the barrel falls where it is, a loose thing again. */
+	private _dropBarrel(): void {
+		const blast = this._blast;
+		if (blast && blast.body.node.isValid && Debris.instance && Debris.instance.bodies.indexOf(blast.body) >= 0) {
+			Debris.instance.launch(blast.body, 0, 0, 0, 0, 0, this.node, this.throwGrace);
+		}
+	}
+
+	/** Seconds from letting the held aim go to the potion leaving the gun. */
+	private _shotDelay(): number {
+		const length = this.animationController ? this.animationController.shotLength(this.barrelShotRate) : 0;
+		return length * Math.max(0, this._attack.shotMoment - this.aimMoment);
+	}
+
+	private _endBlast(): void {
+		this._blast = null;
+		if (!this._throw) {
+			this._lock(false);
+		}
+	}
+
+	private _explosive(body: Body): boolean {
+		return !!(body && body.furniture && body.furniture.explosive);
+	}
+
+	/** Standing next to a barrel: it is taken first, before any shooting. */
+	private _grabNearby(): void {
+		const debris = Debris.instance;
+		if (!debris || this.busy || this._cooldown > 0) {
+			return;
+		}
+		const at = this.node.worldPosition;
+		let best: Body = null;
+		let bestGap = this.grabNear;
+		for (const body of debris.bodies) {
+			if (body.held || !this._explosive(body) || !body.node.isValid) {
+				continue;
+			}
+			if (!body.asleep && body.velocity.lengthSqr() > 1) {
+				continue; // still flying
+			}
+			const p = body.node.worldPosition;
+			const gap = Math.hypot(p.x - at.x, p.z - at.z) - body.radius - this.radius;
+			if (gap <= bestGap) {
+				best = body;
+				bestGap = gap;
+			}
+		}
+		best && this._grab(best);
 	}
 
 	/** The player fell mid-throw: the piece drops where it is. */

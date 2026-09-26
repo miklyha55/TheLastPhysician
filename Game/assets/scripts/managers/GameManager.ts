@@ -17,11 +17,22 @@ export class GameManager extends Component {
 		this._handleEvents(false);
 	}
 
+	private static _instance: GameManager = null;
+
 	protected onLoad(): void {
+		// Every level scene has one; the first lives on through them all, the others go.
+		if (GameManager._instance && GameManager._instance.isValid) {
+			this.node.destroy();
+			return;
+		}
+		GameManager._instance = this;
 		director.addPersistRootNode(this.node);
 	}
 
 	protected start(): void {
+		if (GameManager._instance !== this) {
+			return;
+		}
 		const body = document.body;
 		const loaderElement = Array.from(
 			body.getElementsByClassName("loader_c")

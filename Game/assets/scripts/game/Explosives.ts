@@ -10,8 +10,8 @@ const { ccclass, property } = _decorator;
 
 // Potions bursting and barrels blowing up, the way ThroughTheDeadCity blows things up.
 // A potion that lands bursts — a pink flash and glass flying — and every zombie within
-// `splashRadius` loses a life; an explosive barrel in that circle goes off. A barrel's blast
-// kills everyone in `blastRadius`, zombies and the player alike, throws the loose things
+// `splashRadius` loses a life (the one it was thrown at splashes, the rest only reel); an explosive barrel in that circle goes off. A barrel's blast
+// kills every zombie in `blastRadius` — the player it spares — throws the loose things
 // about, shakes the camera, and sets off the barrels lying within `chainRadius` one after
 // another, in a wave. Sizes are ThroughTheDeadCity's scaled to this game.
 @ccclass("Explosives")
@@ -62,8 +62,11 @@ export class Explosives extends Component {
 		}
 	}
 
-	/** A potion bursts at `at`, having flown from `from`. */
-	potionBurst(at: Vec3, from: Vec3): void {
+	/**
+	 * A potion bursts at `at`, having flown from `from`, on `direct` — the zombie it was thrown
+	 * at. Only that one splashes; the others caught by the burst just lose a life and reel.
+	 */
+	potionBurst(at: Vec3, from: Vec3, direct: Zombie = null): void {
 		this.potionFlash && this.potionFlash.burst(at);
 		this.potionShards && this.potionShards.splash(at, from);
 		const player = PlayerAttack.instance;
@@ -72,7 +75,7 @@ export class Explosives extends Component {
 				continue;
 			}
 			zombie.takeHit();
-			const blood = player && player.zombieBlood;
+			const blood = zombie === direct && player && player.zombieBlood;
 			if (blood) {
 				const z = zombie.node.worldPosition;
 				blood.splash(v3(z.x, z.y + 0.4, z.z), from, zombie.isDead ? player.killSplash : 1);
@@ -100,7 +103,7 @@ export class Explosives extends Component {
 		debris.remove(body);
 		debris.blast(at, this.kickRadius, this.kick, this.lift);
 
-		// In the circle nobody lives — whoever set it off.
+		// In the circle no zombie lives. The player is spared: a barrel is their weapon.
 		const player = PlayerAttack.instance;
 		for (const zombie of Zombie.all.slice()) {
 			if (!zombie.isDead && this._within(zombie.node.worldPosition, ground, this.blastRadius)) {
@@ -111,9 +114,6 @@ export class Explosives extends Component {
 				}
 				zombie.kill();
 			}
-		}
-		if (player && !player.isDead && this._within(player.node.worldPosition, ground, this.blastRadius)) {
-			player.kill(ground);
 		}
 		this._chain(ground);
 	}

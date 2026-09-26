@@ -1,5 +1,10 @@
-import { _decorator, Component, Mat4, MeshRenderer, Node, Prefab, v3, Vec3 } from "cc";
+import { _decorator, Component, Mat4, MeshRenderer, Node, Prefab, Quat, v3, Vec3 } from "cc";
 import { Door } from "./Door";
+
+/** What swings open in a wall — a door, a gate: its leaves block the way only while it is shut. */
+interface Opening {
+	readonly isOpen: boolean;
+}
 
 const { ccclass, property } = _decorator;
 
@@ -35,6 +40,8 @@ export class WallCollision extends Component {
 	cellSize: number = 0.05;
 	@property({ tooltip: "Geometry lower than this (the floor under a wall) does not block" })
 	minHeight: number = 0.05;
+	@property({ tooltip: "Geometry no higher than this is stepped over — the sill of a gate" })
+	stepHeight: number = 0.1;
 	@property({ tooltip: "Geometry entirely higher than this (a lintel over a doorway) does not block" })
 	maxHeight: number = 0.9;
 	@property({ tooltip: "How far to the side a blocked step looks for a way through — steers the player into a doorway it just missed; 0 — off" })
@@ -43,7 +50,7 @@ export class WallCollision extends Component {
 	private _cells: Uint8Array = null;
 	// Layers that block only at times: a door leaf while its door is shut, a solid thing while
 	// it exists.
-	private _doors: { door: Door; node: Node; cells: Uint8Array }[] = [];
+	private _doors: { door: Opening; node: Node; cells: Uint8Array }[] = [];
 	// Cells any such layer covers, so the common case — none here — is one lookup.
 	private _doorCells: Uint8Array = null;
 	private _cols: number = 0;
@@ -253,14 +260,24 @@ export class WallCollision extends Component {
 
 	private _build(): void {
 		const walls: number[] = [];
-		const doors: { door: Door; triangles: number[] }[] = [];
+		const doors: { door: Opening; triangles: number[] }[] = [];
 		for (const wall of this._wallInstances()) {
-			const leaves = new Map<Node, number[]>();
+			// Every leaf, with what opens it and how it stands when shut.
+			const leaves = new Map<Node, { triangles: number[]; closed: Quat }>();
 			for (const door of wall.getComponentsInChildren(Door)) {
 				if (door.leaf) {
-					const group = { door, triangles: [] as number[] };
+					const group = { door: door as Opening, triangles: [] as number[] };
 					doors.push(group);
-					leaves.set(door.leaf, group.triangles);
+					leaves.set(door.leaf, { triangles: group.triangles, closed: door.closedRotation });
+				}
+			}
+			// A gate: both leaves one opening; shut, they stand square (Gate turns them from zero).
+			// Looked up by name — Gate reaches back to the player, and so to this script.
+			for (const gate of wall.getComponentsInChildren("Gate") as (Component & Opening & { leftLeaf: Node; rightLeaf: Node })[]) {
+				const group = { door: gate as Opening, triangles: [] as number[] };
+				doors.push(group);
+				for (const leaf of [gate.leftLeaf, gate.rightLeaf]) {
+					leaf && leaves.set(leaf, { triangles: group.triangles, closed: Quat.IDENTITY as Quat });
 				}
 			}
 			for (const renderer of wall.getComponentsInChildren(MeshRenderer)) {
@@ -270,10 +287,10 @@ export class WallCollision extends Component {
 					continue;
 				}
 				// Laid out shut, whatever the door is doing right now.
-				const door = doors.find((group) => group.door.leaf === leaf).door;
+				const entry = leaves.get(leaf);
 				const now = leaf.rotation.clone();
-				leaf.setRotation(door.closedRotation);
-				this._collect(renderer, leaves.get(leaf));
+				leaf.setRotation(entry.closed);
+				this._collect(renderer, entry.triangles);
 				leaf.setRotation(now);
 			}
 		}
@@ -307,7 +324,7 @@ export class WallCollision extends Component {
 		this._cells = this._rasterize(walls);
 		this._doors = doors
 			.map((group) => ({ door: group.door, node: null as Node, cells: this._rasterize(group.triangles) }))
-			.concat(solids.map((group) => ({ door: null as Door, node: group.node, cells: this._rasterize(group.triangles) })));
+			.concat(solids.map((group) => ({ door: null as Opening, node: group.node, cells: this._rasterize(group.triangles) })));
 		this._doorCells = new Uint8Array(this._cols * this._rows);
 		for (const layer of this._doors) {
 			for (let i = 0; i < layer.cells.length; i++) {
@@ -317,7 +334,7 @@ export class WallCollision extends Component {
 	}
 
 	/** The door leaf a renderer belongs to — the leaf itself or a node under it — or null. */
-	private _leafOf(node: Node, leaves: Map<Node, number[]>): Node {
+	private _leafOf(node: Node, leaves: Map<Node, unknown>): Node {
 		for (let at = node; at; at = at.parent) {
 			if (leaves.has(at)) {
 				return at;
@@ -354,7 +371,7 @@ export class WallCollision extends Component {
 					top = Math.max(top, a.y);
 					bottom = Math.min(bottom, a.y);
 				}
-				if (top > this.minHeight && bottom < this.maxHeight) {
+				if (top > Math.max(this.minHeight, this.stepHeight) && bottom < this.maxHeight) {
 					out.push(...tri);
 				}
 			}
@@ -551,7 +568,7 @@ export class WallCollision extends Component {
 	}
 
 	/** Does a layer stand in the way now: a door while shut, a solid thing while it is there. */
-	private _blocks(layer: { door: Door; node: Node }): boolean {
+	private _blocks(layer: { door: Opening; node: Node }): boolean {
 		return layer.door ? !layer.door.isOpen : layer.node.isValid && layer.node.activeInHierarchy;
 	}
 

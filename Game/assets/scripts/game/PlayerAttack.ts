@@ -1,15 +1,18 @@
 import { _decorator, AnimationClip, Component, instantiate, math, Node, Prefab, SkeletalAnimation, v3, Vec3 } from "cc";
 import GameEvent from "../enums/GameEvent";
 import { CameraManager } from "../managers/camera/CameraManager";
+import { GameState, StackItem } from "../managers/GameState";
 import { gameEventTarget } from "../plugins/GameEventTarget";
 import { AnimationController } from "./AnimationController";
 import { Blood } from "./Blood";
+import type { Body } from "./Debris";
 import { FaceDirection } from "./FaceDirection";
 import { Explosives } from "./Explosives";
 import { GunEffects } from "./GunEffects";
 import { OcclusionFade } from "./OcclusionFade";
 import { PotionStack } from "./PotionStack";
 import { GunSocket } from "./GunSocket";
+import { PlayerKeys } from "./PlayerKeys";
 import { PlayerMovement } from "./PlayerMovement";
 import { WallCollision } from "./WallCollision";
 import { Zombie } from "./Zombie";
@@ -20,7 +23,10 @@ const DEATH = "death";
 
 interface Shot {
 	node: Node;
+	/** The zombie it is thrown at — or null for a shot at a barrel in flight. */
 	target: Zombie;
+	/** The barrel it is shot at, flying; it goes off when the potion reaches it. */
+	barrel: Body;
 	start: Vec3;
 	aim: Vec3;
 	time: number;
@@ -74,6 +80,8 @@ export class PlayerAttack extends Component {
 	shotMoment: number = 0.4;
 	@property({ tooltip: "Potion speed along the ground, units per second" })
 	projectileSpeed: number = 4;
+	@property({ tooltip: "Speed of a potion shot at a thrown barrel: straight and fast, it catches it in the air" })
+	barrelShotSpeed: number = 10;
 	@property({ tooltip: "How high the potion's arc rises over a throw across the whole shoot radius, units; shorter throws rise less" })
 	arcHeight: number = 0.5;
 	@property({ tooltip: "How fast the potion tumbles in flight, degrees per second" })
@@ -84,6 +92,8 @@ export class PlayerAttack extends Component {
 	orbitSpeed: number = 20;
 	@property({ tooltip: "Height above the fallen player's feet the camera looks at" })
 	orbitLookHeight: number = 0.2;
+	@property({ tooltip: "Seconds from dying to playing the level again from its start; 0 — never" })
+	restartDelay: number = 3;
 
 	private _walls: WallCollision = null;
 	private _occlusion: OcclusionFade = null;
@@ -159,7 +169,31 @@ export class PlayerAttack extends Component {
 	}
 
 	protected start(): void {
-		this.stack && this.stack.fill(this.ammo);
+		// Brought from the last level: potions and keys, as they lay on the stack. Otherwise
+		// the level's own start — `ammo` potions.
+		const carried = GameState.enter();
+		if (!carried) {
+			this.stack && this.stack.fill(this.ammo);
+			return;
+		}
+		this.ammo = carried.filter((item) => !item.key).length;
+		const keys = PlayerKeys.instance;
+		for (const item of carried) {
+			item.key && keys && keys.add(item.color);
+		}
+		this.stack && this.stack.restore(carried);
+	}
+
+	/** What the player carries on, bottom to top: the stack, or just the potions left without one. */
+	carried(): StackItem[] {
+		if (this.stack) {
+			return this.stack.contents();
+		}
+		const items: StackItem[] = [];
+		for (let i = 0; i < this.ammo; i++) {
+			items.push({ key: false, color: -1 });
+		}
+		return items;
 	}
 
 	/**
@@ -297,7 +331,36 @@ export class PlayerAttack extends Component {
 		const duration = Math.max(0.1, distance / Math.max(this.projectileSpeed, 0.01));
 		// Point-blank the potion barely rises; lobbed across the whole radius it rises to arcHeight.
 		const height = this.arcHeight * Math.min(1, distance / Math.max(this.shootRadius, 0.01));
-		this._shots.push({ node, target, start, aim, time: 0, duration, height });
+		this._shots.push({ node, target, barrel: null, start, aim, time: 0, duration, height });
+	}
+
+	/**
+	 * A shot at a barrel the player has just thrown, the way ThroughTheDeadCity finishes a
+	 * throw of an explosive: PlayerActions has the player aim and play the shot, and at its
+	 * moment calls this — a potion flies out of the muzzle straight and fast into the barrel — it goes off in the air, over the zombies it was thrown at. The potion is
+	 * a real one, taken off the stack. False when there is none to shoot.
+	 */
+	shootBarrel(barrel: Body): boolean {
+		if (this._dead || this.ammo <= 0 || !barrel || !barrel.node.isValid) {
+			return false;
+		}
+		this.ammo--;
+		this.stack && this.stack.pop();
+		const at = barrel.node.worldPosition;
+		const start = (this.muzzle ? this.muzzle.worldPosition : this.node.worldPosition).clone();
+		const aim = at.clone();
+		this.gunEffects && this.gunEffects.fire(start, aim);
+		const duration = Math.max(0.05, Vec3.distance(start, aim) / Math.max(this.barrelShotSpeed, 0.01));
+		if (!this.projectile) {
+			Explosives.instance && Explosives.instance.explode(barrel);
+			return true;
+		}
+		const node = this._spare.pop() || instantiate(this.projectile);
+		node.setParent(this.projectileParent || this.node.parent);
+		node.active = true;
+		node.setWorldPosition(start);
+		this._shots.push({ node, target: null, barrel, start, aim, time: 0, duration, height: 0 });
+		return true;
 	}
 
 	private _aim(target: Zombie, out: Vec3): Vec3 {
@@ -313,6 +376,10 @@ export class PlayerAttack extends Component {
 	private _updateShots(dt: number): void {
 		for (let i = this._shots.length - 1; i >= 0; i--) {
 			const shot = this._shots[i];
+			if (shot.barrel) {
+				this._barrelShot(shot, dt, i);
+				continue;
+			}
 			if (shot.target.isValid && !shot.target.isDead) {
 				this._aim(shot.target, shot.aim);
 			}
@@ -335,6 +402,28 @@ export class PlayerAttack extends Component {
 		}
 	}
 
+	/** A potion after a flying barrel: it keeps after it, and it goes off when caught. */
+	private _barrelShot(shot: Shot, dt: number, index: number): void {
+		// Explosives.explode itself does nothing for a barrel already gone off.
+		const alive = shot.barrel.node.isValid;
+		if (alive) {
+			shot.aim.set(shot.barrel.node.worldPosition);
+		}
+		shot.time += dt;
+		const t = Math.min(1, shot.time / shot.duration);
+		if (t >= 1) {
+			// Gone already — set off by something else — and the potion just flies on out of sight.
+			alive && Explosives.instance && Explosives.instance.explode(shot.barrel);
+			this._release(shot.node);
+			this._shots.splice(index, 1);
+			return;
+		}
+		Vec3.lerp(this._to, shot.start, shot.aim, t);
+		shot.node.setWorldPosition(this._to);
+		const yaw = math.toDegree(Math.atan2(shot.aim.x - shot.start.x, shot.aim.z - shot.start.z));
+		shot.node.setRotationFromEuler(0, yaw - 90, -this.spinSpeed * shot.time);
+	}
+
 	/**
 	 * A potion lands: it bursts, and with Explosives in the scene everyone round the spot loses
 	 * a life and a barrel near it goes off; without it, just the zombie hit loses one.
@@ -342,7 +431,7 @@ export class PlayerAttack extends Component {
 	private _hit(target: Zombie, from: Vec3, at: Vec3): void {
 		const explosives = Explosives.instance;
 		if (explosives) {
-			explosives.potionBurst(at, from);
+			explosives.potionBurst(at, from, target);
 			return;
 		}
 		if (target.isDead) {
@@ -395,5 +484,9 @@ export class PlayerAttack extends Component {
 		const camera = CameraManager.instance;
 		camera && camera.orbit(this.node, this.orbitSpeed, v3(0, this.orbitLookHeight, 0));
 		this.enabled = false;
+		// The component is off now, so the wait is kept outside it.
+		if (this.restartDelay > 0) {
+			setTimeout(() => GameState.restart(), this.restartDelay * 1000);
+		}
 	}
 }

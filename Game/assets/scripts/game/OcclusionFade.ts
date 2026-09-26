@@ -107,6 +107,10 @@ export class OcclusionFade extends Component {
 		const reach = Vec3.distance(eye, this._aim);
 		geometry.Ray.fromPoints(this._ray, eye, this._aim);
 		for (const [renderer, item] of this._itemOf) {
+			if (!renderer.isValid) {
+				this._itemOf.delete(renderer);
+				continue;
+			}
 			if (!renderer.enabledInHierarchy || !renderer.model || this._blocking.has(item)) {
 				continue;
 			}
@@ -124,6 +128,11 @@ export class OcclusionFade extends Component {
 
 	private _apply(item: Item): void {
 		item.renderers.forEach((renderer, index) => {
+			// Gone meanwhile — a barrel blown up, a chest vanished, the level left.
+			if (!renderer.isValid || !renderer.sharedMaterials) {
+				this._itemOf.delete(renderer);
+				return;
+			}
 			if (item.amount <= 0) {
 				// Solid again: back to the shared materials, so it batches with its neighbours.
 				// forceUpdate, since the shared material is the same one and the renderer

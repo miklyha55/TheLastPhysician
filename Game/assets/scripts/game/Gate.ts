@@ -1,15 +1,15 @@
-import { _decorator, Component, director, Node, Tween, tween, v3 } from "cc";
-import GameEvent from "../enums/GameEvent";
-import { gameEventTarget } from "../plugins/GameEventTarget";
+import { _decorator, Component, Mat4, Node, Tween, tween, v3, Vec3 } from "cc";
+import { GameState } from "../managers/GameState";
 import { Lever } from "./Lever";
 import { PlayerAttack } from "./PlayerAttack";
 
 const { ccclass, property } = _decorator;
 
 // The way out of a level. Shut from the start; only its lever opens it, and flipping the lever
-// back shuts it again. A moment after the player reaches the gate while it stands open, the
-// next level's scene is loaded — or, with no next scene named, the game is over and
-// GameEvent.GAME_COMPLETE goes out.
+// back shuts it again. Behind it, outside the level, lies the exit — a box the player walks
+// into through the open gate. The moment they step into it the gate swings shut behind them,
+// and a moment later the level is done: GameState takes what the player carries on to the next level — or, after the
+// last one, ends the game.
 @ccclass("Gate")
 export class Gate extends Component {
 	@property({ type: Node, tooltip: "Left leaf, turning on its hinge" })
@@ -22,15 +22,22 @@ export class Gate extends Component {
 	openAngle: number = 95;
 	@property({ tooltip: "Seconds the leaves take to open or shut" })
 	openTime: number = 0.6;
-	@property({ tooltip: "The player reaches it within this distance of its centre, on the floor" })
-	touchRadius: number = 0.6;
+	@property({ type: Node, tooltip: "The exit behind the gate: the box around this node, in its own axes, that leads out of the level" })
+	exit: Node = null;
+	@property({ tooltip: "Size of the exit box — across, height, depth" })
+	exitSize: Vec3 = v3(0.8, 2, 0.6);
 	@property({ tooltip: "Seconds from reaching the open gate to leaving the level" })
 	delay: number = 1;
-	@property({ tooltip: "Scene of the next level; empty — this is the last one" })
-	nextScene: string = "";
 
 	private _open = false;
 	private _leaving = false;
+	private _inverse = new Mat4();
+	private _local = v3();
+
+	/** Can the player walk through? True from the moment the leaves start swinging open. */
+	get isOpen(): boolean {
+		return this._open;
+	}
 
 	protected update(): void {
 		if (this._leaving) {
@@ -43,16 +50,29 @@ export class Gate extends Component {
 		if (!player || player.isDead) {
 			return;
 		}
-		const at = this.node.worldPosition;
-		const them = player.node.worldPosition;
-		if (Math.hypot(them.x - at.x, them.z - at.z) > this.touchRadius) {
-			return;
-		}
-		if (!this._open) {
-			return; // shut: only the lever opens it
+		if (!this._open || !this._inside(player.node.worldPosition)) {
+			return; // shut, the way out is barred: only the lever opens it
 		}
 		this._leaving = true;
+		console.log("Gate: the player is out");
+		// Shut behind them: the level is over, the lever no longer has a say.
+		this._swing(false);
 		this.scheduleOnce(() => this._leave(), this.delay);
+	}
+
+	/** Is a point in the exit box? */
+	private _inside(point: Vec3): boolean {
+		if (!this.exit) {
+			return false;
+		}
+		Mat4.invert(this._inverse, this.exit.worldMatrix);
+		Vec3.transformMat4(this._local, point, this._inverse);
+		const scale = this.exit.worldScale;
+		return (
+			Math.abs(this._local.x * scale.x) <= this.exitSize.x / 2 &&
+			Math.abs(this._local.y * scale.y) <= this.exitSize.y / 2 &&
+			Math.abs(this._local.z * scale.z) <= this.exitSize.z / 2
+		);
 	}
 
 	/** Leaves open or shut. They hinge on opposite sides, so they turn opposite ways to swing to one side. */
@@ -69,10 +89,7 @@ export class Gate extends Component {
 	}
 
 	private _leave(): void {
-		if (this.nextScene) {
-			director.loadScene(this.nextScene);
-		} else {
-			gameEventTarget.emit(GameEvent.GAME_COMPLETE);
-		}
+		const player = PlayerAttack.instance;
+		GameState.complete(player ? player.carried() : []);
 	}
 }

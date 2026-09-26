@@ -95,8 +95,51 @@ export class AnimationController extends Component {
 		return state.duration / (speed || 1);
 	}
 
+	/**
+	 * The gun up and held: the shooting clip stopped at `moment` of it, 0..1 — a frame with the
+	 * gun already at the shoulder, as in any shot; its first frames are still bringing it up.
+	 * Stays so, over run and idle, until `fire` lets it play on or `release`. Held by speed 0
+	 * rather than a pause, so it is still playing and the gun stays in the hand (GunSocket).
+	 */
+	aim(moment: number = 0): void {
+		const state = this.animation && this.animation.getState(SHOOTING);
+		if (!state) {
+			return;
+		}
+		this.unschedule(this._backToIdle);
+		state.wrapMode = AnimationClip.WrapMode.Normal;
+		this._override = SHOOTING;
+		this._current = SHOOTING;
+		this.animation.crossFade(SHOOTING, 0.1);
+		state.time = state.duration * moment;
+		state.speed = 0;
+	}
+
+	/**
+	 * The held aim goes off: the shooting clip plays on from where it stood, `rate` times its
+	 * usual speed. Returns the seconds until `moment` of the clip — the shot — or 0 when the gun
+	 * was not up.
+	 */
+	fire(rate: number = 1, moment: number = 0): number {
+		const state = this.animation && this.animation.getState(SHOOTING);
+		if (!state || this._override !== SHOOTING) {
+			return 0;
+		}
+		const speed = this.shootingSpeed * rate;
+		state.speed = speed;
+		return Math.max(0, state.duration * moment - state.time) / (speed || 1);
+	}
+
+	/** Seconds the shooting clip takes at its own speed, `rate` times faster. */
+	shotLength(rate: number = 1): number {
+		const state = this.animation && this.animation.getState(SHOOTING);
+		return state ? state.duration / (this.shootingSpeed * rate || 1) : 0;
+	}
+
 	/** Back to running or idling, whichever the stick says. */
 	release(): void {
+		const shooting = this.animation && this.animation.getState(SHOOTING);
+		shooting && (shooting.speed = this.shootingSpeed);
 		this._override = null;
 		this._current = null;
 		this._play(this._pressed ? RUN : IDLE);
