@@ -42,6 +42,7 @@ export class CameraManager extends Component {
 	private _scale: number = 0;
 	private _distance: Vec3 = v3();
 	private _isStart: boolean = false;
+	private _orbitSpeed: number = 0;
 
 	protected onDestroy(): void {
 		if (CameraManager.instance === this) {
@@ -61,9 +62,13 @@ export class CameraManager extends Component {
 		this._cameraAnimation = Utils.getChildByName(this.cameraBox, "Animation");
 	}
 
-	protected update() {
+	protected update(dt: number) {
 		if (!this.cameras.length || !this.cameraBox) {
 			return;
+		}
+
+		if (this._orbitSpeed && this.followTarget) {
+			Vec3.rotateY(this._distance, this._distance, Vec3.ZERO, math.toRadian(this._orbitSpeed * dt));
 		}
 
 		this._updatePosition();
@@ -135,6 +140,16 @@ export class CameraManager extends Component {
 	setFollowTarget(followTarget: Node): void {
 		this.followTarget = followTarget;
 		this.setDistance();
+	}
+
+	/** Circles round the target at the current distance, looking at it; 0 degrees per second stops. */
+	orbit(target: Node, degreesPerSecond: number, lookAtOffset: Vec3 = new Vec3()): void {
+		if (this.followTarget !== target) {
+			this.setFollowTarget(target);
+		}
+		this.lookAtTarget = target;
+		this.offsetLookAtTargetTarget.set(lookAtOffset);
+		this._orbitSpeed = degreesPerSecond;
 	}
 
 	setLookAtTarget(lookAtTarget: Node): void {

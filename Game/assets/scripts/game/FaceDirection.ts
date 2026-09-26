@@ -50,6 +50,22 @@ export class FaceDirection extends Component {
 		}
 	}
 
+	/** Turns to face a point on the floor, the way a joystick push towards it would. */
+	faceTowards(point: Vec3): void {
+		const at = this.node.worldPosition;
+		const dx = point.x - at.x;
+		const dz = point.z - at.z;
+		if (dx * dx + dz * dz < 1e-8) {
+			return;
+		}
+		const worldYaw = math.toDegree(Math.atan2(dx, dz)) + this.yawOffset;
+		const parentYaw = this.node.parent ? this.node.parent.eulerAngles.y : 0;
+		this._targetYaw = worldYaw - parentYaw;
+		if (this.turnSpeed <= 0) {
+			this._setYaw(this._targetYaw);
+		}
+	}
+
 	protected update(dt: number): void {
 		if (this._targetYaw === null || this.turnSpeed <= 0) {
 			return;

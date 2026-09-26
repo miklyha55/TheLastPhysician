@@ -127,6 +127,55 @@ export class WallCollision extends Component {
 		return out.set(from.x, to.y, from.z);
 	}
 
+	/** Would something of the player's radius standing here touch a wall or a shut door? */
+	isBlocked(x: number, z: number): boolean {
+		return !!this._cells && this._blocked(x, z);
+	}
+
+	/** Can something of the player's radius go from `a` to `b` in a straight line? */
+	isPathClear(a: Vec3, b: Vec3): boolean {
+		if (!this._cells) {
+			return true;
+		}
+		const steps = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / this.cellSize));
+		for (let i = 1; i <= steps; i++) {
+			const t = i / steps;
+			if (this._blocked(a.x + (b.x - a.x) * t, a.z + (b.z - a.z) * t)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/** Is there no wall or shut door on the line between two points, however thin? */
+	lineOfSight(a: Vec3, b: Vec3): boolean {
+		if (!this._cells) {
+			return true;
+		}
+		const steps = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / (this.cellSize * 0.5)));
+		for (let i = 0; i <= steps; i++) {
+			const t = i / steps;
+			const c = Math.floor((a.x + (b.x - a.x) * t - this._originX) / this.cellSize);
+			const r = Math.floor((a.z + (b.z - a.z) * t - this._originZ) / this.cellSize);
+			if (c < 0 || r < 0 || c >= this._cols || r >= this._rows) {
+				continue;
+			}
+			const at = r * this._cols + c;
+			if (this._cells[at] || this._closedDoorAt(at)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/** The floor area the walls cover, as x, z, width, depth; null before the walls are built. */
+	get area(): { x: number; z: number; width: number; depth: number } {
+		if (!this._cells) {
+			return null;
+		}
+		return { x: this._originX, z: this._originZ, width: this._cols * this.cellSize, depth: this._rows * this.cellSize };
+	}
+
 	/** A safety net for anything else that moves the player straight into a wall. */
 	protected lateUpdate(): void {
 		if (!this._cells) {

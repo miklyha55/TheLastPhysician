@@ -41,6 +41,11 @@ export class GunSocket extends Component {
 		}
 	}
 
+	/** Back on the back, whatever is playing. */
+	stow(): void {
+		this._place(false);
+	}
+
 	private _place(inHand: boolean): void {
 		const socket = inHand ? this.handSocket : this.backSocket;
 		if (!socket) {
