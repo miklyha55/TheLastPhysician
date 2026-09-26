@@ -1,6 +1,7 @@
 import { _decorator, Component, Node, v3, Vec2, Vec3 } from "cc";
 import GameEvent from "../enums/GameEvent";
 import { gameEventTarget } from "../plugins/GameEventTarget";
+import { WallCollision } from "./WallCollision";
 
 const { ccclass, property } = _decorator;
 
@@ -17,6 +18,12 @@ export class PlayerMovement extends Component {
 	private _velocity: Vec3 = v3();
 	private _forward: Vec3 = v3();
 	private _right: Vec3 = v3();
+	private _target: Vec3 = v3();
+	private _walls: WallCollision = null;
+
+	protected start(): void {
+		this._walls = this.getComponent(WallCollision);
+	}
 
 	protected onEnable() {
 		this._handleEvents(true);
@@ -47,8 +54,12 @@ export class PlayerMovement extends Component {
 		this._axes();
 		Vec3.multiplyScalar(this._velocity, this._right, this._direction.x);
 		Vec3.scaleAndAdd(this._velocity, this._velocity, this._forward, this._direction.y);
-		Vec3.scaleAndAdd(this._velocity, this.node.worldPosition, this._velocity, this.speed * dt);
-		this.node.setWorldPosition(this._velocity);
+		Vec3.scaleAndAdd(this._target, this.node.worldPosition, this._velocity, this.speed * dt);
+		// Walls are settled before the move, so nothing that follows the player sees it inside one.
+		if (this._walls) {
+			this._walls.resolve(this.node.worldPosition, this._target, this._target);
+		}
+		this.node.setWorldPosition(this._target);
 	}
 
 	// The camera's forward and right flattened onto the floor.

@@ -6,7 +6,6 @@
     },
     "configs": {
       "migrationsConfig": {
-        "name": "Migrated Configuration",
         "cache": {
           "base": {
             "_value": true
@@ -60,7 +59,7 @@
             "_value": true
           },
           "physics": {
-            "_value": true,
+            "_value": false,
             "_option": "physics-cannon"
           },
           "physics-ammo": {
@@ -107,7 +106,7 @@
             "_value": true
           },
           "profiler": {
-            "_value": false
+            "_value": true
           },
           "occlusion-query": {
             "_value": false
@@ -171,10 +170,10 @@
             "_value": false
           },
           "marionette": {
-            "_value": false
+            "_value": true
           },
           "procedural-animation": {
-            "_value": false
+            "_value": true
           },
           "custom-pipeline-post-process": {
             "_value": false
@@ -194,6 +193,7 @@
           }
         },
         "flags": {},
+        "name": "Migrated Configuration",
         "includeModules": [
           "2d",
           "3d",
@@ -204,10 +204,13 @@
           "gfx-webgl",
           "graphics",
           "legacy-pipeline",
+          "marionette",
           "mask",
           "particle",
           "physics-cannon",
           "primitive",
+          "procedural-animation",
+          "profiler",
           "rich-text",
           "skeletal-animation",
           "tween",

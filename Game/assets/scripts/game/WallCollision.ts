@@ -5,6 +5,8 @@ const { ccclass, property } = _decorator;
 
 // How many times a step into a wall is pushed back out before falling back to axis sliding.
 const PUSH_ITERATIONS = 4;
+// Fractions of a slide tried when the full one would still touch a wall.
+const SLIDE_SCALES = [1, 0.5, 0.25];
 
 // Keeps the player out of the walls: every instance of a wall prefab found in the scene is
 // flattened onto the floor as a grid of blocked cells, built from the walls' own geometry,
@@ -37,48 +39,94 @@ export class WallCollision extends Component {
 	private _originZ: number = 0;
 	private _previous: Vec3 = null;
 	private _next: Vec3 = v3();
+	private _want: Vec3 = v3();
+	private _normal: Vec3 = v3();
+	private _probe: Vec3 = v3();
+	private _slide: Vec3 = v3();
+	private _sliding = false;
+	private _input: Vec3 = v3();
 
 	protected start(): void {
 		this._build();
 		this._previous = this.node.worldPosition.clone();
 	}
 
+	/**
+	 * Where a move from `from` towards `to` may end: `to` when it is clear, otherwise pushed
+	 * out along the walls, steered into a nearby opening, slid along one axis, or held at
+	 * `from`. Movement code calls this before placing the player, so the player is never
+	 * inside a wall, not even for the part of a frame a following camera looks at.
+	 */
+	resolve(from: Vec3, target: Vec3, out: Vec3): Vec3 {
+		// `out` may be `target` itself; keep the wanted point apart from the working one.
+		const to = this._want.set(target);
+		out.set(to);
+		const mx = to.x - from.x;
+		const mz = to.z - from.z;
+		const steady = this._sameInput(mx, mz);
+		if (!this._cells || !this._blocked(to.x, to.z) || this._blocked(from.x, from.z)) {
+			// Clear, or caught inside when a door shut on the player: let them walk out.
+			this._sliding = false;
+			return out;
+		}
+		// Slide: drop the part of the step that goes into the wall and keep the part along
+		// it. The player stays as far from the wall as it already was, so sliding is one
+		// smooth line instead of a step in and a push back out every other frame. At a door
+		// jamb or a corner the normal leans sideways, which carries the player round it.
+		if (this._normalAt(to, this._normal)) {
+			const into = mx * this._normal.x + mz * this._normal.z;
+			if (into < 0) {
+				const sx = mx - this._normal.x * into;
+				const sz = mz - this._normal.z * into;
+				// Wedged in a corner, each wall in turn sends the slide back the other way. With
+				// the stick held still, a slide that turns round means there is nowhere to go.
+				if (steady && this._sliding && sx * this._slide.x + sz * this._slide.z < 0) {
+					return out.set(from);
+				}
+				for (const scale of SLIDE_SCALES) {
+					out.set(from.x + sx * scale, to.y, from.z + sz * scale);
+					if (!this._blocked(out.x, out.z)) {
+						this._slide.set(sx, 0, sz);
+						this._sliding = true;
+						return out;
+					}
+				}
+			}
+		}
+		// Push back out along the normal, as long as that does not throw the player backwards.
+		out.set(to);
+		for (let i = 0; i < PUSH_ITERATIONS && this._pushOut(out); i++) {}
+		if (!this._blocked(out.x, out.z) && (out.x - from.x) * mx + (out.z - from.z) * mz >= 0) {
+			return out;
+		}
+		// Head-on into a jamb: if the way through is just to one side, step towards it.
+		if (this._assist(from, to, out)) {
+			return out;
+		}
+		// Otherwise keep whichever axis is still free, so the player slides along the wall.
+		if (!this._blocked(to.x, from.z)) {
+			return out.set(to.x, to.y, from.z);
+		}
+		if (!this._blocked(from.x, to.z)) {
+			return out.set(from.x, to.y, to.z);
+		}
+		return out.set(from.x, to.y, from.z);
+	}
+
+	/** A safety net for anything else that moves the player straight into a wall. */
 	protected lateUpdate(): void {
 		if (!this._cells) {
 			return;
 		}
 		const current = this.node.worldPosition;
 		const previous = this._previous;
-		if (current.equals(previous)) {
-			return;
-		}
-		// Caught inside when a door shut on the player: let them walk out.
-		if (this._blocked(current.x, current.z) && !this._blocked(previous.x, previous.z)) {
-			// First push the player back out along the walls' normal: at a door jamb or any
-			// corner that normal leans sideways, so the player slips round it into the
-			// opening instead of stopping dead against it.
-			this._next.set(current);
-			for (let i = 0; i < PUSH_ITERATIONS && this._pushOut(this._next); i++) {}
-			if (!this._blocked(this._next.x, this._next.z)) {
+		// Only when something left the player inside a wall; the movement code has already
+		// settled its own steps, and calling resolve again would reset the slide it keeps.
+		if (!current.equals(previous) && this._blocked(current.x, current.z)) {
+			this.resolve(previous, current, this._next);
+			if (!this._next.equals(current)) {
 				this.node.setWorldPosition(this._next);
-				previous.set(this._next);
-				return;
 			}
-			// Head-on into a jamb: if the way through is just to one side, step towards it.
-			if (this._assist(previous, current, this._next)) {
-				this.node.setWorldPosition(this._next);
-				previous.set(this._next);
-				return;
-			}
-			// Otherwise keep whichever axis is still free, so the player slides along the wall.
-			if (!this._blocked(current.x, previous.z)) {
-				this._next.set(current.x, current.y, previous.z);
-			} else if (!this._blocked(previous.x, current.z)) {
-				this._next.set(previous.x, current.y, current.z);
-			} else {
-				this._next.set(previous.x, current.y, previous.z);
-			}
-			this.node.setWorldPosition(this._next);
 		}
 		previous.set(this.node.worldPosition);
 	}
@@ -285,6 +333,34 @@ export class WallCollision extends Component {
 			}
 		}
 		return false;
+	}
+
+	/** Is this step heading the same way as the last one? Remembers it for the next call. */
+	private _sameInput(mx: number, mz: number): boolean {
+		const length = Math.hypot(mx, mz);
+		if (length < 1e-6) {
+			return true;
+		}
+		const x = mx / length;
+		const z = mz / length;
+		const same = x * this._input.x + z * this._input.z > 0.99;
+		this._input.set(x, 0, z);
+		return same;
+	}
+
+	/** The direction away from the walls a point overlaps, on the floor; false when it overlaps none. */
+	private _normalAt(point: Vec3, out: Vec3): boolean {
+		const probe = this._probe.set(point);
+		if (!this._pushOut(probe)) {
+			return false;
+		}
+		out.set(probe.x - point.x, 0, probe.z - point.z);
+		const length = Math.hypot(out.x, out.z);
+		if (length < 1e-6) {
+			return false;
+		}
+		out.multiplyScalar(1 / length);
+		return true;
 	}
 
 	/**

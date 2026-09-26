@@ -1,0 +1,54 @@
+{
+    "version": 3,
+    "name": "WallOpacity",
+    "view": {
+        "x": 486,
+        "y": 277,
+        "scale": 0.679
+    },
+    "nodes": [
+        {
+            "id": "n1",
+            "name": "Node 1",
+            "x": -28,
+            "y": -217,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Любые модели 3D которые на 70% скрывают плеера становится прозрачными, но так что бы не было видно внутренностей. Можно скрывать из черезстрочным рендерингом. И возвращались обратно к не прозрачному материалу когда плеер вышел.",
+            "payload": {
+                "kind": "node",
+                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
+                "name": "Player",
+                "type": "cc.Node",
+                "path": "Main/World/Player"
+            }
+        },
+        {
+            "id": "n4",
+            "name": "Node 4",
+            "x": -370,
+            "y": -149,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "folder",
+                "uuid": "39b7b99d-b646-4f57-935f-3f0f42a58851",
+                "name": "models",
+                "type": "Folder",
+                "importer": "directory",
+                "url": "db://assets/models",
+                "path": "db://assets/models"
+            }
+        }
+    ],
+    "links": [
+        {
+            "id": "l5",
+            "from": "n4",
+            "to": "n1"
+        }
+    ]
+}
