@@ -21,6 +21,8 @@ export class PathFinder {
 	private _x = 0;
 	private _z = 0;
 	private _walkable: Int8Array = null;
+	// What the walkable cells were worked out for; while it holds they are reused, not asked again.
+	private _known = "";
 	private _cost: Float32Array = null;
 	private _from: Int32Array = null;
 	private _closed: Uint8Array = null;
@@ -99,15 +101,21 @@ export class PathFinder {
 		if (cols * rows > (this._walkable ? this._walkable.length : 0)) {
 			const count = cols * rows;
 			this._walkable = new Int8Array(count);
+			this._known = "";
 			this._cost = new Float32Array(count);
 			this._from = new Int32Array(count);
 			this._closed = new Uint8Array(count);
 		}
+		// Same grid and the same doors shut: every cell answered before still holds.
+		const known = `${cols},${rows},${x0.toFixed(3)},${z0.toFixed(3)},${this._walls.doorState}`;
 		this._cols = cols;
 		this._rows = rows;
 		this._x = x0;
 		this._z = z0;
-		this._walkable.fill(-1);
+		if (known !== this._known) {
+			this._known = known;
+			this._walkable.fill(-1);
+		}
 		return true;
 	}
 

@@ -180,6 +180,12 @@ export class CameraManager extends Component {
 	private _direction = new Vec3();
 	private _targetRotation = new Quat();
 	private _currentRotation = new Quat();
+	// Scratch values reused every frame, so following the player makes no garbage.
+	private _offsetQuat = new Quat();
+	private _lookAt = new Vec3();
+	private _boxAt = new Vec3();
+	private _cameraAt = new Vec3();
+	private static readonly ONE = v3(1, 1, 1);
 
 	private _updateEuler(): void {
 		this.cameras.forEach((camera) => {
@@ -193,15 +199,13 @@ export class CameraManager extends Component {
 				(this._cameraTransform?.eulerAngles.z || 0) +
 				(this._cameraAnimation?.eulerAngles.z || 0);
 
-			const offsetQuat = new Quat();
+			const offsetQuat = this._offsetQuat;
 			Quat.fromEuler(offsetQuat, offsetX, offsetY, offsetZ);
 
 			if (this.lookAtTarget) {
 				Vec3.subtract(
 					this._direction,
-					this.lookAtTarget.worldPosition
-						.clone()
-						.add(this.offsetLookAtTargetTarget),
+					Vec3.add(this._lookAt, this.lookAtTarget.worldPosition, this.offsetLookAtTargetTarget),
 					camera.node.worldPosition
 				)
 					.normalize()
@@ -235,12 +239,12 @@ export class CameraManager extends Component {
 	private _updateZoom(): void {
 		this.cameras.forEach((camera) => {
 			const { width, height }: math.Size = screen.resolution;
-			const transformScale: Vec3 = this._cameraTransform
-				? this._cameraTransform.scale.clone()
-				: v3(1, 1, 1);
-			const animationScale: Vec3 = this._cameraAnimation
-				? this._cameraAnimation.scale.clone()
-				: v3(1, 1, 1);
+			const transformScale: Readonly<Vec3> = this._cameraTransform
+				? this._cameraTransform.scale
+				: CameraManager.ONE;
+			const animationScale: Readonly<Vec3> = this._cameraAnimation
+				? this._cameraAnimation.scale
+				: CameraManager.ONE;
 
 			const tw: number =
 				width / (this.cameraBox.scale.x * animationScale.x * transformScale.x);
@@ -264,34 +268,20 @@ export class CameraManager extends Component {
 	private _updatePosition(): void {
 		this.cameras.forEach((camera) => {
 			if (this.followTarget) {
-				let followTargetWorldPosition: Vec3 = v3();
-				this.followTarget.getWorldPosition(followTargetWorldPosition);
-
-				this.cameraBox.setWorldPosition(
-					followTargetWorldPosition.clone().add(this._distance)
-				);
+				Vec3.add(this._boxAt, this.followTarget.worldPosition, this._distance);
+				this.cameraBox.setWorldPosition(this._boxAt);
 			}
 
-			const transformPosition: Vec3 = this._cameraTransform
-				? this._cameraTransform.worldPosition.clone()
-				: v3();
-			const animationPosition: Vec3 = this._cameraAnimation
-				? this._cameraAnimation.worldPosition.clone()
-				: v3();
-
-			let cameraBoxWorldPosition: Vec3 = v3();
-			this.cameraBox.getWorldPosition(cameraBoxWorldPosition);
-			cameraBoxWorldPosition
-				.subtract(cameraBoxWorldPosition.clone().subtract(animationPosition))
-				.clone()
-				.subtract(cameraBoxWorldPosition.clone().subtract(transformPosition));
+			// Where the camera goes is the Animation child of the camera box, or the origin
+			// without one — the same place the chain of box and child offsets came to before.
+			const target = this._cameraAnimation
+				? this._boxAt.set(this._cameraAnimation.worldPosition)
+				: this._boxAt.set(0, 0, 0);
 
 			camera.node.setWorldPosition(
 				this._isStart
-					? camera.node.worldPosition
-							.clone()
-							.lerp(cameraBoxWorldPosition, this.lerpRatio)
-					: cameraBoxWorldPosition
+					? Vec3.lerp(this._cameraAt, camera.node.worldPosition, target, this.lerpRatio)
+					: target
 			);
 		});
 	}

@@ -134,6 +134,10 @@ export class OcclusionFade extends Component {
 				if (!material || !material.passes[0].getHandle(DITHER)) {
 					continue;
 				}
+				// Only a fading instance carries the discard; the shared material stays without it.
+				if (!material.passes[0].defines.USE_DITHER) {
+					material.recompileShaders({ USE_DITHER: true });
+				}
 				material.setProperty(DITHER, item.amount);
 				if (material.passes[0].getHandle(GRAIN)) {
 					// Per layout pixel, so a dense phone screen does not get a grain half as big.

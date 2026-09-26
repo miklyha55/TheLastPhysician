@@ -1,0 +1,75 @@
+{
+    "version": 4,
+    "name": "Gate",
+    "view": {
+        "x": 489,
+        "y": 317,
+        "scale": 0.829
+    },
+    "nodes": [
+        {
+            "id": "n2",
+            "name": "Открыты",
+            "x": 19,
+            "y": -206,
+            "width": 238,
+            "height": 485,
+            "previewHeight": 96,
+            "prompt": "При соприкосновении с плеером, и через 1 секунду переход на следующий уровень или финал. Открываются анимацией \n(Tile_Gate_L)[MeshRenderer]\n (Tile_Gate_R)[MeshRenderer]",
+            "payload": {
+                "kind": "asset",
+                "uuid": "0c8b38ea-817d-46c3-89af-40734311ba5a",
+                "name": "Tile_Wall_Gate.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/tiles/walls/Tile_Wall_Gate.prefab",
+                "path": "db://assets/prefabs/tiles/walls/Tile_Wall_Gate.prefab"
+            },
+            "state": true
+        },
+        {
+            "id": "n3",
+            "name": "Закрыты",
+            "x": 330,
+            "y": -209,
+            "width": 227,
+            "height": 401,
+            "previewHeight": 96,
+            "prompt": "Со старта.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "0c8b38ea-817d-46c3-89af-40734311ba5a",
+                "name": "Tile_Wall_Gate.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/tiles/walls/Tile_Wall_Gate.prefab",
+                "path": "db://assets/prefabs/tiles/walls/Tile_Wall_Gate.prefab"
+            },
+            "state": true
+        },
+        {
+            "id": "n5",
+            "name": "Node 3",
+            "x": -400,
+            "y": -141,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "node",
+                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
+                "name": "Player",
+                "type": "cc.Node",
+                "path": "Main/World/Player"
+            }
+        }
+    ],
+    "links": [
+        {
+            "id": "l6",
+            "from": "n5",
+            "to": "n2"
+        }
+    ]
+}

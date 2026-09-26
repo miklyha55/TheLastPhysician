@@ -265,12 +265,17 @@ CCProgram surface-fragment %{
 
     baseColor.rgb *= albedoScaleAndCutoff.xyz;
 
-    // Screen-door fade: a steady per-pixel threshold, compared with ditherAmount.
-    if (ditherParams.x > 0.0) {
-      vec2 cell = floor(gl_FragCoord.xy / max(ditherParams.y, 0.5));
-      float threshold = fract(52.9829189 * fract(dot(cell, vec2(0.06711056, 0.00583715))));
-      if (threshold < ditherParams.x) discard;
-    }
+    // Screen-door fade: a steady per-pixel threshold, compared with ditherAmount. Compiled in
+    // only for a material that is fading (USE_DITHER, set by OcclusionFade on its instance):
+    // a discard anywhere in the shader stops mobile GPUs rejecting hidden pixels early, and
+    // every wall and floor tile would pay for it all the time.
+    #if USE_DITHER
+      if (ditherParams.x > 0.0) {
+        vec2 cell = floor(gl_FragCoord.xy / max(ditherParams.y, 0.5));
+        float threshold = fract(52.9829189 * fract(dot(cell, vec2(0.06711056, 0.00583715))));
+        if (threshold < ditherParams.x) discard;
+      }
+    #endif
 
     return baseColor;
   }

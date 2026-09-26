@@ -10,9 +10,11 @@ interface Flight {
 	duration: number;
 }
 
-// A chest of potions. It stands open with its potions inside, in sight; the first time the
-// player touches it, they fly out one after another in an arc to the player — each one that arrives is a potion more
-// to shoot with — and once the last has arrived the lid shuts. After that it is only a chest.
+// A chest of potions. It stands open with its potions inside, in sight. When the player comes
+// within `giveRadius` they start flying out one after another in an arc to the player — each
+// one that arrives is a potion more to shoot with — for as long as the player stays there;
+// walking off stops the stream, coming back resumes it. Once the last has arrived the lid shuts, and
+// after that it is only a chest.
 @ccclass("Chest")
 export class Chest extends Component {
 	@property({ type: Node, tooltip: "The lid, turning on its hinge around X" })
@@ -27,8 +29,8 @@ export class Chest extends Component {
 	openAngle: number = -105;
 	@property({ tooltip: "Seconds the lid takes to shut" })
 	closeTime: number = 0.3;
-	@property({ tooltip: "The player touches it within this distance on the floor" })
-	touchRadius: number = 0.45;
+	@property({ tooltip: "Potions fly to the player while they are within this distance; outside it the flying stops until they come back" })
+	giveRadius: number = 1.5;
 	@property({ tooltip: "Seconds between potions" })
 	interval: number = 0.2;
 	@property({ tooltip: "Potion speed along the ground, units per second" })
@@ -57,23 +59,29 @@ export class Chest extends Component {
 	protected update(dt: number): void {
 		const player = PlayerAttack.instance;
 		if (!this._given) {
-			if (player && !player.isDead) {
-				const at = this.node.worldPosition;
-				const them = player.node.worldPosition;
-				if (Math.hypot(them.x - at.x, them.z - at.z) <= this.touchRadius) {
-					this._given = true;
-					this._left = this.potions.length || this.count;
-					this._timer = 0;
-				}
+			if (this._near(player, this.giveRadius)) {
+				this._given = true;
+				this._left = this.potions.length || this.count;
+				this._timer = 0;
 			}
 			return;
 		}
-		if (this._left > 0 && (this._timer -= dt) <= 0) {
+		// Only while the player stays near; walking off stops the stream, coming back resumes it.
+		if (this._left > 0 && this._near(player, this.giveRadius) && (this._timer -= dt) <= 0) {
 			this._timer = this.interval;
 			this._left--;
 			this._throw();
 		}
 		this._fly(player, dt);
+	}
+
+	private _near(player: PlayerAttack, radius: number): boolean {
+		if (!player || player.isDead) {
+			return false;
+		}
+		const at = this.node.worldPosition;
+		const them = player.node.worldPosition;
+		return Math.hypot(them.x - at.x, them.z - at.z) <= radius;
 	}
 
 	private _throw(): void {

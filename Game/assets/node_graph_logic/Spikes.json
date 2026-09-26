@@ -1,0 +1,87 @@
+{
+    "version": 4,
+    "name": "Spikes",
+    "view": {
+        "x": 676,
+        "y": 339,
+        "scale": 0.727
+    },
+    "nodes": [
+        {
+            "id": "n1",
+            "name": "Вылетили вверх",
+            "x": -334,
+            "y": -270,
+            "width": 236,
+            "height": 447,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "asset",
+                "uuid": "bed8095f-e751-4d9c-ae36-3c7a73a07e8e",
+                "name": "Tile_Floor_Spikes.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/tiles/floor/Tile_Floor_Spikes.prefab",
+                "path": "db://assets/prefabs/tiles/floor/Tile_Floor_Spikes.prefab"
+            },
+            "state": true
+        },
+        {
+            "id": "n2",
+            "name": "Убрались назад",
+            "x": 160,
+            "y": -208,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Со старта убрану, затем цикл. Постоянно.",
+            "payload": null,
+            "state": true,
+            "params": [
+                {
+                    "name": "close",
+                    "value": "2"
+                },
+                {
+                    "name": "open",
+                    "value": "1"
+                }
+            ]
+        },
+        {
+            "id": "n6",
+            "name": "Node 2",
+            "x": -693,
+            "y": 186,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Умирает соприкасаясь с этим состоянием.",
+            "payload": {
+                "kind": "node",
+                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
+                "name": "Player",
+                "type": "cc.Node",
+                "path": "Main/World/Player"
+            }
+        }
+    ],
+    "links": [
+        {
+            "id": "l3",
+            "from": "n1",
+            "to": "n2"
+        },
+        {
+            "id": "l4",
+            "from": "n2",
+            "to": "n1"
+        },
+        {
+            "id": "l7",
+            "from": "n6",
+            "to": "n1"
+        }
+    ]
+}

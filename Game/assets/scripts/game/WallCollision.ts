@@ -39,6 +39,8 @@ export class WallCollision extends Component {
 
 	private _cells: Uint8Array = null;
 	private _doors: { door: Door; cells: Uint8Array }[] = [];
+	// Cells any door leaf covers, so the common case — no door here — is one lookup.
+	private _doorCells: Uint8Array = null;
 	private _cols: number = 0;
 	private _rows: number = 0;
 	private _originX: number = 0;
@@ -266,6 +268,12 @@ export class WallCollision extends Component {
 
 		this._cells = this._rasterize(walls);
 		this._doors = doors.map((group) => ({ door: group.door, cells: this._rasterize(group.triangles) }));
+		this._doorCells = new Uint8Array(this._cols * this._rows);
+		for (const layer of this._doors) {
+			for (let i = 0; i < layer.cells.length; i++) {
+				this._doorCells[i] |= layer.cells[i];
+			}
+		}
 	}
 
 	/** The door leaf a renderer belongs to — the leaf itself or a node under it — or null. */
@@ -479,7 +487,21 @@ export class WallCollision extends Component {
 		return true;
 	}
 
+	/** Which doors are shut right now, as one number: it changes exactly when the walls do. */
+	get doorState(): number {
+		let state = 0;
+		this._doors.forEach((layer, i) => {
+			if (!layer.door.isOpen) {
+				state += 1 << (i % 30);
+			}
+		});
+		return state;
+	}
+
 	private _closedDoorAt(at: number): boolean {
+		if (!this._doorCells || !this._doorCells[at]) {
+			return false;
+		}
 		for (const layer of this._doors) {
 			if (layer.cells[at] && !layer.door.isOpen) {
 				return true;

@@ -14,6 +14,7 @@ const GameEvent = Enum({
 	MOVE_DIRECTION: 110,
 	DOOR_OPEN: 120,
 	DOOR_CLOSE: 130,
+	GAME_COMPLETE: 140,
 });
 
 export default GameEvent;
