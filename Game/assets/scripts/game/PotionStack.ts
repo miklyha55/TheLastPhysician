@@ -67,7 +67,7 @@ export class PotionStack extends Component {
 			}
 			node = instantiate(this.item);
 		}
-		this._adopt(node, this.itemScale, 0, this._height(this._items.length));
+		this._adopt(node, this.itemScale, 0, this._centre(this._items.length, this.step));
 		this._items.push({ node, key: false, color: -1, height: this.step });
 	}
 
@@ -77,7 +77,7 @@ export class PotionStack extends Component {
 			node.destroy();
 			return;
 		}
-		this._adopt(node, this.keyScale, 90, this._height(this._items.length));
+		this._adopt(node, this.keyScale, 90, this._centre(this._items.length, this.keyStep));
 		this._items.push({ node, key: true, color, height: this.keyStep });
 	}
 
@@ -160,8 +160,17 @@ export class PotionStack extends Component {
 		if (!this.anchor) {
 			return out.set(this.node.worldPosition);
 		}
-		this._at.set(0, this._height(index) / this._anchorScale(), 0);
+		this._at.set(0, this._centre(index, this.step) / this._anchorScale(), 0);
 		return Vec3.transformMat4(out, this._at, this.anchor.worldMatrix);
+	}
+
+	/**
+	 * World height of the middle of an item `height` tall at this place: half its height above
+	 * the top of what lies under it. Measured from the middle of a potion at the bottom, so a
+	 * stack of potions stands where it always did; a thinner key sits lower, flat on the one below.
+	 */
+	private _centre(index: number, height: number): number {
+		return this._height(index) + (height - this.step) / 2;
 	}
 
 	/** World height of the bottom of the item at this place in the stack. */
@@ -183,14 +192,15 @@ export class PotionStack extends Component {
 
 	/** Moves the items from `from` on to where they now belong. */
 	private _layout(from: number): void {
-		let height = this._height(from);
+		let bottom = this._height(from);
 		for (let i = from; i < this._items.length; i++) {
-			const node = this._items[i].node;
-			Tween.stopAllByTarget(node);
-			tween(node)
-				.to(this.shiftTime, { position: v3(0, height / this._anchorScale(), 0) }, { easing: "quadOut" })
+			const entry = this._items[i];
+			const centre = bottom + (entry.height - this.step) / 2;
+			Tween.stopAllByTarget(entry.node);
+			tween(entry.node)
+				.to(this.shiftTime, { position: v3(0, centre / this._anchorScale(), 0) }, { easing: "quadOut" })
 				.start();
-			height += this._items[i].height;
+			bottom += entry.height;
 		}
 	}
 
