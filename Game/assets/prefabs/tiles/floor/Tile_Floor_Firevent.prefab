@@ -1,7 +1,7 @@
 [
   {
     "__type__": "cc.Prefab",
-    "_name": "Tile_Floor_Button",
+    "_name": "Tile_Floor_Firevent",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_native": "",
@@ -13,7 +13,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "Tile_Floor_Button",
+    "_name": "Tile_Floor_Firevent",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": null,
@@ -65,7 +65,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "Tile_Button",
+    "_name": "Tile_Firevent_Grate",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -133,7 +133,7 @@
       "__id__": 5
     },
     "_mesh": {
-      "__uuid__": "9d261b9e-cad5-4370-acdb-66f008ae6572@01308",
+      "__uuid__": "5497d8cf-f4a5-4f15-b698-f1236e7df1b6@c51b7",
       "__expectedType__": "cc.Mesh"
     },
     "_shadowCastingMode": 1,
@@ -149,7 +149,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "e5muWVTSRGEJ/XzCp9Oc5X"
+    "fileId": "9ej1iacAZEi4Q/vp8KNklE"
   },
   {
     "__type__": "cc.ModelBakeSettings",
@@ -179,7 +179,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "69q5BFbLlDu6Rt6CZAQ5MV",
+    "fileId": "63eUxGAopInphW9uZkWb05",
     "instance": null,
     "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
@@ -207,10 +207,10 @@
       "__id__": 9
     },
     "_mesh": {
-      "__uuid__": "9d261b9e-cad5-4370-acdb-66f008ae6572@63b8e",
+      "__uuid__": "5497d8cf-f4a5-4f15-b698-f1236e7df1b6@0512d",
       "__expectedType__": "cc.Mesh"
     },
-    "_shadowCastingMode": 1,
+    "_shadowCastingMode": 0,
     "_shadowReceivingMode": 1,
     "_shadowBias": 0,
     "_shadowNormalBias": 0,
@@ -246,7 +246,7 @@
     "_bakeToReflectionProbe": true
   },
   {
-    "__type__": "34ea0WAMmJBgr4k9rxR/sdo",
+    "__type__": "c9cc4L3iZ1F/KMk5lUK8F7s",
     "_name": "",
     "_objFlags": 0,
     "__editorExtras__": {},
@@ -257,20 +257,45 @@
     "__prefab": {
       "__id__": 11
     },
-    "doors": [],
-    "plate": {
-      "__id__": 2
+    "offTime": 2,
+    "onTime": 3,
+    "fadeTime": 0.4,
+    "phase": 0,
+    "killRadius": 0.32,
+    "killStrength": 0.5,
+    "mouthHeight": 0.03,
+    "mouthRadius": 0.16,
+    "flameHeight": 0.75,
+    "tongueLife": 0.45,
+    "tongueSize": 0.16,
+    "tongues": 18,
+    "spinSpeed": 360,
+    "coreColor": {
+      "__type__": "cc.Color",
+      "r": 255,
+      "g": 236,
+      "b": 150,
+      "a": 255
     },
-    "pressDepth": 0.025,
-    "pressTime": 0.08,
-    "releaseTime": 0.2,
-    "radius": 0.3,
-    "maxHeight": 0.15,
+    "midColor": {
+      "__type__": "cc.Color",
+      "r": 255,
+      "g": 128,
+      "b": 32,
+      "a": 255
+    },
+    "tailColor": {
+      "__type__": "cc.Color",
+      "r": 200,
+      "g": 36,
+      "b": 12,
+      "a": 255
+    },
     "_id": ""
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "bf/lZbXnpILLIHKw37Jjao"
+    "fileId": "bfn2O/sRBPt4ojPcH+zmbT"
   },
   {
     "__type__": "cc.PrefabInfo",
@@ -281,6 +306,6 @@
       "__id__": 0
     },
     "fileId": "27EM1WXsFN76GJZ9NGYyp3",
-    "targetOverrides": []
+    "targetOverrides": null
   }
 ]
