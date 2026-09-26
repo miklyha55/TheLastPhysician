@@ -29,7 +29,8 @@ interface Shot {
 // The player's fight. Standing still, the player picks the nearest zombie within
 // `shootRadius` that is in plain sight, turns to it and shoots: one shot, one potion, lobbed
 // in an arc at the zombie, taking one of its lives when it lands. The next shot waits for
-// `fireInterval` and for the potion in the air to land, so there is never more than one. The
+// `fireInterval` and for the potion in the air to land, so there is never more than one; each
+// shot takes one potion from `ammo`, and with none left there is no shot. The
 // target is picked afresh before every shot: whichever is nearest then. Running
 // stops the shooting. The player has one life; a zombie's blow takes it — the player falls,
 // lies still, and the camera circles round them.
@@ -59,6 +60,8 @@ export class PlayerAttack extends Component {
 	projectileParent: Node = null;
 
 	@property lives: number = 1;
+	@property({ tooltip: "Potions carried; every shot takes one, and with none left the player cannot shoot" })
+	ammo: number = 5;
 	@property({ tooltip: "Zombies nearer than this are shot at" })
 	shootRadius: number = 3;
 	@property({ tooltip: "Seconds from one shot to the next" })
@@ -138,6 +141,11 @@ export class PlayerAttack extends Component {
 		this._pressed = false;
 	}
 
+	/** Potions handed to the player — from a chest. */
+	addAmmo(count: number): void {
+		this.ammo += count;
+	}
+
 	/** A zombie's blow, struck from `from`. */
 	takeHit(from: Vec3 = null): void {
 		if (this._dead) {
@@ -172,7 +180,7 @@ export class PlayerAttack extends Component {
 				}
 			}
 		}
-		const ready = this._cooldown <= 0 && this._throwIn < 0 && !this._shots.length;
+		const ready = this._cooldown <= 0 && this._throwIn < 0 && !this._shots.length && this.ammo > 0;
 		// Before every shot the nearest zombie is taken afresh; between shots the player keeps
 		// facing the one being shot at, so it does not twitch between two at the same distance.
 		this._target = ready || !this._canShoot(this._target) ? this._nearest() : this._target;
@@ -186,6 +194,7 @@ export class PlayerAttack extends Component {
 			return;
 		}
 		this._cooldown = this.fireInterval;
+		this.ammo--;
 		const duration = this.animationController ? this.animationController.shoot() : 0;
 		this._throwAt = this._target;
 		this._throwIn = duration * this.shotMoment;

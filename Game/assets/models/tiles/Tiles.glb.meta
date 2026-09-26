@@ -193,7 +193,7 @@
       "name": "Tile_Wall_Corner.mesh",
       "userData": {
         "gltfIndex": 9,
-        "triangleCount": 608
+        "triangleCount": 596
       },
       "ver": "1.1.1",
       "imported": true,
@@ -229,7 +229,7 @@
       "name": "Tile_Wall_Cross.mesh",
       "userData": {
         "gltfIndex": 11,
-        "triangleCount": 1204
+        "triangleCount": 1196
       },
       "ver": "1.1.1",
       "imported": true,
@@ -329,6 +329,42 @@
       ],
       "subMetas": {}
     },
+    "1f02e": {
+      "importer": "gltf-mesh",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@1f02e",
+      "displayName": "",
+      "id": "1f02e",
+      "name": "Tile_Wall_T.mesh",
+      "userData": {
+        "gltfIndex": 18,
+        "triangleCount": 964
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f00d5": {
+      "importer": "gltf-mesh",
+      "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@f00d5",
+      "displayName": "",
+      "id": "f00d5",
+      "name": "Floor_Tile_Wall_T.mesh",
+      "userData": {
+        "gltfIndex": 19,
+        "triangleCount": 84
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
     "5742b": {
       "importer": "gltf-material",
       "uuid": "2581c147-0119-4e7a-989c-5dd42669b400@5742b",
@@ -401,7 +437,9 @@
         "2581c147-0119-4e7a-989c-5dd42669b400@43334",
         "2581c147-0119-4e7a-989c-5dd42669b400@9dbad",
         "2581c147-0119-4e7a-989c-5dd42669b400@853ab",
-        "2581c147-0119-4e7a-989c-5dd42669b400@1d359"
+        "2581c147-0119-4e7a-989c-5dd42669b400@1d359",
+        "2581c147-0119-4e7a-989c-5dd42669b400@1f02e",
+        "2581c147-0119-4e7a-989c-5dd42669b400@f00d5"
       ],
       "skeletons": [],
       "textures": [],

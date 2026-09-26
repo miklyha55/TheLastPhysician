@@ -1,0 +1,109 @@
+{
+    "version": 4,
+    "name": "Chest",
+    "view": {
+        "x": 243,
+        "y": 299,
+        "scale": 0.456
+    },
+    "nodes": [
+        {
+            "id": "n2",
+            "name": "Node 2",
+            "x": -368,
+            "y": -290,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "node",
+                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
+                "name": "Player",
+                "type": "cc.Node",
+                "path": "Main/World/Player"
+            }
+        },
+        {
+            "id": "n4",
+            "name": "Node 3",
+            "x": 777,
+            "y": 197,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "летят по дуге к плееру",
+            "payload": {
+                "kind": "asset",
+                "uuid": "a9cb6f9f-42ef-44e0-aa45-0b2d7631f151",
+                "name": "Potion.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/weapons/Potion.prefab",
+                "path": "db://assets/prefabs/weapons/Potion.prefab"
+            }
+        },
+        {
+            "id": "n9",
+            "name": "Окрыт",
+            "x": 213,
+            "y": -436,
+            "width": 219,
+            "height": 455,
+            "previewHeight": 96,
+            "prompt": "Chest_Lid открыт со старта, при соприкосновении с плеером один раз.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "475847b0-dc37-47a5-a7fc-83d8fb3e8259",
+                "name": "Chest.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/props/Chest.prefab",
+                "path": "db://assets/prefabs/props/Chest.prefab"
+            },
+            "state": true
+        },
+        {
+            "id": "n11",
+            "name": "Закрыт",
+            "x": 578,
+            "y": -345,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Chest_Lid закрыт после того как выдал 5 склянок",
+            "payload": {
+                "kind": "asset",
+                "uuid": "475847b0-dc37-47a5-a7fc-83d8fb3e8259",
+                "name": "Chest.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/props/Chest.prefab",
+                "path": "db://assets/prefabs/props/Chest.prefab"
+            },
+            "state": true
+        }
+    ],
+    "links": [
+        {
+            "id": "l14",
+            "from": "n11",
+            "to": "n4"
+        },
+        {
+            "id": "l16",
+            "from": "n4",
+            "to": "n2"
+        },
+        {
+            "id": "l18",
+            "from": "n2",
+            "to": "n9"
+        },
+        {
+            "id": "l20",
+            "from": "n9",
+            "to": "n11"
+        }
+    ]
+}

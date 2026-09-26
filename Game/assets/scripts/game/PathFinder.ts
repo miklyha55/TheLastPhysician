@@ -7,7 +7,7 @@ const STEPS = [
 	[1, 1, Math.SQRT2], [1, -1, Math.SQRT2], [-1, 1, Math.SQRT2], [-1, -1, Math.SQRT2],
 ];
 // A search that has looked at this many cells gives up rather than stall a frame.
-const MAX_VISITS = 6000;
+const MAX_VISITS = 12000;
 
 // The shortest way round the walls between two points on the floor: A* over a coarse grid
 // laid on the walls' own blocked map, then straightened, so a zombie runs in straight lines

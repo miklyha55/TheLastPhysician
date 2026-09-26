@@ -1,0 +1,188 @@
+{
+  "ver": "2.3.14",
+  "importer": "gltf",
+  "imported": true,
+  "uuid": "670e94e8-8875-47a5-b3ee-56be3d2c71e6",
+  "files": [],
+  "subMetas": {
+    "85554": {
+      "importer": "gltf-mesh",
+      "uuid": "670e94e8-8875-47a5-b3ee-56be3d2c71e6@85554",
+      "displayName": "",
+      "id": "85554",
+      "name": "Key_Green__exp.mesh",
+      "userData": {
+        "gltfIndex": 5,
+        "triangleCount": 316
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "4c8f6": {
+      "importer": "gltf-mesh",
+      "uuid": "670e94e8-8875-47a5-b3ee-56be3d2c71e6@4c8f6",
+      "displayName": "",
+      "id": "4c8f6",
+      "name": "Tile_Door_Red__exp.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 48
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f9416": {
+      "importer": "gltf-mesh",
+      "uuid": "670e94e8-8875-47a5-b3ee-56be3d2c71e6@f9416",
+      "displayName": "",
+      "id": "f9416",
+      "name": "Key_Red__exp.mesh",
+      "userData": {
+        "gltfIndex": 1,
+        "triangleCount": 316
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "ebc4f": {
+      "importer": "gltf-mesh",
+      "uuid": "670e94e8-8875-47a5-b3ee-56be3d2c71e6@ebc4f",
+      "displayName": "",
+      "id": "ebc4f",
+      "name": "Tile_Door_Blue__exp.mesh",
+      "userData": {
+        "gltfIndex": 2,
+        "triangleCount": 48
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "e1f01": {
+      "importer": "gltf-mesh",
+      "uuid": "670e94e8-8875-47a5-b3ee-56be3d2c71e6@e1f01",
+      "displayName": "",
+      "id": "e1f01",
+      "name": "Key_Blue__exp.mesh",
+      "userData": {
+        "gltfIndex": 3,
+        "triangleCount": 316
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "c6dd1": {
+      "importer": "gltf-mesh",
+      "uuid": "670e94e8-8875-47a5-b3ee-56be3d2c71e6@c6dd1",
+      "displayName": "",
+      "id": "c6dd1",
+      "name": "Tile_Door_Green__exp.mesh",
+      "userData": {
+        "gltfIndex": 4,
+        "triangleCount": 48
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "5742b": {
+      "importer": "gltf-material",
+      "uuid": "670e94e8-8875-47a5-b3ee-56be3d2c71e6@5742b",
+      "displayName": "",
+      "id": "5742b",
+      "name": "TilesPalette.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "7d066": {
+      "importer": "gltf-scene",
+      "uuid": "670e94e8-8875-47a5-b3ee-56be3d2c71e6@7d066",
+      "displayName": "",
+      "id": "7d066",
+      "name": "KeysDoors.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "670e94e8-8875-47a5-b3ee-56be3d2c71e6@4c8f6",
+        "670e94e8-8875-47a5-b3ee-56be3d2c71e6@f9416",
+        "670e94e8-8875-47a5-b3ee-56be3d2c71e6@ebc4f",
+        "670e94e8-8875-47a5-b3ee-56be3d2c71e6@e1f01",
+        "670e94e8-8875-47a5-b3ee-56be3d2c71e6@c6dd1",
+        "670e94e8-8875-47a5-b3ee-56be3d2c71e6@85554"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "670e94e8-8875-47a5-b3ee-56be3d2c71e6@5742b"
+      ],
+      "scenes": [
+        "670e94e8-8875-47a5-b3ee-56be3d2c71e6@7d066"
+      ]
+    }
+  }
+}
