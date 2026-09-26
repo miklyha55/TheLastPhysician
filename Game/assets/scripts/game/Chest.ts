@@ -32,7 +32,7 @@ export class Chest extends Component {
 	@property({ tooltip: "Seconds the chest takes to fade away once shut; then it is gone" })
 	vanishTime: number = 0.5;
 	@property({ tooltip: "Potions fly to the player while they are within this distance; outside it the flying stops until they come back" })
-	giveRadius: number = 1.5;
+	giveRadius: number = 0.75;
 	@property({ tooltip: "Seconds between potions" })
 	interval: number = 0.2;
 	@property({ tooltip: "Potion speed along the ground, units per second" })

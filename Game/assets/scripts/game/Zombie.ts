@@ -136,6 +136,15 @@ export class Zombie extends Component {
 		this._stand();
 	}
 
+	/** Killed outright, whatever lives are left — a heavy thing flying into it. */
+	kill(): void {
+		if (this.isDead) {
+			return;
+		}
+		this.lives = 0;
+		this._die();
+	}
+
 	/** A potion hit: one life less — reel, or fall. */
 	takeHit(): void {
 		if (this.isDead) {

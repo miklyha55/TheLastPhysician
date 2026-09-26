@@ -21,6 +21,9 @@ export class PlayerMovement extends Component {
 	private _target: Vec3 = v3();
 	private _walls: WallCollision = null;
 
+	/** While set, the player is moved by something else — a throw, a jump — and the stick is ignored. */
+	locked = false;
+
 	protected start(): void {
 		this._walls = this.getComponent(WallCollision);
 	}
@@ -47,8 +50,21 @@ export class PlayerMovement extends Component {
 		}
 	}
 
-	protected update(dt: number): void {
+	/** Where the stick sends the player, flat on the floor and of unit length; false when it is let go. */
+	moveDirection(out: Vec3): boolean {
 		if (this._direction.lengthSqr() === 0) {
+			return false;
+		}
+		this._axes();
+		Vec3.multiplyScalar(out, this._right, this._direction.x);
+		Vec3.scaleAndAdd(out, out, this._forward, this._direction.y);
+		out.y = 0;
+		out.normalize();
+		return true;
+	}
+
+	protected update(dt: number): void {
+		if (this.locked || this._direction.lengthSqr() === 0) {
 			return;
 		}
 		this._axes();

@@ -1,0 +1,226 @@
+{
+  "ver": "2.3.14",
+  "importer": "gltf",
+  "imported": true,
+  "uuid": "69a3738a-076e-4a1b-8281-e325e72e0dea",
+  "files": [],
+  "subMetas": {
+    "36427": {
+      "importer": "gltf-mesh",
+      "uuid": "69a3738a-076e-4a1b-8281-e325e72e0dea@36427",
+      "displayName": "",
+      "id": "36427",
+      "name": "Furn_Candelabra.mesh",
+      "userData": {
+        "gltfIndex": 3,
+        "triangleCount": 346
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "72615": {
+      "importer": "gltf-mesh",
+      "uuid": "69a3738a-076e-4a1b-8281-e325e72e0dea@72615",
+      "displayName": "",
+      "id": "72615",
+      "name": "Furn_Crate.mesh",
+      "userData": {
+        "gltfIndex": 5,
+        "triangleCount": 72
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "def25": {
+      "importer": "gltf-mesh",
+      "uuid": "69a3738a-076e-4a1b-8281-e325e72e0dea@def25",
+      "displayName": "",
+      "id": "def25",
+      "name": "Furn_Barrel.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 176
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "e4c26": {
+      "importer": "gltf-mesh",
+      "uuid": "69a3738a-076e-4a1b-8281-e325e72e0dea@e4c26",
+      "displayName": "",
+      "id": "e4c26",
+      "name": "Furn_Bed.mesh",
+      "userData": {
+        "gltfIndex": 1,
+        "triangleCount": 108
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "72fd2": {
+      "importer": "gltf-mesh",
+      "uuid": "69a3738a-076e-4a1b-8281-e325e72e0dea@72fd2",
+      "displayName": "",
+      "id": "72fd2",
+      "name": "Furn_Bench.mesh",
+      "userData": {
+        "gltfIndex": 2,
+        "triangleCount": 48
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "35f01": {
+      "importer": "gltf-mesh",
+      "uuid": "69a3738a-076e-4a1b-8281-e325e72e0dea@35f01",
+      "displayName": "",
+      "id": "35f01",
+      "name": "Furn_Chair.mesh",
+      "userData": {
+        "gltfIndex": 4,
+        "triangleCount": 84
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "e5bd9": {
+      "importer": "gltf-mesh",
+      "uuid": "69a3738a-076e-4a1b-8281-e325e72e0dea@e5bd9",
+      "displayName": "",
+      "id": "e5bd9",
+      "name": "Furn_Shelf.mesh",
+      "userData": {
+        "gltfIndex": 6,
+        "triangleCount": 108
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "da832": {
+      "importer": "gltf-mesh",
+      "uuid": "69a3738a-076e-4a1b-8281-e325e72e0dea@da832",
+      "displayName": "",
+      "id": "da832",
+      "name": "Furn_Table.mesh",
+      "userData": {
+        "gltfIndex": 7,
+        "triangleCount": 132
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "113d3": {
+      "importer": "gltf-material",
+      "uuid": "69a3738a-076e-4a1b-8281-e325e72e0dea@113d3",
+      "displayName": "",
+      "id": "113d3",
+      "name": "FurniturePalette.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "191f9": {
+      "importer": "gltf-scene",
+      "uuid": "69a3738a-076e-4a1b-8281-e325e72e0dea@191f9",
+      "displayName": "",
+      "id": "191f9",
+      "name": "Furniture.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "69a3738a-076e-4a1b-8281-e325e72e0dea@def25",
+        "69a3738a-076e-4a1b-8281-e325e72e0dea@e4c26",
+        "69a3738a-076e-4a1b-8281-e325e72e0dea@72fd2",
+        "69a3738a-076e-4a1b-8281-e325e72e0dea@36427",
+        "69a3738a-076e-4a1b-8281-e325e72e0dea@35f01",
+        "69a3738a-076e-4a1b-8281-e325e72e0dea@72615",
+        "69a3738a-076e-4a1b-8281-e325e72e0dea@e5bd9",
+        "69a3738a-076e-4a1b-8281-e325e72e0dea@da832"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "69a3738a-076e-4a1b-8281-e325e72e0dea@113d3"
+      ],
+      "scenes": [
+        "69a3738a-076e-4a1b-8281-e325e72e0dea@191f9"
+      ]
+    }
+  }
+}

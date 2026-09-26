@@ -43,6 +43,8 @@ export class OcclusionFade extends Component {
 	private _itemOf = new Map<MeshRenderer, Item>();
 	private _blocking = new Set<Item>();
 	private _ray = new geometry.Ray();
+	private _local = new geometry.AABB();
+	private _bounds = new geometry.AABB();
 	private _aim = v3();
 	private _target: Node = null;
 
@@ -108,7 +110,7 @@ export class OcclusionFade extends Component {
 			if (!renderer.enabledInHierarchy || !renderer.model || this._blocking.has(item)) {
 				continue;
 			}
-			const near = geometry.intersect.rayAABB(this._ray, renderer.model.worldBounds);
+			const near = geometry.intersect.rayAABB(this._ray, this._tightBounds(renderer, this._bounds));
 			if (!near || near >= reach) {
 				continue;
 			}
@@ -162,9 +164,26 @@ export class OcclusionFade extends Component {
 	}
 
 	private _isFloor(renderer: MeshRenderer): boolean {
-		const bounds = renderer.model && renderer.model.worldBounds;
+		const bounds = this._tightBounds(renderer, this._bounds);
 		return !!bounds && bounds.center.y + bounds.halfExtents.y < FLOOR_TOP;
 	}
+
+	/**
+	 * The renderer's box in the world, from its own mesh. Not `model.worldBounds`: those may be
+	 * blown up on purpose (ShadowCullMargin grows them so planar shadows are not culled at the
+	 * screen's edge), and a box twenty units wide would lie in front of everything.
+	 */
+	private _tightBounds(renderer: MeshRenderer, out: geometry.AABB): geometry.AABB {
+		const struct = renderer.mesh && renderer.mesh.struct;
+		if (!struct || !struct.minPosition || !struct.maxPosition) {
+			return renderer.model ? renderer.model.worldBounds : null;
+		}
+		geometry.AABB.fromPoints(this._local, struct.minPosition, struct.maxPosition);
+		const node = renderer.node;
+		this._local.transform(node.worldMatrix, node.worldPosition, node.worldRotation, node.worldScale, out);
+		return out;
+	}
+
 
 	private _canFade(renderer: MeshRenderer): boolean {
 		return renderer.sharedMaterials.some((material) => material && material.passes[0].getHandle(DITHER));

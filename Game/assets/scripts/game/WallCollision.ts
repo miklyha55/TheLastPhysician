@@ -59,6 +59,11 @@ export class WallCollision extends Component {
 		this._previous = this.node.worldPosition.clone();
 	}
 
+	protected onEnable(): void {
+		// Switched off for a jump over something: where the player landed is where they are.
+		this._previous && this._previous.set(this.node.worldPosition);
+	}
+
 	/**
 	 * Where a move from `from` towards `to` may end: `to` when it is clear, otherwise pushed
 	 * out along the walls, steered into a nearby opening, slid along one axis, or held at
@@ -132,6 +137,21 @@ export class WallCollision extends Component {
 	/** Would something of the player's radius standing here touch a wall or a shut door? */
 	isBlocked(x: number, z: number): boolean {
 		return !!this._cells && this._blocked(x, z);
+	}
+
+	/**
+	 * Pushes a point of the player's radius out of the walls it overlaps — for things other
+	 * than the player bouncing off them. Returns false when it overlapped nothing.
+	 */
+	pushOut(point: Vec3): boolean {
+		if (!this._cells) {
+			return false;
+		}
+		let moved = false;
+		for (let i = 0; i < PUSH_ITERATIONS && this._pushOut(point); i++) {
+			moved = true;
+		}
+		return moved;
 	}
 
 	/** Can something of the player's radius go from `a` to `b` in a straight line? */

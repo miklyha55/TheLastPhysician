@@ -100,6 +100,19 @@ export class PlayerAttack extends Component {
 		return this._dead;
 	}
 
+	/** Set while the player throws something or jumps: no shot is started meanwhile. */
+	busy = false;
+
+	/** The zombie being aimed at now, or null. */
+	get target(): Zombie {
+		return this._target && this._target.isValid && !this._target.isDead ? this._target : null;
+	}
+
+	/** The nearest zombie that could be shot at now, or null — what a throw is aimed at. */
+	nearestTarget(): Zombie {
+		return this._nearest();
+	}
+
 	/** The walls the player collides with, which the zombies find their way round too. */
 	get walls(): WallCollision {
 		return this._walls;
@@ -206,7 +219,7 @@ export class PlayerAttack extends Component {
 				}
 			}
 		}
-		const ready = this._cooldown <= 0 && this._throwIn < 0 && !this._shots.length && this.ammo > 0;
+		const ready = this._cooldown <= 0 && this._throwIn < 0 && !this._shots.length && this.ammo > 0 && !this.busy;
 		// Before every shot the nearest zombie is taken afresh; between shots the player keeps
 		// facing the one being shot at, so it does not twitch between two at the same distance.
 		this._target = ready || !this._canShoot(this._target) ? this._nearest() : this._target;

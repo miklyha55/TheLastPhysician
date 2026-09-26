@@ -24,6 +24,7 @@ export class AnimationController extends Component {
 
 	private _pressed: boolean = false;
 	private _current: string = null;
+	private _override: string = null;
 
 	protected onLoad(): void {
 		this.animation = this.animation || this.getComponent(SkeletalAnimation);
@@ -73,6 +74,34 @@ export class AnimationController extends Component {
 		return duration;
 	}
 
+	/**
+	 * Plays a clip of its own over run and idle — a throw, a jump — at `speed`, from its start;
+	 * the stick does not change it until `release`. Returns how long it takes, seconds.
+	 */
+	override(clip: AnimationClip, name: string, speed: number): number {
+		if (!this.animation || !clip) {
+			return 0;
+		}
+		let state = this.animation.getState(name);
+		if (!state) {
+			state = this.animation.createState(clip, name);
+		}
+		state.wrapMode = AnimationClip.WrapMode.Normal;
+		state.speed = speed;
+		this.unschedule(this._backToIdle);
+		this._override = name;
+		this._current = name;
+		this.animation.crossFade(name, 0.08);
+		return state.duration / (speed || 1);
+	}
+
+	/** Back to running or idling, whichever the stick says. */
+	release(): void {
+		this._override = null;
+		this._current = null;
+		this._play(this._pressed ? RUN : IDLE);
+	}
+
 	private _backToIdle(): void {
 		if (!this._pressed) {
 			this._play(IDLE);
@@ -112,7 +141,7 @@ export class AnimationController extends Component {
 	}
 
 	private _play(name: string): void {
-		if (!this.animation || this._current === name || !this.animation.getState(name)) {
+		if (this._override || !this.animation || this._current === name || !this.animation.getState(name)) {
 			return;
 		}
 		this._current = name;

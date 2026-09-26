@@ -1,0 +1,128 @@
+{
+    "version": 4,
+    "name": "Furniture",
+    "view": {
+        "x": 487,
+        "y": 321,
+        "scale": 0.859
+    },
+    "nodes": [
+        {
+            "id": "n2",
+            "name": "Node 2",
+            "x": -571,
+            "y": -184,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "При взаимодействии с объектами фурнитуры.",
+            "payload": {
+                "kind": "node",
+                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
+                "name": "Player",
+                "type": "cc.Node",
+                "path": "Main/World/Player"
+            }
+        },
+        {
+            "id": "n3",
+            "name": "Node 3",
+            "x": 307,
+            "y": -5,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "динамический объект летит в направлении врага по дуге снимая ему все жизни если попала. Можно сбить ногами и полетит. Со своей физикой как тут /Users/admin/Yandex.Disk.localized/MyGame/ThroughTheDeadCity/Game",
+            "payload": {
+                "kind": "folder",
+                "uuid": "68797287-76b0-4198-9c37-0e011b60e008",
+                "name": "furniture",
+                "type": "Folder",
+                "importer": "directory",
+                "url": "db://assets/prefabs/furniture",
+                "path": "db://assets/prefabs/furniture"
+            }
+        },
+        {
+            "id": "n4",
+            "name": "Node 4",
+            "x": -156,
+            "y": 48,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "расчитать время кидка исходя из тймлайна анимации и проиграть ее быстрее в 3 раза",
+            "payload": {
+                "kind": "asset",
+                "uuid": "c96bb1b1-bbcf-4071-8cc3-965e33fbc5ee",
+                "name": "Throw Object.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/player/Throw Object.fbx",
+                "path": "db://assets/models/player/Throw Object.fbx"
+            }
+        },
+        {
+            "id": "n9",
+            "name": "Node 6",
+            "x": 244,
+            "y": -395,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "статический объект можно перепрыгнуть учитывая высоту и расчитывая конечную точку как в примере тут /Users/admin/Yandex.Disk.localized/MyGame/ThroughTheDeadCity/Game",
+            "payload": {
+                "kind": "folder",
+                "uuid": "68797287-76b0-4198-9c37-0e011b60e008",
+                "name": "furniture",
+                "type": "Folder",
+                "importer": "directory",
+                "url": "db://assets/prefabs/furniture",
+                "path": "db://assets/prefabs/furniture"
+            }
+        },
+        {
+            "id": "n11",
+            "name": "Node 7",
+            "x": -163,
+            "y": -462,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "приграть быстрее в 2 раза",
+            "payload": {
+                "kind": "asset",
+                "uuid": "a11a2862-2cf8-4372-b010-155b483b1eeb",
+                "name": "Jumping.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/player/Jumping.fbx",
+                "path": "db://assets/models/player/Jumping.fbx"
+            }
+        }
+    ],
+    "links": [
+        {
+            "id": "l5",
+            "from": "n2",
+            "to": "n4",
+            "label": "если малогаборитный"
+        },
+        {
+            "id": "l6",
+            "from": "n4",
+            "to": "n3"
+        },
+        {
+            "id": "l12",
+            "from": "n2",
+            "to": "n11",
+            "label": "если большие габориты"
+        },
+        {
+            "id": "l13",
+            "from": "n11",
+            "to": "n9"
+        }
+    ]
+}
