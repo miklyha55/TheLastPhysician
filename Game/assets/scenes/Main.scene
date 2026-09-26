@@ -207,7 +207,7 @@
       "__id__": 34
     },
     "fovDefault": 45,
-    "orthoHeightDefault": 2,
+    "orthoHeightDefault": 1,
     "lookAtTarget": null,
     "offsetLookAtTargetTarget": {
       "__type__": "cc.Vec3",
@@ -5068,11 +5068,11 @@
     "root": {
       "__id__": 43
     },
-    "threshold": 0.7,
-    "hysteresis": 0.2,
-    "fadeAmount": 0.6,
-    "fadeSpeed": 4,
-    "checkInterval": 0.1,
+    "aimHeight": 0.4,
+    "fadeAmount": 0.78,
+    "fadeOutSpeed": 6,
+    "fadeInSpeed": 2.5,
+    "grain": 1,
     "_id": "81w/cVLgVOTYbrel0Q+vmd"
   },
   {
