@@ -1,0 +1,93 @@
+{
+  "ver": "2.3.14",
+  "importer": "gltf",
+  "imported": true,
+  "uuid": "c42f3c18-1b0c-4eaa-97e9-fd86af238ee5",
+  "files": [],
+  "subMetas": {
+    "9d844": {
+      "importer": "gltf-mesh",
+      "uuid": "c42f3c18-1b0c-4eaa-97e9-fd86af238ee5@9d844",
+      "displayName": "",
+      "id": "9d844",
+      "name": "Potion.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 536
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "0bec5": {
+      "importer": "gltf-material",
+      "uuid": "c42f3c18-1b0c-4eaa-97e9-fd86af238ee5@0bec5",
+      "displayName": "",
+      "id": "0bec5",
+      "name": "GunPalette.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "a721b": {
+      "importer": "gltf-scene",
+      "uuid": "c42f3c18-1b0c-4eaa-97e9-fd86af238ee5@a721b",
+      "displayName": "",
+      "id": "a721b",
+      "name": "Potion.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "c42f3c18-1b0c-4eaa-97e9-fd86af238ee5@9d844"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "c42f3c18-1b0c-4eaa-97e9-fd86af238ee5@0bec5"
+      ],
+      "scenes": [
+        "c42f3c18-1b0c-4eaa-97e9-fd86af238ee5@a721b"
+      ]
+    }
+  }
+}

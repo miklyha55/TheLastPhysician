@@ -23,7 +23,7 @@ export class CameraManager extends Component {
 	@property([Camera]) cameras: Camera[] = [];
 	@property(Node) cameraBox: Node = null;
 	@property(CCInteger) fovDefault: number = 45;
-	@property(CCInteger) orthoHeightDefault: number = 300;
+	@property(CCFloat) orthoHeightDefault: number = 300;
 	@property(Node) lookAtTarget: Node | null = null;
 	@property({
 		visible(this: CameraManager) {

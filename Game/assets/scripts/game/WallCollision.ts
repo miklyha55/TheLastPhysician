@@ -7,6 +7,12 @@ const { ccclass, property } = _decorator;
 const PUSH_ITERATIONS = 4;
 // Fractions of a slide tried when the full one would still touch a wall.
 const SLIDE_SCALES = [1, 0.5, 0.25];
+// Small steps away from the wall tried with a slide that still touches it, before anything
+// cruder: a few millimetres, where a push-out would throw the player a whole cell away.
+const SLIDE_LIFTS = [0.002, 0.005, 0.01];
+// A normal component this small is noise from the blocked-cell grid, not a real slant: along a
+// straight wall it would tilt the slide into the wall and out again every few centimetres.
+const NORMAL_SNAP = 0.15;
 
 // Keeps the player out of the walls: every instance of a wall prefab found in the scene is
 // flattened onto the floor as a grid of blocked cells, built from the walls' own geometry,
@@ -85,6 +91,14 @@ export class WallCollision extends Component {
 				}
 				for (const scale of SLIDE_SCALES) {
 					out.set(from.x + sx * scale, to.y, from.z + sz * scale);
+					if (!this._blocked(out.x, out.z)) {
+						this._slide.set(sx, 0, sz);
+						this._sliding = true;
+						return out;
+					}
+				}
+				for (const lift of SLIDE_LIFTS) {
+					out.set(from.x + sx + this._normal.x * lift, to.y, from.z + sz + this._normal.z * lift);
 					if (!this._blocked(out.x, out.z)) {
 						this._slide.set(sx, 0, sz);
 						this._sliding = true;
@@ -355,7 +369,19 @@ export class WallCollision extends Component {
 			return false;
 		}
 		out.set(probe.x - point.x, 0, probe.z - point.z);
-		const length = Math.hypot(out.x, out.z);
+		let length = Math.hypot(out.x, out.z);
+		if (length < 1e-6) {
+			return false;
+		}
+		out.multiplyScalar(1 / length);
+		// Straighten grid noise: a straight wall gets a normal exactly across it.
+		if (Math.abs(out.x) < NORMAL_SNAP) {
+			out.x = 0;
+		}
+		if (Math.abs(out.z) < NORMAL_SNAP) {
+			out.z = 0;
+		}
+		length = Math.hypot(out.x, out.z);
 		if (length < 1e-6) {
 			return false;
 		}

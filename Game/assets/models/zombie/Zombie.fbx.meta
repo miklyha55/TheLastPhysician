@@ -1,0 +1,258 @@
+{
+  "ver": "2.3.14",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "222e153b-fc90-4672-9656-da6be5fe6766",
+  "files": [
+    "__original-animation-0.bin"
+  ],
+  "subMetas": {
+    "59524": {
+      "importer": "gltf-material",
+      "uuid": "222e153b-fc90-4672-9656-da6be5fe6766@59524",
+      "displayName": "",
+      "id": "59524",
+      "name": "ZMouth.material",
+      "userData": {
+        "gltfIndex": 3
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "c0414": {
+      "importer": "gltf-mesh",
+      "uuid": "222e153b-fc90-4672-9656-da6be5fe6766@c0414",
+      "displayName": "",
+      "id": "c0414",
+      "name": "Zombie.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 6302
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "18d6f": {
+      "importer": "gltf-animation",
+      "uuid": "222e153b-fc90-4672-9656-da6be5fe6766@18d6f",
+      "displayName": "",
+      "id": "18d6f",
+      "name": "mixamo.com.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 0,
+          "to": 0.03333333507180214
+        },
+        "events": []
+      },
+      "ver": "1.0.18",
+      "imported": true,
+      "files": [
+        ".bin"
+      ],
+      "subMetas": {}
+    },
+    "438fe": {
+      "importer": "gltf-skeleton",
+      "uuid": "222e153b-fc90-4672-9656-da6be5fe6766@438fe",
+      "displayName": "",
+      "id": "438fe",
+      "name": "UnnamedSkeleton.skeleton",
+      "userData": {
+        "gltfIndex": 0,
+        "jointsLength": 28
+      },
+      "ver": "1.0.1",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "006b1": {
+      "importer": "gltf-material",
+      "uuid": "222e153b-fc90-4672-9656-da6be5fe6766@006b1",
+      "displayName": "",
+      "id": "006b1",
+      "name": "ZSkin.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "dd796": {
+      "importer": "gltf-material",
+      "uuid": "222e153b-fc90-4672-9656-da6be5fe6766@dd796",
+      "displayName": "",
+      "id": "dd796",
+      "name": "ZBandage.material",
+      "userData": {
+        "gltfIndex": 1
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "c2086": {
+      "importer": "gltf-material",
+      "uuid": "222e153b-fc90-4672-9656-da6be5fe6766@c2086",
+      "displayName": "",
+      "id": "c2086",
+      "name": "ZEye.material",
+      "userData": {
+        "gltfIndex": 2
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "ebd5d": {
+      "importer": "gltf-material",
+      "uuid": "222e153b-fc90-4672-9656-da6be5fe6766@ebd5d",
+      "displayName": "",
+      "id": "ebd5d",
+      "name": "ZPants.material",
+      "userData": {
+        "gltfIndex": 4
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "ec655": {
+      "importer": "gltf-material",
+      "uuid": "222e153b-fc90-4672-9656-da6be5fe6766@ec655",
+      "displayName": "",
+      "id": "ec655",
+      "name": "ZShoe.material",
+      "userData": {
+        "gltfIndex": 5
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "2d8d8": {
+      "importer": "gltf-material",
+      "uuid": "222e153b-fc90-4672-9656-da6be5fe6766@2d8d8",
+      "displayName": "",
+      "id": "2d8d8",
+      "name": "ZStain.material",
+      "userData": {
+        "gltfIndex": 6
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "eb7e1": {
+      "importer": "gltf-scene",
+      "uuid": "222e153b-fc90-4672-9656-da6be5fe6766@eb7e1",
+      "displayName": "",
+      "id": "eb7e1",
+      "name": "Zombie.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "fbx": {
+      "smartMaterialEnabled": true
+    },
+    "animationImportSettings": [
+      {
+        "name": "mixamo.com",
+        "duration": 0.03333333507180214,
+        "fps": 30,
+        "splits": [
+          {
+            "name": "mixamo.com",
+            "from": 0,
+            "to": 0.03333333507180214,
+            "wrapMode": 2,
+            "previousId": "18d6f"
+          }
+        ]
+      }
+    ],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "222e153b-fc90-4672-9656-da6be5fe6766@c0414"
+      ],
+      "skeletons": [
+        "222e153b-fc90-4672-9656-da6be5fe6766@438fe"
+      ],
+      "textures": [],
+      "materials": [
+        "222e153b-fc90-4672-9656-da6be5fe6766@006b1",
+        "222e153b-fc90-4672-9656-da6be5fe6766@dd796",
+        "222e153b-fc90-4672-9656-da6be5fe6766@c2086",
+        "222e153b-fc90-4672-9656-da6be5fe6766@59524",
+        "222e153b-fc90-4672-9656-da6be5fe6766@ebd5d",
+        "222e153b-fc90-4672-9656-da6be5fe6766@ec655",
+        "222e153b-fc90-4672-9656-da6be5fe6766@2d8d8"
+      ],
+      "scenes": [
+        "222e153b-fc90-4672-9656-da6be5fe6766@eb7e1"
+      ]
+    }
+  }
+}

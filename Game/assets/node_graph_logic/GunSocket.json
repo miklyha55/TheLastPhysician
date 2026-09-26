@@ -1,0 +1,135 @@
+{
+    "version": 3,
+    "name": "GunSocket",
+    "view": {
+        "x": 507,
+        "y": 151,
+        "scale": 0.638
+    },
+    "nodes": [
+        {
+            "id": "n2",
+            "name": "Node 2",
+            "x": -648,
+            "y": -212,
+            "width": 180,
+            "height": 475,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "asset",
+                "uuid": "5f6b0fb7-0ca1-4c9d-88dd-5570efe10a4a",
+                "name": "Shooting.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/player/Shooting.fbx",
+                "path": "db://assets/models/player/Shooting.fbx"
+            }
+        },
+        {
+            "id": "n3",
+            "name": "Node 3",
+            "x": -12,
+            "y": 238,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Сзади спины",
+            "payload": {
+                "kind": "node",
+                "uuid": "9e4pMSo89JWqvEgigMPjES",
+                "name": "mixamorig:Spine2",
+                "type": "cc.Node",
+                "path": "Main/World/Player/Skeleton/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2"
+            }
+        },
+        {
+            "id": "n5",
+            "name": "Node 4",
+            "x": -27,
+            "y": -141,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "node",
+                "uuid": "ca700H6jVLp5feS9xmXxV5",
+                "name": "mixamorig:RightHand",
+                "type": "cc.Node",
+                "path": "Main/World/Player/Skeleton/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand"
+            }
+        },
+        {
+            "id": "n7",
+            "name": "Node 5",
+            "x": -336,
+            "y": -122,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Привязать к кости сокетом",
+            "payload": {
+                "kind": "asset",
+                "uuid": "c67b90f5-9782-44a5-bb7c-06503dc01279",
+                "name": "PotionBlaster.glb",
+                "type": "cc.Asset",
+                "importer": "gltf",
+                "url": "db://assets/models/weapons/PotionBlaster.glb",
+                "path": "db://assets/models/weapons/PotionBlaster.glb"
+            }
+        },
+        {
+            "id": "n10",
+            "name": "Node 6",
+            "x": -671,
+            "y": 375,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Все остальные анимации плеера",
+            "payload": null
+        },
+        {
+            "id": "n12",
+            "name": "Node 7",
+            "x": -317,
+            "y": 314,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Привязать к кости сокетом",
+            "payload": {
+                "kind": "asset",
+                "uuid": "c67b90f5-9782-44a5-bb7c-06503dc01279",
+                "name": "PotionBlaster.glb",
+                "type": "cc.Asset",
+                "importer": "gltf",
+                "url": "db://assets/models/weapons/PotionBlaster.glb",
+                "path": "db://assets/models/weapons/PotionBlaster.glb"
+            }
+        }
+    ],
+    "links": [
+        {
+            "id": "l8",
+            "from": "n2",
+            "to": "n7"
+        },
+        {
+            "id": "l13",
+            "from": "n10",
+            "to": "n12"
+        },
+        {
+            "id": "l15",
+            "from": "n7",
+            "to": "n5"
+        },
+        {
+            "id": "l16",
+            "from": "n12",
+            "to": "n3"
+        }
+    ]
+}

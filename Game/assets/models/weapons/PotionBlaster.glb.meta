@@ -1,0 +1,93 @@
+{
+  "ver": "2.3.14",
+  "importer": "gltf",
+  "imported": true,
+  "uuid": "c67b90f5-9782-44a5-bb7c-06503dc01279",
+  "files": [],
+  "subMetas": {
+    "5a7b8": {
+      "importer": "gltf-mesh",
+      "uuid": "c67b90f5-9782-44a5-bb7c-06503dc01279@5a7b8",
+      "displayName": "",
+      "id": "5a7b8",
+      "name": "PotionBlaster.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 856
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "0bec5": {
+      "importer": "gltf-material",
+      "uuid": "c67b90f5-9782-44a5-bb7c-06503dc01279@0bec5",
+      "displayName": "",
+      "id": "0bec5",
+      "name": "GunPalette.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "a4d1d": {
+      "importer": "gltf-scene",
+      "uuid": "c67b90f5-9782-44a5-bb7c-06503dc01279@a4d1d",
+      "displayName": "",
+      "id": "a4d1d",
+      "name": "PotionBlaster.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "c67b90f5-9782-44a5-bb7c-06503dc01279@5a7b8"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "c67b90f5-9782-44a5-bb7c-06503dc01279@0bec5"
+      ],
+      "scenes": [
+        "c67b90f5-9782-44a5-bb7c-06503dc01279@a4d1d"
+      ]
+    }
+  }
+}

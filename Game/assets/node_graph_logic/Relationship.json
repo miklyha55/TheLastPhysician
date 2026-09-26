@@ -1,0 +1,322 @@
+{
+    "version": 3,
+    "name": "Relationship",
+    "view": {
+        "x": 344,
+        "y": 282,
+        "scale": 0.332
+    },
+    "nodes": [
+        {
+            "id": "n3",
+            "name": "Node 3",
+            "x": -971,
+            "y": -204,
+            "width": 246,
+            "height": 436,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "asset",
+                "uuid": "6b60ec55-a1cd-4eaa-8de9-0171a4ccdcea",
+                "name": "Zombie1.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/enemys/Zombie1.prefab",
+                "path": "db://assets/prefabs/enemys/Zombie1.prefab"
+            }
+        },
+        {
+            "id": "n4",
+            "name": "Node 4",
+            "x": 305,
+            "y": -399,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "node",
+                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
+                "name": "Player",
+                "type": "cc.Node",
+                "path": "Main/World/Player"
+            }
+        },
+        {
+            "id": "n6",
+            "name": "Node 5",
+            "x": -382,
+            "y": -301,
+            "width": 221,
+            "height": 489,
+            "previewHeight": 96,
+            "prompt": "Ожидает плеера, прогуливаясь в рандомном направлении туда сюда, зацикленно. Не пересекаясь с другими зомби. При обнаружении плеера в заданном радиусе бегут к нему, высчитывая короткий путь.  Могут терять фокус если плеер вышел из радиуса. У зомби 3 жизни.",
+            "payload": {
+                "kind": "component",
+                "uuid": "",
+                "name": "Zombie",
+                "type": "Zombie",
+                "builtin": false,
+                "isNew": true,
+                "path": "Scripts/Zombie"
+            }
+        },
+        {
+            "id": "n9",
+            "name": "Node 6",
+            "x": 783,
+            "y": -333,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "При вхождении зомби или группу зомби в радиус выстрела азначает цель фильтруя по мин. дистанции. При потери цели во время смерти, переключается на другую. У плеера одна жизнь. При потере ее он умирает.",
+            "payload": {
+                "kind": "component",
+                "uuid": "",
+                "name": "PlayerAttack",
+                "type": "PlayerAttack",
+                "builtin": false,
+                "isNew": true,
+                "path": "Scripts/PlayerAttack"
+            }
+        },
+        {
+            "id": "n11",
+            "name": "Node 7",
+            "x": 678,
+            "y": 304,
+            "width": 230,
+            "height": 396,
+            "previewHeight": 96,
+            "prompt": "При  потере всех жизней проигрывается анимация. ",
+            "payload": {
+                "kind": "asset",
+                "uuid": "7f6ec83d-f9cc-4211-8a6b-4e568e7d3217",
+                "name": "Death From Right.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/zombie/Death From Right.fbx",
+                "path": "db://assets/models/zombie/Death From Right.fbx"
+            }
+        },
+        {
+            "id": "n13",
+            "name": "Node 8",
+            "x": 1088,
+            "y": 404,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "По окончанию зомби проваливается под пол медленно, а потом нода удаляется. Высвобождая скелет и все прочее. Оптимизированно.",
+            "payload": null
+        },
+        {
+            "id": "n15",
+            "name": "Node 9",
+            "x": -157,
+            "y": -1146,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Цикл анимаций, во время прогулки.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "e4577c96-f838-4cdf-864d-b2fef53ae47b",
+                "name": "Idle.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/zombie/Idle.fbx",
+                "path": "db://assets/models/zombie/Idle.fbx"
+            }
+        },
+        {
+            "id": "n17",
+            "name": "Node 10",
+            "x": 193,
+            "y": -1228,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "asset",
+                "uuid": "cb272375-d9f8-4eee-9254-6c77658e157f",
+                "name": "Zombie Running.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/zombie/Zombie Running.fbx",
+                "path": "db://assets/models/zombie/Zombie Running.fbx"
+            }
+        },
+        {
+            "id": "n23",
+            "name": "Node 11",
+            "x": -672,
+            "y": 571,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "asset",
+                "uuid": "cb272375-d9f8-4eee-9254-6c77658e157f",
+                "name": "Zombie Running.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/zombie/Zombie Running.fbx",
+                "path": "db://assets/models/zombie/Zombie Running.fbx"
+            }
+        },
+        {
+            "id": "n24",
+            "name": "Node 12",
+            "x": -336,
+            "y": 594,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "asset",
+                "uuid": "76a17b43-4870-40bd-9130-e150e74a11a4",
+                "name": "Hit To Body.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/zombie/Hit To Body.fbx",
+                "path": "db://assets/models/zombie/Hit To Body.fbx"
+            }
+        },
+        {
+            "id": "n29",
+            "name": "Node 13",
+            "x": -993,
+            "y": -882,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Если еще не все жизни истрачены",
+            "payload": {
+                "kind": "asset",
+                "uuid": "2c59d7d6-d405-40c2-adf2-7b780197ce8d",
+                "name": "Zombie Headbutt.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/zombie/Zombie Headbutt.fbx",
+                "path": "db://assets/models/zombie/Zombie Headbutt.fbx"
+            }
+        },
+        {
+            "id": "n33",
+            "name": "Node 15",
+            "x": -617,
+            "y": -879,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Проверка радиуса есть ли плеер в приближении",
+            "payload": null
+        },
+        {
+            "id": "n39",
+            "name": "Node 16",
+            "x": 1219,
+            "y": -384,
+            "width": 220,
+            "height": 546,
+            "previewHeight": 96,
+            "prompt": "Анимация смерти когда плеера ударили зомби. После просто лежит и камера начинает вращаться по орбиту вокруг плеера смотря на него.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "44fe73e5-6756-4843-80c8-ff3a00624a57",
+                "name": "Death.fbx",
+                "type": "cc.Asset",
+                "importer": "fbx",
+                "url": "db://assets/models/player/Death.fbx",
+                "path": "db://assets/models/player/Death.fbx"
+            }
+        }
+    ],
+    "links": [
+        {
+            "id": "l7",
+            "from": "n3",
+            "to": "n6"
+        },
+        {
+            "id": "l10",
+            "from": "n4",
+            "to": "n9"
+        },
+        {
+            "id": "l14",
+            "from": "n11",
+            "to": "n13"
+        },
+        {
+            "id": "l18",
+            "from": "n15",
+            "to": "n17"
+        },
+        {
+            "id": "l19",
+            "from": "n17",
+            "to": "n15"
+        },
+        {
+            "id": "l21",
+            "from": "n6",
+            "to": "n11"
+        },
+        {
+            "id": "l25",
+            "from": "n6",
+            "to": "n23"
+        },
+        {
+            "id": "l26",
+            "from": "n23",
+            "to": "n24"
+        },
+        {
+            "id": "l28",
+            "from": "n9",
+            "to": "n6"
+        },
+        {
+            "id": "l30",
+            "from": "n6",
+            "to": "n29"
+        },
+        {
+            "id": "l34",
+            "from": "n29",
+            "to": "n33"
+        },
+        {
+            "id": "l35",
+            "from": "n6",
+            "to": "n33"
+        },
+        {
+            "id": "l36",
+            "from": "n33",
+            "to": "n15"
+        },
+        {
+            "id": "l37",
+            "from": "n33",
+            "to": "n23"
+        },
+        {
+            "id": "l38",
+            "from": "n24",
+            "to": "n9"
+        },
+        {
+            "id": "l40",
+            "from": "n9",
+            "to": "n39"
+        }
+    ]
+}
