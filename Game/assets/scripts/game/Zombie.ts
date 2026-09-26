@@ -24,7 +24,8 @@ enum Mode {
 // A zombie. Until it notices the player it wanders: runs a little way in a random direction,
 // stands for a while, and again, never far from where it was put. Once the player is within
 // `detectRadius` and in plain sight it runs at them the shortest way round the walls, and
-// gives up when they get further than `loseRadius` — or fall — and goes back to its own
+// gives up when they get further than `loseRadius`, stay hidden behind walls for
+// `loseSightTime`, or fall — and goes back to its own
 // place to wander there again. Up close it strikes; the hit kills the player. Each potion that hits it takes one of its lives: while some are left it reels,
 // then looks round for the player again; the last one knocks it down, it sinks through the
 // floor and is gone. Zombies keep out of each other's way.
@@ -67,6 +68,8 @@ export class Zombie extends Component {
 	detectRadius: number = 3;
 	@property({ tooltip: "A chased player further than this is lost" })
 	loseRadius: number = 3.5;
+	@property({ tooltip: "A chased player hidden behind walls this long, seconds, is lost; the short wait keeps a door jamb from breaking the chase" })
+	loseSightTime: number = 0.5;
 	@property({ tooltip: "Distance from the player at which the zombie strikes" })
 	attackDistance: number = 0.45;
 	@property({ tooltip: "Point of the strike clip, 0..1, at which the hit lands", slide: true, range: [0, 1, 0.05] })
@@ -94,6 +97,7 @@ export class Zombie extends Component {
 	private _struck: boolean = false;
 	private _path: Vec3[] = [];
 	private _repath: number = 0;
+	private _unseen: number = 0;
 	private _homeTries: number = 0;
 	private _goal: Vec3 = v3();
 	private _step: Vec3 = v3();
@@ -281,6 +285,7 @@ export class Zombie extends Component {
 	private _chase(): void {
 		this._mode = Mode.Chase;
 		this._repath = 0;
+		this._unseen = 0;
 		this._path.length = 0;
 		this._play(RUN);
 	}
@@ -293,6 +298,15 @@ export class Zombie extends Component {
 		const distance = Vec3.distance(target, this.node.worldPosition);
 		if (distance > this.loseRadius) {
 			return this._goHome();
+		}
+		// Out of sight behind the walls for long enough — the zombie loses them.
+		const walls = this._walls();
+		if (walls && !walls.lineOfSight(this.node.worldPosition, target)) {
+			if ((this._unseen += dt) >= this.loseSightTime) {
+				return this._goHome();
+			}
+		} else {
+			this._unseen = 0;
 		}
 		if (distance <= this.attackDistance) {
 			return this._attack();
