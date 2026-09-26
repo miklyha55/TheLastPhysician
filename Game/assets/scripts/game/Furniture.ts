@@ -24,6 +24,8 @@ export class Furniture extends Component {
 	size: number = FurnitureSize.Auto;
 	@property({ tooltip: "With size Auto: this wide or less, across either side, counts as small" })
 	smallMaxSize: number = 0.45;
+	@property({ tooltip: "Blows up when a potion bursts near it or another blast reaches it (Explosives)" })
+	explosive: boolean = false;
 
 	/** Its box in its own axes, relative to its origin, scaled. */
 	readonly boxMin = v3();

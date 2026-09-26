@@ -12,10 +12,23 @@ import {
 	CCInteger,
 	TweenEasing,
 	CCFloat,
+	director,
 } from "cc";
 import Utils from "../../utils/Utils";
 
 const { ccclass, property } = _decorator;
+
+/** Smooth noise in -1..1: the same whole number always gives the same value, so the track never tears. */
+function wobble(t: number): number {
+	const step = Math.floor(t);
+	const part = t - step;
+	const at = (n: number) => {
+		const s = Math.sin(n * 127.1) * 43758.5453;
+		return (s - Math.floor(s)) * 2 - 1;
+	};
+	const k = part * part * (3 - 2 * part);
+	return at(step) + (at(step + 1) - at(step)) * k;
+}
 
 @ccclass("CameraManager")
 export class CameraManager extends Component {
@@ -43,6 +56,18 @@ export class CameraManager extends Component {
 	private _distance: Vec3 = v3();
 	private _isStart: boolean = false;
 	private _orbitSpeed: number = 0;
+	// Shake: seconds left, over how long it dies away, the strength it started at, and a
+	// time of its own for the noise, never reset so the track never jumps.
+	private _shake: number = 0;
+	private _shakeFor: number = 1;
+	private _shakePower: number = 0;
+	private _shakeTime: number = Math.random() * 100;
+	private _cameraBase = new Vec3();
+	private _baseSet = false;
+	@property({ type: CCFloat, tooltip: "Shakes per second: lower is heavier, higher is finer" })
+	shakeRate: number = 11;
+	@property({ type: CCFloat, tooltip: "How much weaker the shake is up and down than across" })
+	shakeLift: number = 0.6;
 
 	protected onDestroy(): void {
 		if (CameraManager.instance === this) {
@@ -140,6 +165,19 @@ export class CameraManager extends Component {
 	setFollowTarget(followTarget: Node): void {
 		this.followTarget = followTarget;
 		this.setDistance();
+	}
+
+	/**
+	 * Shakes the camera by up to `power` world units, dying away over `seconds`. A stronger
+	 * jolt replaces a weaker one rather than adding to it; an equal one keeps it going.
+	 */
+	shake(power: number, seconds: number): void {
+		if (power < this._shakePower && this._shake > 0) {
+			return;
+		}
+		this._shake = seconds;
+		this._shakeFor = seconds;
+		this._shakePower = power;
 	}
 
 	/** Circles round the target at the current distance, looking at it; 0 degrees per second stops. */
@@ -278,11 +316,38 @@ export class CameraManager extends Component {
 				? this._boxAt.set(this._cameraAnimation.worldPosition)
 				: this._boxAt.set(0, 0, 0);
 
-			camera.node.setWorldPosition(
-				this._isStart
-					? Vec3.lerp(this._cameraAt, camera.node.worldPosition, target, this.lerpRatio)
-					: target
-			);
+			// The follow runs on the unshaken place, and the shake goes on top of it, so the
+			// frame jerks but stays looking where it did and settles exactly back.
+			if (!this._baseSet) {
+				this._cameraBase.set(camera.node.worldPosition);
+				this._baseSet = true;
+			}
+			if (this._isStart) {
+				Vec3.lerp(this._cameraBase, this._cameraBase, target, this.lerpRatio);
+			} else {
+				this._cameraBase.set(target);
+			}
+			this._cameraAt.set(this._cameraBase);
+			this._shakeStep(this._cameraAt);
+			camera.node.setWorldPosition(this._cameraAt);
 		});
+	}
+
+	private _shakeStep(at: Vec3): void {
+		if (this._shake <= 0) {
+			return;
+		}
+		const dt = director.getDeltaTime();
+		this._shake = Math.max(0, this._shake - dt);
+		this._shakeTime += dt * this.shakeRate;
+		const left = this._shake / this._shakeFor;
+		const amount = this._shakePower * left * left; // dies away softly
+		// A track per axis, far apart on the noise, so the frame rocks instead of sliding.
+		at.x += wobble(this._shakeTime) * amount;
+		at.y += wobble(this._shakeTime + 31.7) * amount * this.shakeLift;
+		at.z += wobble(this._shakeTime + 74.3) * amount;
+		if (this._shake === 0) {
+			this._shakePower = 0;
+		}
 	}
 }

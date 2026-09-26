@@ -1,0 +1,78 @@
+{
+    "version": 4,
+    "name": "Lever",
+    "view": {
+        "x": 549,
+        "y": 297,
+        "scale": 1
+    },
+    "nodes": [
+        {
+            "id": "n1",
+            "name": "Node 1",
+            "x": -170,
+            "y": -225,
+            "width": 249,
+            "height": 421,
+            "previewHeight": 96,
+            "prompt": "Привет взаимодействии с плеером включается, при следующим взаимодействии выключается. \n\n(Tile_Lever)[MeshRenderer] - солид объект",
+            "payload": {
+                "kind": "asset",
+                "uuid": "c1f597bc-fcbc-43f3-9dc5-6e0f7b05912a",
+                "name": "Tile_Floor_Lever.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/tiles/floor/Tile_Floor_Lever.prefab",
+                "path": "db://assets/prefabs/tiles/floor/Tile_Floor_Lever.prefab"
+            }
+        },
+        {
+            "id": "n2",
+            "name": "Node 2",
+            "x": -509,
+            "y": -191,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Сталкивается с переключателем.",
+            "payload": {
+                "kind": "node",
+                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
+                "name": "Player",
+                "type": "cc.Node",
+                "path": "Main/World/Player"
+            }
+        },
+        {
+            "id": "n4",
+            "name": "Node 3",
+            "x": 193,
+            "y": -251,
+            "width": 261,
+            "height": 438,
+            "previewHeight": 96,
+            "prompt": "открываются или закрываются в зависимости от переключателя",
+            "payload": {
+                "kind": "asset",
+                "uuid": "0c8b38ea-817d-46c3-89af-40734311ba5a",
+                "name": "Tile_Wall_Gate.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/tiles/walls/Tile_Wall_Gate.prefab",
+                "path": "db://assets/prefabs/tiles/walls/Tile_Wall_Gate.prefab"
+            }
+        }
+    ],
+    "links": [
+        {
+            "id": "l3",
+            "from": "n2",
+            "to": "n1"
+        },
+        {
+            "id": "l5",
+            "from": "n1",
+            "to": "n4"
+        }
+    ]
+}

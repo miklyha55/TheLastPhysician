@@ -5,6 +5,7 @@ import { gameEventTarget } from "../plugins/GameEventTarget";
 import { AnimationController } from "./AnimationController";
 import { Blood } from "./Blood";
 import { FaceDirection } from "./FaceDirection";
+import { Explosives } from "./Explosives";
 import { GunEffects } from "./GunEffects";
 import { OcclusionFade } from "./OcclusionFade";
 import { PotionStack } from "./PotionStack";
@@ -185,6 +186,15 @@ export class PlayerAttack extends Component {
 		return out.set(at.x, at.y + height, at.z);
 	}
 
+	/** Killed outright, however many lives are left — a blast. */
+	kill(from: Vec3 = null): void {
+		if (this._dead) {
+			return;
+		}
+		this.lives = 1;
+		this.takeHit(from);
+	}
+
 	/** A zombie's blow, struck from `from`. */
 	takeHit(from: Vec3 = null): void {
 		if (this._dead) {
@@ -325,8 +335,16 @@ export class PlayerAttack extends Component {
 		}
 	}
 
-	/** A potion lands: a life off the zombie and a splash flying on the way the potion came. */
+	/**
+	 * A potion lands: it bursts, and with Explosives in the scene everyone round the spot loses
+	 * a life and a barrel near it goes off; without it, just the zombie hit loses one.
+	 */
 	private _hit(target: Zombie, from: Vec3, at: Vec3): void {
+		const explosives = Explosives.instance;
+		if (explosives) {
+			explosives.potionBurst(at, from);
+			return;
+		}
 		if (target.isDead) {
 			return;
 		}

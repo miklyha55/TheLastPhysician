@@ -181,6 +181,43 @@ export class Debris extends Component {
 		return body;
 	}
 
+	/**
+	 * Throws the loose things round a blast: the nearer, the harder; the reach is measured
+	 * on the floor, the push goes out and up from the blast, into an edge so they tumble.
+	 */
+	blast(at: Vec3, radius: number, power: number, lift: number): void {
+		for (const body of this.bodies) {
+			if (body.held || !body.node.isValid) {
+				continue;
+			}
+			const position = body.node.worldPosition;
+			const dx = position.x - at.x;
+			const dy = position.y - at.y;
+			const dz = position.z - at.z;
+			const reach = Math.hypot(dx, dz);
+			if (reach > radius) {
+				continue;
+			}
+			const distance = Math.hypot(dx, dy, dz);
+			if (distance < 1e-4) {
+				continue;
+			}
+			const share = 1 - reach / radius;
+			_impulse.set(dx / distance, dy / distance + lift, dz / distance).multiplyScalar(power * share * body.mass);
+			_point.set((-dx / distance) * body.radius, 0, (-dz / distance) * body.radius);
+			this._applyImpulse(body, _impulse, _point);
+			body.asleep = false;
+			body.idle = 0;
+		}
+	}
+
+	/** Takes a thing out of the physics and off the level — a barrel that blew up. */
+	remove(body: Body): void {
+		const index = this.bodies.indexOf(body);
+		index >= 0 && this.bodies.splice(index, 1);
+		body.node.isValid && body.node.destroy();
+	}
+
 	/** Into the hand: physics lets go of it until it is launched. */
 	hold(body: Body): void {
 		body.held = true;
