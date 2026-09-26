@@ -1,0 +1,54 @@
+{
+    "version": 4,
+    "name": "Stream",
+    "view": {
+        "x": 549,
+        "y": 297,
+        "scale": 1
+    },
+    "nodes": [
+        {
+            "id": "n1",
+            "name": "Node 1",
+            "x": -56,
+            "y": -211,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Плеер находясь на этом тайле, замедляется при выходе скорость опять становится прежней. Соприкасаться именон с зеленым потоком.",
+            "payload": {
+                "kind": "folder",
+                "uuid": "37a64c11-7725-4d5d-aaa2-758853235283",
+                "name": "stream",
+                "type": "Folder",
+                "importer": "directory",
+                "url": "db://assets/prefabs/tiles/stream",
+                "path": "db://assets/prefabs/tiles/stream"
+            }
+        },
+        {
+            "id": "n2",
+            "name": "Node 2",
+            "x": -448,
+            "y": -137,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "node",
+                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
+                "name": "Player",
+                "type": "cc.Node",
+                "path": "Main/World/Player"
+            }
+        }
+    ],
+    "links": [
+        {
+            "id": "l3",
+            "from": "n2",
+            "to": "n1"
+        }
+    ]
+}

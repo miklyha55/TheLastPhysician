@@ -1,0 +1,112 @@
+{
+  "ver": "2.3.14",
+  "importer": "gltf",
+  "imported": true,
+  "uuid": "9d261b9e-cad5-4370-acdb-66f008ae6572",
+  "files": [],
+  "subMetas": {
+    "63b8e": {
+      "importer": "gltf-mesh",
+      "uuid": "9d261b9e-cad5-4370-acdb-66f008ae6572@63b8e",
+      "displayName": "",
+      "id": "63b8e",
+      "name": "Tile_Floor_Button.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 148
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "01308": {
+      "importer": "gltf-mesh",
+      "uuid": "9d261b9e-cad5-4370-acdb-66f008ae6572@01308",
+      "displayName": "",
+      "id": "01308",
+      "name": "Tile_Button.mesh",
+      "userData": {
+        "gltfIndex": 1,
+        "triangleCount": 72
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "113d3": {
+      "importer": "gltf-material",
+      "uuid": "9d261b9e-cad5-4370-acdb-66f008ae6572@113d3",
+      "displayName": "",
+      "id": "113d3",
+      "name": "FurniturePalette.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "bcbcd": {
+      "importer": "gltf-scene",
+      "uuid": "9d261b9e-cad5-4370-acdb-66f008ae6572@bcbcd",
+      "displayName": "",
+      "id": "bcbcd",
+      "name": "Button.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "9d261b9e-cad5-4370-acdb-66f008ae6572@63b8e",
+        "9d261b9e-cad5-4370-acdb-66f008ae6572@01308"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "9d261b9e-cad5-4370-acdb-66f008ae6572@113d3"
+      ],
+      "scenes": [
+        "9d261b9e-cad5-4370-acdb-66f008ae6572@bcbcd"
+      ]
+    }
+  }
+}

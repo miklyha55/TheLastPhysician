@@ -1,18 +1,24 @@
 import { _decorator, Component, Node, v3, Vec2, Vec3 } from "cc";
 import GameEvent from "../enums/GameEvent";
 import { gameEventTarget } from "../plugins/GameEventTarget";
+import { SlimeStream } from "./SlimeStream";
 import { WallCollision } from "./WallCollision";
 
 const { ccclass, property } = _decorator;
 
 // Moves the player over the floor at a constant linear speed along the joystick direction,
-// however far the knob is pushed. Screen up is away from the camera.
+// however far the knob is pushed. Screen up is away from the camera. Wading through the slime
+// of a stream (SlimeStream) it goes slower, and as soon as it is out, at its own speed again.
 @ccclass("PlayerMovement")
 export class PlayerMovement extends Component {
 	@property({ tooltip: "Units per second" })
 	speed: number = 2;
 	@property({ type: Node, tooltip: "Camera the joystick is relative to; empty — screen up is −Z" })
 	camera: Node = null;
+	@property({ tooltip: "Share of the speed left while wading through slime" })
+	slimeSpeed: number = 0.5;
+	@property({ tooltip: "Radius of the player's body touching the slime" })
+	slimeRadius: number = 0.1;
 
 	private _direction: Vec2 = new Vec2();
 	private _velocity: Vec3 = v3();
@@ -23,6 +29,12 @@ export class PlayerMovement extends Component {
 
 	/** While set, the player is moved by something else — a throw, a jump — and the stick is ignored. */
 	locked = false;
+
+	/** Is the player touching the slime of a stream? */
+	get inSlime(): boolean {
+		const at = this.node.worldPosition;
+		return SlimeStream.touching(at.x, at.z, this.slimeRadius);
+	}
 
 	protected start(): void {
 		this._walls = this.getComponent(WallCollision);
@@ -70,7 +82,7 @@ export class PlayerMovement extends Component {
 		this._axes();
 		Vec3.multiplyScalar(this._velocity, this._right, this._direction.x);
 		Vec3.scaleAndAdd(this._velocity, this._velocity, this._forward, this._direction.y);
-		Vec3.scaleAndAdd(this._target, this.node.worldPosition, this._velocity, this.speed * dt);
+		Vec3.scaleAndAdd(this._target, this.node.worldPosition, this._velocity, this.speed * (this.inSlime ? this.slimeSpeed : 1) * dt);
 		// Walls are settled before the move, so nothing that follows the player sees it inside one.
 		if (this._walls) {
 			this._walls.resolve(this.node.worldPosition, this._target, this._target);

@@ -1,0 +1,108 @@
+{
+    "version": 4,
+    "name": "Button",
+    "view": {
+        "x": 573,
+        "y": 362,
+        "scale": 0.737
+    },
+    "nodes": [
+        {
+            "id": "n1",
+            "name": "Node 1",
+            "x": -111,
+            "y": -237,
+            "width": 315,
+            "height": 480,
+            "previewHeight": 96,
+            "prompt": "(Tile_Button)[MeshRenderer] - анимация нажатия.\n",
+            "payload": {
+                "kind": "asset",
+                "uuid": "9e3b4c3d-fecb-4960-8dcd-cd2067bf3fc5",
+                "name": "Tile_Floor_Button.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/tiles/floor/Tile_Floor_Button.prefab",
+                "path": "db://assets/prefabs/tiles/floor/Tile_Floor_Button.prefab"
+            }
+        },
+        {
+            "id": "n2",
+            "name": "Node 2",
+            "x": -627,
+            "y": -57,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Плеер нажимает на кнопку наступая на нее. ",
+            "payload": {
+                "kind": "node",
+                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
+                "name": "Player",
+                "type": "cc.Node",
+                "path": "Main/World/Player"
+            }
+        },
+        {
+            "id": "n4",
+            "name": "Node 3",
+            "x": 325,
+            "y": -245,
+            "width": 299,
+            "height": 447,
+            "previewHeight": 96,
+            "prompt": "Открывается после нажатия на кнопку а через 2 секунды закрывается. ",
+            "payload": {
+                "kind": "asset",
+                "uuid": "da39a363-a91a-4e52-ad68-0c21bf6fcee5",
+                "name": "Tile_Wall_Door.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/tiles/walls/Tile_Wall_Door.prefab",
+                "path": "db://assets/prefabs/tiles/walls/Tile_Wall_Door.prefab"
+            },
+            "params": [
+                {
+                    "name": "delay",
+                    "value": "2"
+                }
+            ]
+        },
+        {
+            "id": "n6",
+            "name": "Node 4",
+            "x": -601,
+            "y": -496,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Любая малогаборитная форнитура нажимает на кнопку  наступая на нее",
+            "payload": {
+                "kind": "folder",
+                "uuid": "68797287-76b0-4198-9c37-0e011b60e008",
+                "name": "furniture",
+                "type": "Folder",
+                "importer": "directory",
+                "url": "db://assets/prefabs/furniture",
+                "path": "db://assets/prefabs/furniture"
+            }
+        }
+    ],
+    "links": [
+        {
+            "id": "l3",
+            "from": "n2",
+            "to": "n1"
+        },
+        {
+            "id": "l5",
+            "from": "n1",
+            "to": "n4"
+        },
+        {
+            "id": "l7",
+            "from": "n6",
+            "to": "n1"
+        }
+    ]
+}
