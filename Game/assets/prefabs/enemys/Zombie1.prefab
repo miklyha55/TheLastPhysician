@@ -283,11 +283,11 @@
       "__expectedType__": "cc.AnimationClip"
     },
     "attackClip": {
-      "__uuid__": "76a17b43-4870-40bd-9130-e150e74a11a4@18d6f",
+      "__uuid__": "2c59d7d6-d405-40c2-adf2-7b780197ce8d@18d6f",
       "__expectedType__": "cc.AnimationClip"
     },
     "hurtClip": {
-      "__uuid__": "2c59d7d6-d405-40c2-adf2-7b780197ce8d@18d6f",
+      "__uuid__": "76a17b43-4870-40bd-9130-e150e74a11a4@18d6f",
       "__expectedType__": "cc.AnimationClip"
     },
     "deathClip": {
@@ -295,9 +295,10 @@
       "__expectedType__": "cc.AnimationClip"
     },
     "hurtTime": 0.6,
+    "hurtSpeed": 2,
     "lives": 3,
-    "wanderSpeed": 0.8,
-    "chaseSpeed": 1.6,
+    "wanderSpeed": 0.5,
+    "chaseSpeed": 1,
     "turnSpeed": 540,
     "yawOffset": 0,
     "wanderRadius": 1.5,
@@ -338,7 +339,6 @@
       "__id__": 0
     },
     "fileId": "53H4rmm+NBA5q7YJIV8rom",
-    "instance": null,
     "targetOverrides": null,
     "nestedPrefabInstanceRoots": [
       {

@@ -43,12 +43,16 @@ export class Zombie extends Component {
 	@property(AnimationClip) deathClip: AnimationClip = null;
 	@property({ tooltip: "Seconds a hit stops the zombie for; the reeling clip is cut short after that" })
 	hurtTime: number = 0.6;
+	@property({ tooltip: "Playback speed of the reeling clip" })
+	hurtSpeed: number = 2;
+	@property({ tooltip: "Playback speed of the strike clip" })
+	attackSpeed: number = 2;
 
 	@property lives: number = 3;
 	@property({ tooltip: "Units per second while wandering" })
-	wanderSpeed: number = 0.8;
+	wanderSpeed: number = 0.5;
 	@property({ tooltip: "Units per second while running at the player" })
-	chaseSpeed: number = 1.6;
+	chaseSpeed: number = 1;
 	@property({ tooltip: "Degrees per second" })
 	turnSpeed: number = 540;
 	@property({ tooltip: "Extra yaw if the model's front is not its local +Z" })
@@ -106,6 +110,10 @@ export class Zombie extends Component {
 		this._createState(this.runClip, RUN, true);
 		this._createState(this.attackClip, ATTACK, false);
 		this._createState(this.hurtClip, HURT, false);
+		const hurt = this.animation && this.animation.getState(HURT);
+		hurt && (hurt.speed = this.hurtSpeed);
+		const attack = this.animation && this.animation.getState(ATTACK);
+		attack && (attack.speed = this.attackSpeed);
 		this._createState(this.deathClip, DEATH, false);
 	}
 
@@ -319,7 +327,7 @@ export class Zombie extends Component {
 				this._struck = true;
 				// Only if the player is still within reach when the blow lands.
 				if (Vec3.distance(player.node.worldPosition, this.node.worldPosition) <= this.attackDistance * 1.3) {
-					player.takeHit();
+					player.takeHit(this.node.worldPosition);
 				}
 			}
 		}

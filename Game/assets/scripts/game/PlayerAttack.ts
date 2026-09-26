@@ -3,7 +3,9 @@ import GameEvent from "../enums/GameEvent";
 import { CameraManager } from "../managers/camera/CameraManager";
 import { gameEventTarget } from "../plugins/GameEventTarget";
 import { AnimationController } from "./AnimationController";
+import { Blood } from "./Blood";
 import { FaceDirection } from "./FaceDirection";
+import { GunEffects } from "./GunEffects";
 import { GunSocket } from "./GunSocket";
 import { PlayerMovement } from "./PlayerMovement";
 import { WallCollision } from "./WallCollision";
@@ -27,7 +29,7 @@ interface Shot {
 // `shootRadius` that is in plain sight, turns to it and shoots: one shot, one potion, lobbed
 // in an arc at the zombie, taking one of its lives when it lands. The next shot waits for
 // `fireInterval` and for the potion in the air to land, so there is never more than one. The
-// target is kept until it dies or gets away, then the nearest other one is taken. Running
+// target is picked afresh before every shot: whichever is nearest then. Running
 // stops the shooting. The player has one life; a zombie's blow takes it — the player falls,
 // lies still, and the camera circles round them.
 @ccclass("PlayerAttack")
@@ -42,6 +44,16 @@ export class PlayerAttack extends Component {
 	projectile: Prefab = null;
 	@property({ type: Node, tooltip: "Where the potion leaves from — the gun's muzzle, a child of the gun" })
 	muzzle: Node = null;
+	@property({ type: GunEffects, tooltip: "Flash, sparks and smoke at the muzzle on every shot" })
+	gunEffects: GunEffects = null;
+	@property({ type: Blood, tooltip: "Splash where a potion hits a zombie" })
+	zombieBlood: Blood = null;
+	@property({ type: Blood, tooltip: "Splash where a zombie's blow hits the player" })
+	playerBlood: Blood = null;
+	@property({ tooltip: "Height above the player's feet their splash comes from" })
+	woundHeight: number = 0.35;
+	@property({ tooltip: "How much bigger the splash of a killing blow is" })
+	killSplash: number = 1.6;
 	@property({ type: Node, tooltip: "Where flying potions live; empty — the player's parent" })
 	projectileParent: Node = null;
 
@@ -123,12 +135,17 @@ export class PlayerAttack extends Component {
 		this._pressed = false;
 	}
 
-	/** A zombie's blow. */
-	takeHit(): void {
+	/** A zombie's blow, struck from `from`. */
+	takeHit(from: Vec3 = null): void {
 		if (this._dead) {
 			return;
 		}
 		this.lives--;
+		if (this.playerBlood) {
+			const at = this.node.worldPosition;
+			this._to.set(at.x, at.y + this.woundHeight, at.z);
+			this.playerBlood.splash(this._to, from || at, this.lives <= 0 ? this.killSplash : 1);
+		}
 		if (this.lives <= 0) {
 			this._die();
 		}
@@ -152,12 +169,15 @@ export class PlayerAttack extends Component {
 				}
 			}
 		}
-		this._target = this._pickTarget();
+		const ready = this._cooldown <= 0 && this._throwIn < 0 && !this._shots.length;
+		// Before every shot the nearest zombie is taken afresh; between shots the player keeps
+		// facing the one being shot at, so it does not twitch between two at the same distance.
+		this._target = ready || !this._canShoot(this._target) ? this._nearest() : this._target;
 		if (this._pressed || !this._target) {
 			return;
 		}
 		this.faceDirection && this.faceDirection.faceTowards(this._target.node.worldPosition);
-		if (this._cooldown > 0 || this._throwIn >= 0 || this._shots.length) {
+		if (!ready) {
 			return;
 		}
 		this._cooldown = this.fireInterval;
@@ -166,11 +186,8 @@ export class PlayerAttack extends Component {
 		this._throwIn = duration * this.shotMoment;
 	}
 
-	/** The current target while it is still fair game, otherwise the nearest one that is. */
-	private _pickTarget(): Zombie {
-		if (this._target && this._canShoot(this._target)) {
-			return this._target;
-		}
+	/** The nearest zombie within reach and in plain sight. */
+	private _nearest(): Zombie {
 		let best: Zombie = null;
 		let bestDistance = Infinity;
 		for (const zombie of Zombie.all) {
@@ -202,7 +219,7 @@ export class PlayerAttack extends Component {
 	private _throw(target: Zombie): void {
 		if (!this.projectile) {
 			// Nothing to throw: the hit lands at once.
-			target.takeHit();
+			this._hit(target, this.muzzle ? this.muzzle.worldPosition : this.node.worldPosition, this._aim(target, v3()));
 			return;
 		}
 		const node = this._spare.pop() || instantiate(this.projectile);
@@ -211,6 +228,7 @@ export class PlayerAttack extends Component {
 		const start = (this.muzzle ? this.muzzle.worldPosition : this.node.worldPosition).clone();
 		node.setWorldPosition(start);
 		const aim = this._aim(target, v3());
+		this.gunEffects && this.gunEffects.fire(start, aim);
 		const distance = Math.hypot(aim.x - start.x, aim.z - start.z);
 		const duration = Math.max(0.1, distance / Math.max(this.projectileSpeed, 0.01));
 		// Point-blank the potion barely rises; lobbed across the whole radius it rises to arcHeight.
@@ -238,7 +256,7 @@ export class PlayerAttack extends Component {
 			const t = Math.min(1, shot.time / shot.duration);
 			if (t >= 1) {
 				if (shot.target.isValid) {
-					shot.target.takeHit();
+					this._hit(shot.target, shot.start, shot.aim);
 				}
 				this._release(shot.node);
 				this._shots.splice(i, 1);
@@ -251,6 +269,15 @@ export class PlayerAttack extends Component {
 			const yaw = math.toDegree(Math.atan2(shot.aim.x - shot.start.x, shot.aim.z - shot.start.z));
 			shot.node.setRotationFromEuler(0, yaw - 90, -this.spinSpeed * shot.time);
 		}
+	}
+
+	/** A potion lands: a life off the zombie and a splash flying on the way the potion came. */
+	private _hit(target: Zombie, from: Vec3, at: Vec3): void {
+		if (target.isDead) {
+			return;
+		}
+		target.takeHit();
+		this.zombieBlood && this.zombieBlood.splash(at, from, target.isDead ? this.killSplash : 1);
 	}
 
 	/** A potion that landed waits for the next throw instead of being made again. */
