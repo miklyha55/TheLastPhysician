@@ -6,6 +6,7 @@ import { AnimationController } from "./AnimationController";
 import { Blood } from "./Blood";
 import { FaceDirection } from "./FaceDirection";
 import { GunEffects } from "./GunEffects";
+import { OcclusionFade } from "./OcclusionFade";
 import { GunSocket } from "./GunSocket";
 import { PlayerMovement } from "./PlayerMovement";
 import { WallCollision } from "./WallCollision";
@@ -78,6 +79,7 @@ export class PlayerAttack extends Component {
 	orbitLookHeight: number = 0.2;
 
 	private _walls: WallCollision = null;
+	private _occlusion: OcclusionFade = null;
 	private _target: Zombie = null;
 	private _pressed = false;
 	private _cooldown = 0;
@@ -100,6 +102,7 @@ export class PlayerAttack extends Component {
 	protected onLoad(): void {
 		PlayerAttack.instance = this;
 		this._walls = this.getComponent(WallCollision);
+		this._occlusion = this.getComponent(OcclusionFade);
 		if (this.animation && this.deathClip) {
 			const state = this.animation.createState(this.deathClip, DEATH);
 			state.wrapMode = AnimationClip.WrapMode.Normal;
@@ -173,6 +176,8 @@ export class PlayerAttack extends Component {
 		// Before every shot the nearest zombie is taken afresh; between shots the player keeps
 		// facing the one being shot at, so it does not twitch between two at the same distance.
 		this._target = ready || !this._canShoot(this._target) ? this._nearest() : this._target;
+		// Walls between the camera and the target dissolve just as they do for the player.
+		this._occlusion && this._occlusion.setTarget(this._target ? this._target.node : null);
 		if (this._pressed || !this._target) {
 			return;
 		}
@@ -291,6 +296,7 @@ export class PlayerAttack extends Component {
 	private _die(): void {
 		this._dead = true;
 		this._throwIn = -1;
+		this._occlusion && this._occlusion.setTarget(null);
 		// Potions in the air are gone with the thrower.
 		for (const shot of this._shots) {
 			this._release(shot.node);

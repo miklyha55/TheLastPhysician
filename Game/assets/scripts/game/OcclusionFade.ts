@@ -19,7 +19,8 @@ interface Item {
 // Whatever stands between the camera and the player dissolves as a whole — a port of
 // ThroughTheDeadCity's SeeThrough. Every frame one ray goes from the camera to the player at
 // `aimHeight`; each thing it meets before the player is faded, the whole placed object with
-// all its meshes. Fading is screen-door dissolving with a noise pattern (the standard-dither
+// all its meshes. The player's current target, when there is one, gets a ray of its own the
+// same way, so the zombie being shot at is never hidden behind a wall either. Fading is screen-door dissolving with a noise pattern (the standard-dither
 // effect), not alpha: the material stays opaque, needs no sorting and never shows its inside.
 // It dissolves fast and comes back slower, since a flicker at the edge shows more than a delay.
 @ccclass("OcclusionFade")
@@ -43,6 +44,12 @@ export class OcclusionFade extends Component {
 	private _blocking = new Set<Item>();
 	private _ray = new geometry.Ray();
 	private _aim = v3();
+	private _target: Node = null;
+
+	/** Something else to keep in sight besides the player — the target being shot at; null for none. */
+	setTarget(target: Node): void {
+		this._target = target;
+	}
 
 	protected start(): void {
 		// Placed things are watched whole: a hit on any of their meshes fades all of them.
@@ -79,14 +86,21 @@ export class OcclusionFade extends Component {
 		}
 	}
 
-	/** What stands between the camera and the player. */
+	/** What stands between the camera and the player, and between the camera and the target. */
 	private _findBlockers(): void {
 		this._blocking.clear();
 		if (!this.camera) {
 			return;
 		}
+		this._findBlockersOf(this.node);
+		if (this._target && this._target.isValid && this._target.activeInHierarchy) {
+			this._findBlockersOf(this._target);
+		}
+	}
+
+	private _findBlockersOf(node: Node): void {
 		const eye = this.camera.node.worldPosition;
-		const at = this.node.worldPosition;
+		const at = node.worldPosition;
 		this._aim.set(at.x, at.y + this.aimHeight, at.z);
 		const reach = Vec3.distance(eye, this._aim);
 		geometry.Ray.fromPoints(this._ray, eye, this._aim);
@@ -104,6 +118,7 @@ export class OcclusionFade extends Component {
 			}
 		}
 	}
+
 
 	private _apply(item: Item): void {
 		item.renderers.forEach((renderer, index) => {
