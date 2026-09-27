@@ -37,6 +37,10 @@ export class Joystic extends Component {
 	}
 
 	private onDown(touch: Touch): void {
+		// Keyboard movement sends the same events with no touch: nothing to show for it.
+		if (!touch) {
+			return;
+		}
 		this.node.setPosition(this._toParentSpace(touch));
 		this.draggable.setPosition(Vec3.ZERO);
 		this._setVisible(true);
@@ -44,6 +48,9 @@ export class Joystic extends Component {
 	}
 
 	private onMove(touch: Touch): void {
+		if (!touch) {
+			return;
+		}
 		const local = this._toParentSpace(touch).subtract(this.node.position);
 		const radius = this._radius();
 		const length = Math.hypot(local.x, local.y);
@@ -55,6 +62,9 @@ export class Joystic extends Component {
 	}
 
 	private onUp(): void {
+		if (!this.plate || !this.plate.active) {
+			return; // nothing on screen — the keyboard let go
+		}
 		this.draggable.setPosition(Vec3.ZERO);
 		this._setVisible(false);
 		this._emitDirection(0, 0);

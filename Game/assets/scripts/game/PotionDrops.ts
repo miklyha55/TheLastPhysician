@@ -13,7 +13,7 @@ export class PotionDrops extends Component {
 	@property({ type: Prefab, tooltip: "The potion; empty — the one the player's stack is made of" })
 	potion: Prefab = null;
 	@property({ tooltip: "Chance the zombie drops potions as it dies, 0..1", slide: true, range: [0, 1, 0.05] })
-	chance: number = 0.6;
+	chance: number = 0.25;
 	@property({ tooltip: "Fewest potions a drop has" })
 	minCount: number = 1;
 	@property({ tooltip: "Most potions a drop has" })

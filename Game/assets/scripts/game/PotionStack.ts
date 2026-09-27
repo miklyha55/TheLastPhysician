@@ -1,4 +1,4 @@
-import { _decorator, Component, instantiate, math, Node, Prefab, tween, Tween, v3, Vec3 } from "cc";
+import { _decorator, Component, instantiate, math, Node, Prefab, Quat, tween, Tween, v3, Vec3 } from "cc";
 import { StackItem } from "../managers/GameState";
 import { Debris } from "./Debris";
 
@@ -11,9 +11,12 @@ interface Entry {
 	height: number;
 }
 
-// What the player carries, in sight: a stack on the back growing upwards. Everything picked up
-// goes on top — potions, one for every shot left, and keys, laid flat. A shot takes the
+// What the player carries, in sight: a stack on the back growing upwards. Potions go on top,
+// one for every shot left; keys, laid flat, always at the bottom, under the potions. A shot takes the
 // topmost potion away, a door takes a key of its colour, and whatever lay above settles down.
+// The stack follows the back (`anchor`) but always stands straight up: it rides on a mount of
+// its own that takes the anchor's place every frame and only the heading of the body — a lean,
+// a crouch, a recoil leave it upright.
 @ccclass("PotionStack")
 export class PotionStack extends Component {
 	@property({ type: Node, tooltip: "Where the stack stands — a node on the back socket; the stack grows along its +Y" })
@@ -45,6 +48,51 @@ export class PotionStack extends Component {
 
 	private _items: Entry[] = [];
 	private _at = v3();
+	private _mount: Node = null;
+	private _forward = v3();
+	private _yaw = new Quat();
+
+	protected lateUpdate(): void {
+		this._follow();
+	}
+
+	/** Where the stack stands, upright: the anchor's place, turned only the way the body faces. */
+	private _follow(): void {
+		const mount = this._holder();
+		if (!mount || !this.anchor) {
+			return;
+		}
+		mount.setWorldPosition(this.anchor.worldPosition);
+		// The heading: the way the body is turned (FaceDirection's node), flattened onto the floor.
+		const facing = this._facing();
+		Vec3.transformQuat(this._forward, Vec3.FORWARD, facing.worldRotation);
+		const length = Math.hypot(this._forward.x, this._forward.z);
+		if (length > 1e-4) {
+			const yaw = Math.atan2(-this._forward.x, -this._forward.z);
+			Quat.fromAxisAngle(this._yaw, Vec3.UNIT_Y, yaw);
+			mount.setWorldRotation(this._yaw);
+		}
+	}
+
+	private _facing(): Node {
+		const face = (this.getComponent("FaceDirection") || this.getComponentInChildren("FaceDirection")) as Component;
+		return face ? face.node : this.node;
+	}
+
+	/** The upright mount the items lie on, made on first use beside the anchor's owner. */
+	private _holder(): Node {
+		if (this._mount && this._mount.isValid) {
+			return this._mount;
+		}
+		if (!this.anchor) {
+			return null;
+		}
+		this._mount = new Node("StackMount");
+		this.node.addChild(this._mount);
+		this._mount.setWorldScale(1, 1, 1);
+		this._follow();
+		return this._mount;
+	}
 
 	/** Potions in the stack. */
 	get count(): number {
@@ -58,7 +106,9 @@ export class PotionStack extends Component {
 
 	/** The stack as it was brought from the last level, laid at once. */
 	restore(items: StackItem[]): void {
-		for (const item of items) {
+		// Keys at the bottom, as they always lie.
+		const ordered = items.filter((item) => item.key).concat(items.filter((item) => !item.key));
+		for (const item of ordered) {
 			if (!item.key) {
 				this.push();
 				continue;
@@ -108,8 +158,29 @@ export class PotionStack extends Component {
 			node.destroy();
 			return;
 		}
-		this._adopt(node, this.keyScale, 90, this._centre(this._items.length, this.keyStep));
-		this._items.push({ node, key: true, color, height: this.keyStep });
+		// Keys always go to the bottom, above the keys already there: the potions above rise.
+		const index = this.keyCount;
+		this._adopt(node, this.keyScale, 90, this._centre(index, this.keyStep));
+		this._items.splice(index, 0, { node, key: true, color, height: this.keyStep });
+		this._layout(index + 1);
+	}
+
+	/** Keys in the stack — all at the bottom of it. */
+	get keyCount(): number {
+		let count = 0;
+		while (count < this._items.length && this._items[count].key) {
+			count++;
+		}
+		return count;
+	}
+
+	/** Where the next key will lie, in the world: at the bottom, above the keys already there. */
+	keySlot(out: Vec3): Vec3 {
+		if (!this.anchor) {
+			return out.set(this.node.worldPosition);
+		}
+		this._at.set(0, this._centre(this.keyCount, this.keyStep) / this._anchorScale(), 0);
+		return Vec3.transformMat4(out, this._at, this._holder().worldMatrix);
 	}
 
 	/** Is a key of this colour lying in the stack? */
@@ -192,7 +263,7 @@ export class PotionStack extends Component {
 			return out.set(this.node.worldPosition);
 		}
 		this._at.set(0, this._centre(index, this.step) / this._anchorScale(), 0);
-		return Vec3.transformMat4(out, this._at, this.anchor.worldMatrix);
+		return Vec3.transformMat4(out, this._at, this._holder().worldMatrix);
 	}
 
 	/**
@@ -215,7 +286,7 @@ export class PotionStack extends Component {
 
 	private _adopt(node: Node, scale: number, tilt: number, height: number): void {
 		const local = scale / this._anchorScale();
-		node.setParent(this.anchor, false);
+		node.setParent(this._holder(), false);
 		node.setScale(local, local, local);
 		node.setPosition(0, height / this._anchorScale(), 0);
 		node.setRotationFromEuler(tilt, math.randomRange(-this.jitter, this.jitter), math.randomRange(-this.jitter, this.jitter) * 0.5);
@@ -236,6 +307,7 @@ export class PotionStack extends Component {
 	}
 
 	private _anchorScale(): number {
-		return (this.anchor && this.anchor.worldScale.y) || 1;
+		const mount = this._holder();
+		return (mount && mount.worldScale.y) || 1;
 	}
 }

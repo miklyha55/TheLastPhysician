@@ -8,7 +8,7 @@ const { ccclass, property } = _decorator;
 
 // A key lying about the level: it hovers above the floor, turns slowly and bobs, so it is seen
 // from afar. The player picks it up by walking into it: it counts as theirs at once and flies
-// in an arc onto the stack on their back, where it waits for a door of its colour.
+// in an arc to the bottom of the stack on their back, where it waits for a door of its colour.
 @ccclass("KeyPickup")
 export class KeyPickup extends Component {
 	@property({ type: KeyColor }) color: number = KeyColor.Red;
@@ -96,7 +96,7 @@ export class KeyPickup extends Component {
 			this.node.destroy();
 			return;
 		}
-		stack.nextSlot(this._to);
+		stack.keySlot(this._to);
 		const distance = Math.hypot(this._to.x - this._start.x, this._to.z - this._start.z);
 		const duration = Math.max(0.2, distance / Math.max(this.flySpeed, 0.01));
 		this._flight += dt;

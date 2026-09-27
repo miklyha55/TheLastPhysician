@@ -76,7 +76,7 @@ export class PlayerAttack extends Component {
 	@property({ tooltip: "Zombies nearer than this are shot at" })
 	shootRadius: number = 3;
 	@property({ tooltip: "Seconds from one shot to the next" })
-	fireInterval: number = 0.75;
+	fireInterval: number = 0.5;
 	@property({ tooltip: "Point of the shooting clip, 0..1, at which the potion is thrown", slide: true, range: [0, 1, 0.05] })
 	shotMoment: number = 0.4;
 	@property({ tooltip: "Potion speed along the ground, units per second" })

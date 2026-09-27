@@ -1,6 +1,7 @@
 import { _decorator, Component, director } from "cc";
 import GameEvent from "../enums/GameEvent";
 import { gameEventTarget } from "../plugins/GameEventTarget";
+import { KeyboardInput } from "./input/KeyboardInput";
 
 const { ccclass, property } = _decorator;
 
@@ -27,6 +28,8 @@ export class GameManager extends Component {
 		}
 		GameManager._instance = this;
 		director.addPersistRootNode(this.node);
+		// Moving from the keyboard too, on every level: this node lives through them all.
+		this.getComponent(KeyboardInput) || this.addComponent(KeyboardInput);
 	}
 
 	protected start(): void {
