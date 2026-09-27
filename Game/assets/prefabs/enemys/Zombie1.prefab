@@ -26,10 +26,13 @@
     "_components": [
       {
         "__id__": 26
+      },
+      {
+        "__id__": 28
       }
     ],
     "_prefab": {
-      "__id__": 28
+      "__id__": 30
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -450,6 +453,46 @@
   {
     "__type__": "cc.CompPrefabInfo",
     "fileId": "bd61Mw/qBAQ49uJHEp53pz"
+  },
+  {
+    "__type__": "f01e6S4cgVCmaSVI/nVlHmD",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 1
+    },
+    "_enabled": true,
+    "__prefab": {
+      "__id__": 29
+    },
+    "potion": null,
+    "chance": 0.6,
+    "minCount": 1,
+    "maxCount": 2,
+    "dropHeight": 0.5,
+    "scatter": {
+      "__type__": "cc.Vec3",
+      "x": 0.35,
+      "y": 0.9,
+      "z": 0
+    },
+    "size": 2,
+    "lieHeight": 0.05,
+    "arcHeight": 0.55,
+    "fallTime": 0.5,
+    "bounceHeight": 0.08,
+    "bounceTime": 0.18,
+    "spinSpeed": 720,
+    "pickupRadius": 0.4,
+    "collectSpeed": 3.75,
+    "collectArc": 0.4,
+    "catchHeight": 0.35,
+    "_id": ""
+  },
+  {
+    "__type__": "cc.CompPrefabInfo",
+    "fileId": "e6/jhrUXNFYJuMZjCvfa16"
   },
   {
     "__type__": "cc.PrefabInfo",

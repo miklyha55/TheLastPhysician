@@ -258,7 +258,10 @@ export class PlayerAttack extends Component {
 				this._throwIn = -1;
 			} else if ((this._throwIn -= dt) < 0) {
 				this._throwIn = -1;
-				if (this._throwAt && this._throwAt.isValid && !this._throwAt.isDead) {
+				// The potion is spent only now, as it leaves the gun: a shot broken off costs nothing.
+				if (this._throwAt && this._throwAt.isValid && !this._throwAt.isDead && this.ammo > 0) {
+					this.ammo--;
+					this.stack && this.stack.pop();
 					this._throw(this._throwAt);
 				}
 			}
@@ -277,8 +280,6 @@ export class PlayerAttack extends Component {
 			return;
 		}
 		this._cooldown = this.fireInterval;
-		this.ammo--;
-		this.stack && this.stack.pop();
 		const duration = this.animationController ? this.animationController.shoot() : 0;
 		this._throwAt = this._target;
 		this._throwIn = duration * this.shotMoment;

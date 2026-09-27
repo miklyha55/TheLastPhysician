@@ -11,7 +11,7 @@ const ATTACK = "attack";
 const HURT = "hurt";
 const DEATH = "death";
 
-enum Mode {
+export enum Mode {
 	Idle,
 	Wander,
 	Return,
@@ -19,6 +19,8 @@ enum Mode {
 	Attack,
 	Hurt,
 	Dead,
+	/** A kind of zombie of its own after the player its own way (ZombieGirl). */
+	Hunt,
 }
 
 // A zombie. Until it notices the player it wanders: runs a little way in a random direction,
@@ -33,6 +35,8 @@ enum Mode {
 export class Zombie extends Component {
 	/** Every zombie still on its feet. */
 	static readonly all: Zombie[] = [];
+	/** Called with every zombie the moment it dies — what drops from it, and the like. */
+	static readonly deathListeners: ((zombie: Zombie) => void)[] = [];
 
 	@property(SkeletalAnimation) animation: SkeletalAnimation = null;
 	@property(AnimationClip) idleClip: AnimationClip = null;
@@ -90,19 +94,19 @@ export class Zombie extends Component {
 	private static _pathFinder: PathFinder = null;
 	private static _pathWalls: WallCollision = null;
 
-	private _mode: Mode = Mode.Idle;
-	private _current: string = null;
-	private _home: Vec3 = v3();
-	private _timer: number = 0;
+	protected _mode: Mode = Mode.Idle;
+	protected _current: string = null;
+	protected _home: Vec3 = v3();
+	protected _timer: number = 0;
 	private _struck: boolean = false;
-	private _path: Vec3[] = [];
-	private _repath: number = 0;
-	private _unseen: number = 0;
+	protected _path: Vec3[] = [];
+	protected _repath: number = 0;
+	protected _unseen: number = 0;
 	private _homeTries: number = 0;
-	private _goal: Vec3 = v3();
-	private _step: Vec3 = v3();
-	private _next: Vec3 = v3();
-	private _euler: Vec3 = v3();
+	protected _goal: Vec3 = v3();
+	protected _step: Vec3 = v3();
+	protected _next: Vec3 = v3();
+	protected _euler: Vec3 = v3();
 
 	get isDead(): boolean {
 		return this._mode === Mode.Dead;
@@ -159,6 +163,7 @@ export class Zombie extends Component {
 		if (this._mode === Mode.Attack) {
 			return;
 		}
+		this._interrupt();
 		this._mode = Mode.Hurt;
 		this._timer = Math.min(this.hurtTime, this._duration(HURT));
 		this._play(HURT, true);
@@ -169,7 +174,7 @@ export class Zombie extends Component {
 		switch (this._mode) {
 			case Mode.Idle:
 				if (this._notices(player)) {
-					return this._chase();
+					return this._engage();
 				}
 				if ((this._timer -= dt) <= 0) {
 					this._wander();
@@ -177,7 +182,7 @@ export class Zombie extends Component {
 				break;
 			case Mode.Wander:
 				if (this._notices(player)) {
-					return this._chase();
+					return this._engage();
 				}
 				this._timer -= dt;
 				if (this._follow(this.wanderSpeed, dt) || this._timer <= 0) {
@@ -186,7 +191,7 @@ export class Zombie extends Component {
 				break;
 			case Mode.Return:
 				if (this._notices(player)) {
-					return this._chase();
+					return this._engage();
 				}
 				if (this._follow(this.wanderSpeed, dt)) {
 					// Home, or stuck on the way: a stuck zombie looks for the way again, a few times.
@@ -208,12 +213,15 @@ export class Zombie extends Component {
 					this._lookAround(player);
 				}
 				break;
+			case Mode.Hunt:
+				this._updateHunt(player, dt);
+				break;
 		}
 	}
 
 	// --- wandering
 
-	private _stand(): void {
+	protected _stand(): void {
 		this._mode = Mode.Idle;
 		this._timer = math.randomRange(this.idleTime.x, this.idleTime.y);
 		this._play(IDLE);
@@ -252,7 +260,7 @@ export class Zombie extends Component {
 	// --- the player
 
 	/** Is the player alive, close and in plain sight? */
-	private _notices(player: PlayerAttack): boolean {
+	protected _notices(player: PlayerAttack): boolean {
 		if (!player || player.isDead) {
 			return false;
 		}
@@ -265,16 +273,16 @@ export class Zombie extends Component {
 	}
 
 	/** After reeling: after the player if they are near, back to wandering if not. */
-	private _lookAround(player: PlayerAttack): void {
+	protected _lookAround(player: PlayerAttack): void {
 		if (this._notices(player)) {
-			this._chase();
+			this._engage();
 		} else {
 			this._goHome();
 		}
 	}
 
 	/** Back to where it was put, the shortest way round the walls, to wander there again. */
-	private _goHome(fresh: boolean = true): void {
+	protected _goHome(fresh: boolean = true): void {
 		if (fresh) {
 			this._homeTries = 0;
 		}
@@ -291,7 +299,18 @@ export class Zombie extends Component {
 		this._play(RUN);
 	}
 
-	private _chase(): void {
+	/** The player noticed: after them. A plain zombie runs at them; other kinds do their own thing. */
+	protected _engage(): void {
+		this._chase();
+	}
+
+	/** Each frame of a hunt of a kind of its own; a plain zombie never hunts. */
+	protected _updateHunt(player: PlayerAttack, dt: number): void {}
+
+	/** Whatever it was in the middle of is cut short — a hit, or death. */
+	protected _interrupt(): void {}
+
+	protected _chase(): void {
 		this._mode = Mode.Chase;
 		this._repath = 0;
 		this._unseen = 0;
@@ -361,7 +380,8 @@ export class Zombie extends Component {
 
 	// --- dying
 
-	private _die(): void {
+	protected _die(): void {
+		this._interrupt();
 		this._mode = Mode.Dead;
 		// Nothing thinks any more: no update, no chasing, no hits. Only the fall and the
 		// sinking below run, on a tween of the node's own.
@@ -369,6 +389,9 @@ export class Zombie extends Component {
 		this.enabled = false;
 		this._forget();
 		this._play(DEATH, true);
+		for (const listener of Zombie.deathListeners.slice()) {
+			listener(this);
+		}
 		const node = this.node;
 		const down = node.position.clone();
 		down.y -= this.sinkDepth;
@@ -391,7 +414,7 @@ export class Zombie extends Component {
 	// --- moving
 
 	/** Runs along the path; true when the end of it is reached or the way is blocked. */
-	private _follow(speed: number, dt: number): boolean {
+	protected _follow(speed: number, dt: number): boolean {
 		const at = this.node.worldPosition;
 		// Corners already reached drop off; the last point is the end of the way.
 		while (this._path.length > 1 && Math.hypot(this._path[0].x - at.x, this._path[0].z - at.z) < 0.05) {
@@ -422,7 +445,7 @@ export class Zombie extends Component {
 	}
 
 	/** Pushes the point out of other zombies. */
-	private _keepApart(point: Vec3): void {
+	protected _keepApart(point: Vec3): void {
 		for (const other of Zombie.all) {
 			if (other === this) {
 				continue;
@@ -445,7 +468,7 @@ export class Zombie extends Component {
 	}
 
 	/** Keeps a step out of the walls: the whole step, one axis of it, or none. */
-	private _settle(from: Vec3, to: Vec3): boolean {
+	protected _settle(from: Vec3, to: Vec3): boolean {
 		const walls = this._walls();
 		if (!walls || !walls.isBlocked(to.x, to.z)) {
 			return true;
@@ -461,7 +484,7 @@ export class Zombie extends Component {
 		return false;
 	}
 
-	private _turnTo(point: Vec3, dt: number): void {
+	protected _turnTo(point: Vec3, dt: number): void {
 		const at = this.node.worldPosition;
 		const dx = point.x - at.x;
 		const dz = point.z - at.z;
@@ -479,13 +502,13 @@ export class Zombie extends Component {
 
 	// --- helpers
 
-	private _walls(): WallCollision {
+	protected _walls(): WallCollision {
 		const player = PlayerAttack.instance;
 		return player ? player.walls : null;
 	}
 
 	/** One path search shared by all zombies, on the walls the player collides with. */
-	private _finder(): PathFinder {
+	protected _finder(): PathFinder {
 		const walls = this._walls();
 		if (!walls) {
 			return null;
@@ -497,7 +520,7 @@ export class Zombie extends Component {
 		return Zombie._pathFinder;
 	}
 
-	private _createState(clip: AnimationClip, name: string, loop: boolean): void {
+	protected _createState(clip: AnimationClip, name: string, loop: boolean): void {
 		if (!this.animation || !clip) {
 			return;
 		}
@@ -505,13 +528,13 @@ export class Zombie extends Component {
 		state.wrapMode = loop ? AnimationClip.WrapMode.Loop : AnimationClip.WrapMode.Normal;
 	}
 
-	private _duration(name: string): number {
+	protected _duration(name: string): number {
 		const state = this.animation && this.animation.getState(name);
 		return state ? state.duration / (state.speed || 1) : 0;
 	}
 
 	/** Blends into a clip; `restart` plays a one-shot clip again even if it is the current one. */
-	private _play(name: string, restart: boolean = false): void {
+	protected _play(name: string, restart: boolean = false): void {
 		if (!this.animation || !this.animation.getState(name) || (this._current === name && !restart)) {
 			return;
 		}

@@ -1,0 +1,234 @@
+{
+  "ver": "2.3.14",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "d49351bc-3557-4ea8-89d1-81e57cfa5b01",
+  "files": [],
+  "subMetas": {
+    "59524": {
+      "importer": "gltf-material",
+      "uuid": "d49351bc-3557-4ea8-89d1-81e57cfa5b01@59524",
+      "displayName": "",
+      "id": "59524",
+      "name": "ZMouth.material",
+      "userData": {
+        "gltfIndex": 3
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "2ab9a": {
+      "importer": "gltf-mesh",
+      "uuid": "d49351bc-3557-4ea8-89d1-81e57cfa5b01@2ab9a",
+      "displayName": "",
+      "id": "2ab9a",
+      "name": "ZombieGirl_Skinned.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 6496
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "438fe": {
+      "importer": "gltf-skeleton",
+      "uuid": "d49351bc-3557-4ea8-89d1-81e57cfa5b01@438fe",
+      "displayName": "",
+      "id": "438fe",
+      "name": "UnnamedSkeleton.skeleton",
+      "userData": {
+        "gltfIndex": 0,
+        "jointsLength": 33
+      },
+      "ver": "1.0.1",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "006b1": {
+      "importer": "gltf-material",
+      "uuid": "d49351bc-3557-4ea8-89d1-81e57cfa5b01@006b1",
+      "displayName": "",
+      "id": "006b1",
+      "name": "ZSkin.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "dd796": {
+      "importer": "gltf-material",
+      "uuid": "d49351bc-3557-4ea8-89d1-81e57cfa5b01@dd796",
+      "displayName": "",
+      "id": "dd796",
+      "name": "ZBandage.material",
+      "userData": {
+        "gltfIndex": 1
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "c2086": {
+      "importer": "gltf-material",
+      "uuid": "d49351bc-3557-4ea8-89d1-81e57cfa5b01@c2086",
+      "displayName": "",
+      "id": "c2086",
+      "name": "ZEye.material",
+      "userData": {
+        "gltfIndex": 2
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "ebd5d": {
+      "importer": "gltf-material",
+      "uuid": "d49351bc-3557-4ea8-89d1-81e57cfa5b01@ebd5d",
+      "displayName": "",
+      "id": "ebd5d",
+      "name": "ZPants.material",
+      "userData": {
+        "gltfIndex": 4
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "ec655": {
+      "importer": "gltf-material",
+      "uuid": "d49351bc-3557-4ea8-89d1-81e57cfa5b01@ec655",
+      "displayName": "",
+      "id": "ec655",
+      "name": "ZShoe.material",
+      "userData": {
+        "gltfIndex": 5
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "2d8d8": {
+      "importer": "gltf-material",
+      "uuid": "d49351bc-3557-4ea8-89d1-81e57cfa5b01@2d8d8",
+      "displayName": "",
+      "id": "2d8d8",
+      "name": "ZStain.material",
+      "userData": {
+        "gltfIndex": 6
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "66cb1": {
+      "importer": "gltf-material",
+      "uuid": "d49351bc-3557-4ea8-89d1-81e57cfa5b01@66cb1",
+      "displayName": "",
+      "id": "66cb1",
+      "name": "ZHair.material",
+      "userData": {
+        "gltfIndex": 7
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "d2750": {
+      "importer": "gltf-scene",
+      "uuid": "d49351bc-3557-4ea8-89d1-81e57cfa5b01@d2750",
+      "displayName": "",
+      "id": "d2750",
+      "name": "ZombieGirl.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "fbx": {
+      "smartMaterialEnabled": true
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "d49351bc-3557-4ea8-89d1-81e57cfa5b01@2ab9a"
+      ],
+      "skeletons": [
+        "d49351bc-3557-4ea8-89d1-81e57cfa5b01@438fe"
+      ],
+      "textures": [],
+      "materials": [
+        "d49351bc-3557-4ea8-89d1-81e57cfa5b01@006b1",
+        "d49351bc-3557-4ea8-89d1-81e57cfa5b01@dd796",
+        "d49351bc-3557-4ea8-89d1-81e57cfa5b01@c2086",
+        "d49351bc-3557-4ea8-89d1-81e57cfa5b01@59524",
+        "d49351bc-3557-4ea8-89d1-81e57cfa5b01@ebd5d",
+        "d49351bc-3557-4ea8-89d1-81e57cfa5b01@ec655",
+        "d49351bc-3557-4ea8-89d1-81e57cfa5b01@2d8d8",
+        "d49351bc-3557-4ea8-89d1-81e57cfa5b01@66cb1"
+      ],
+      "scenes": [
+        "d49351bc-3557-4ea8-89d1-81e57cfa5b01@d2750"
+      ]
+    }
+  }
+}

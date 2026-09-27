@@ -23,6 +23,8 @@ export interface Body {
 	held: boolean;
 	ignore: Node;
 	ignoreFor: number;
+	/** Thrown at the player by a zombie: it kills them if it hits them while this lasts, seconds. */
+	lethalFor: number;
 	safeX: number;
 	safeZ: number;
 }
@@ -48,7 +50,8 @@ const _inverse = new Quat();
 // touch it, so whether a thing tips over or stays up is not a rule but what gravity does. The
 // player and the zombies kick them as they walk into them; a thing flying fast enough into a
 // zombie kills it. The player may instead pick one up and throw it (PlayerActions): while it is
-// held, physics leaves it alone. Numbers are ThroughTheDeadCity's scaled to this game's size.
+// held, physics leaves it alone. A thing a zombie girl threw at the player (ZombieGirl) kills
+// the player if it hits them in flight — nothing else that flies does. Numbers are ThroughTheDeadCity's scaled to this game's size.
 @ccclass("Debris")
 export class Debris extends Component {
 	static instance: Debris = null;
@@ -174,6 +177,7 @@ export class Debris extends Component {
 			held: false,
 			ignore: null,
 			ignoreFor: 0,
+			lethalFor: 0,
 			safeX: null,
 			safeZ: null,
 		};
@@ -235,6 +239,7 @@ export class Debris extends Component {
 		body.held = false;
 		body.ignore = by;
 		body.ignoreFor = grace;
+		body.lethalFor = 0;
 		body.velocity.set(dirX * speed, speed * lift, dirZ * speed);
 		body.angular.set(-dirZ * spin, 0, dirX * spin);
 		body.asleep = false;
@@ -271,11 +276,17 @@ export class Debris extends Component {
 			if (body.ignoreFor > 0) {
 				body.ignoreFor -= dt;
 			}
+			if (body.lethalFor > 0) {
+				body.lethalFor -= dt;
+			}
 			for (const mover of this._movers) {
 				if (body.ignoreFor > 0 && mover.node === body.ignore) {
 					continue;
 				}
 				this._crush(body, mover);
+				if (!mover.zombie && this._strikes(body, mover)) {
+					continue;
+				}
 				// The player may take it into the hand instead of kicking it.
 				if (!mover.zombie && this.grab && this._touches(body, mover) && this.grab(body)) {
 					break;
@@ -356,6 +367,32 @@ export class Debris extends Component {
 		const blood = player && player.zombieBlood;
 		blood && blood.splash(v3(at.x, at.y + 0.4, at.z), position, player.killSplash);
 		mover.zombie.kill();
+	}
+
+	/**
+	 * A thing a zombie threw at the player hitting them hard: they die. Only a real blow counts —
+	 * it has to close on them at `lethalSpeed`, as a thing must to kill a zombie; one that has
+	 * all but come to rest and just slides into them is harmless.
+	 */
+	private _strikes(body: Body, mover: Mover): boolean {
+		if (body.lethalFor <= 0 || !this._touches(body, mover)) {
+			return false;
+		}
+		const position = body.node.worldPosition;
+		const at = mover.node.worldPosition;
+		const dx = position.x - at.x;
+		const dz = position.z - at.z;
+		const gap = Math.hypot(dx, dz);
+		const closing = gap > 1e-4 ? -(body.velocity.x * dx + body.velocity.z * dz) / gap : body.velocity.length();
+		// Coming down on them from above counts too: the fall is part of the blow.
+		const falling = Math.max(0, -body.velocity.y);
+		if (Math.max(closing, falling) < this.lethalSpeed) {
+			return false;
+		}
+		body.lethalFor = 0;
+		const player = PlayerAttack.instance;
+		player && !player.isDead && player.kill(body.node.worldPosition);
+		return true;
 	}
 
 	/** A kick lands on the side of a thing, not its middle — so it spins as well. */
