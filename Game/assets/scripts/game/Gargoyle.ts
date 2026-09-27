@@ -134,10 +134,11 @@ export class Gargoyle extends Component {
 			node.active = false;
 			this._pool.push({ node, renderer, band: 0, age: 0, life: 0, size: 0, velocity: v3(), spin: v3() });
 		}
-		// The glow in the mouth as it gets ready to spit.
+		// The glow in the mouth as it gets ready to spit. With the fire, not in the head: the
+		// walls are laid out from the head's meshes, and the glow is no wall.
 		if (this.mouth) {
 			this._glow = new Node("Glow");
-			this.mouth.addChild(this._glow);
+			this._root.addChild(this._glow);
 			this._glowMaterial = this._additive(false);
 			this._renderer(this._glow, Gargoyle._sphere, this._glowMaterial);
 			this._glow.active = false;
@@ -332,6 +333,7 @@ export class Gargoyle extends Component {
 		if (!on) {
 			return;
 		}
+		this._glow.setWorldPosition(this.mouth.worldPosition);
 		const flicker = 0.8 + 0.2 * Math.sin(this._time * 29) * Math.sin(this._time * 7.1 + 0.7);
 		const size = this.radius * 2 * (0.4 + 0.8 * strength) * flicker;
 		this._glow.setScale(size, size, size);
