@@ -1,4 +1,4 @@
-import { _decorator, AnimationClip, AnimationState, Component, SkeletalAnimation } from "cc";
+import { _decorator, AnimationClip, AnimationState, Component, SkeletalAnimation, Vec2 } from "cc";
 import GameEvent from "../enums/GameEvent";
 import { gameEventTarget } from "../plugins/GameEventTarget";
 
@@ -157,10 +157,19 @@ export class AnimationController extends Component {
 		gameEventTarget[func](GameEvent.JOYSTICK_DOWN, this.onDown, this);
 		gameEventTarget[func](GameEvent.JOYSTICK_MOVE, this.onMove, this);
 		gameEventTarget[func](GameEvent.JOYSTICK_UP, this.onUp, this);
+		gameEventTarget[func](GameEvent.MOVE_DIRECTION, this.onDirection, this);
 	}
 
 	private onDown(): void {
 		this._pressed = true;
+	}
+
+	/** The stick pushed some way is the stick down, even if its "down" went unheard: run. */
+	private onDirection(direction: Vec2): void {
+		if (!this._pressed && direction.lengthSqr() > 0) {
+			this.onDown();
+			this.onMove();
+		}
 	}
 
 	private onMove(): void {

@@ -1,4 +1,4 @@
-import { _decorator, AnimationClip, Component, instantiate, math, Node, Prefab, SkeletalAnimation, v3, Vec3 } from "cc";
+import { _decorator, AnimationClip, Component, instantiate, math, Node, Prefab, SkeletalAnimation, v3, Vec3, Vec2 } from "cc";
 import GameEvent from "../enums/GameEvent";
 import { CameraManager } from "../managers/camera/CameraManager";
 import { GameState, StackItem } from "../managers/GameState";
@@ -159,6 +159,12 @@ export class PlayerAttack extends Component {
 
 		gameEventTarget[func](GameEvent.JOYSTICK_DOWN, this.onDown, this);
 		gameEventTarget[func](GameEvent.JOYSTICK_UP, this.onUp, this);
+		gameEventTarget[func](GameEvent.MOVE_DIRECTION, this.onDirection, this);
+	}
+
+	/** Moving is running, even if the stick's "down" went unheard: no turning to a zombie then. */
+	private onDirection(direction: Vec2): void {
+		direction.lengthSqr() > 0 && (this._pressed = true);
 	}
 
 	private onDown(): void {

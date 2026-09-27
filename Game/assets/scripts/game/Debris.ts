@@ -25,6 +25,9 @@ export interface Body {
 	ignoreFor: number;
 	/** Thrown at the player by a zombie: it kills them if it hits them while this lasts, seconds. */
 	lethalFor: number;
+	/** In slow motion while this lasts, seconds: its flight runs `slowScale` times its speed, on the same arc. */
+	slowFor: number;
+	slowScale: number;
 	safeX: number;
 	safeZ: number;
 }
@@ -178,6 +181,8 @@ export class Debris extends Component {
 			ignore: null,
 			ignoreFor: 0,
 			lethalFor: 0,
+			slowFor: 0,
+			slowScale: 1,
 			safeX: null,
 			safeZ: null,
 		};
@@ -240,6 +245,7 @@ export class Debris extends Component {
 		body.ignore = by;
 		body.ignoreFor = grace;
 		body.lethalFor = 0;
+		body.slowFor = 0;
 		body.velocity.set(dirX * speed, speed * lift, dirZ * speed);
 		body.angular.set(-dirZ * spin, 0, dirX * spin);
 		body.asleep = false;
@@ -296,7 +302,13 @@ export class Debris extends Component {
 			if (body.asleep) {
 				continue;
 			}
-			this._integrate(body, dt);
+			// A slowed flight: the same arc, walked `slowScale` times as fast.
+			let step = dt;
+			if (body.slowFor > 0) {
+				body.slowFor -= dt;
+				step = dt * body.slowScale;
+			}
+			this._integrate(body, step);
 			for (let i = 0; i < this.iterations; i++) {
 				this._resolveGround(body);
 			}

@@ -15,8 +15,18 @@ export class FaceDirection extends Component {
 	@property({ tooltip: "Extra yaw if the model's front is not its local +Z" })
 	yawOffset: number = 0;
 
-	/** While set, the stick does not turn the node — a throw or a jump turns it itself. */
-	locked = false;
+	/** While set, the stick does not turn the node — a throw or a jump turns it itself. Let go,
+	 * it turns at once to where the stick is held, not only when the stick next moves. */
+	get locked(): boolean {
+		return this._locked;
+	}
+	set locked(value: boolean) {
+		this._locked = value;
+		!value && this._held.lengthSqr() > 0 && this.onDirection(this._held);
+	}
+
+	private _locked = false;
+	private _held: Vec2 = new Vec2();
 
 	private _targetYaw: number = null;
 	private _forward: Vec3 = v3();
@@ -38,7 +48,8 @@ export class FaceDirection extends Component {
 	}
 
 	private onDirection(direction: Vec2): void {
-		if (this.locked || direction.lengthSqr() === 0) {
+		direction !== this._held && this._held.set(direction);
+		if (this._locked || direction.lengthSqr() === 0) {
 			return;
 		}
 		this._axes();

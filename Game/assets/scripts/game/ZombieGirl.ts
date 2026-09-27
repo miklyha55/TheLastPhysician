@@ -78,6 +78,8 @@ export class ZombieGirl extends Zombie {
 	aimHeight: number = 0.35;
 	@property({ tooltip: "Share of the player's run she throws ahead of them, 0..1", slide: true, range: [0, 1, 0.05] })
 	lead: number = 0.5;
+	@property({ tooltip: "How many times slower a thrown thing flies than it would fall by itself — the same arc, more time to see it coming" })
+	flightSlowdown: number = 2;
 	@property({ tooltip: "Seconds past the planned landing a thrown thing is still deadly" })
 	lethalAfter: number = 0.25;
 	@property({ tooltip: "Tumble of a thrown thing, radians per second" })
@@ -121,6 +123,13 @@ export class ZombieGirl extends Zombie {
 		this._clock += dt;
 		this._trackPlayer(player, dt);
 		if (this._carry) {
+			// The player gone behind a wall with the thing still in her hand: she drops it and
+			// loses them, as any zombie does — no throwing blind over the walls.
+			if (!this._carry.released && !this._stillSees(player, dt)) {
+				this._interrupt();
+				this._goHome();
+				return;
+			}
 			this._throwStep(player, dt);
 			return;
 		}
@@ -160,6 +169,12 @@ export class ZombieGirl extends Zombie {
 		}
 		this._unseen = 0;
 		return true;
+	}
+
+	/** Nothing between her and the player that stands as tall as her: a wall, a shut door. */
+	private _sees(player: PlayerAttack): boolean {
+		const walls = this._walls();
+		return !walls || walls.lineOfSight(this.node.worldPosition, player.node.worldPosition, this.height);
 	}
 
 	/** What to throw: on the way to the player first, then the nearest in her room. */
@@ -337,6 +352,13 @@ export class ZombieGirl extends Zombie {
 			Vec3.lerp(_at, carry.from, _hand, k * k * (3 - 2 * k));
 			carry.body.node.setWorldPosition(_at);
 			if (share >= this.releaseMoment) {
+				// Out of the hand only at a player in plain sight; a wall between them now — the
+				// throw is off, the thing drops, and she gives them up.
+				if (!this._sees(player)) {
+					this._interrupt();
+					this._goHome();
+					return;
+				}
 				this._launch(carry, player);
 			}
 		}
@@ -368,7 +390,10 @@ export class ZombieGirl extends Zombie {
 		const aimY = target.y + this.aimHeight;
 		const peak = Math.max(from.y, aimY) + this.arcHeight;
 		const up = Math.sqrt(2 * debris.gravity * Math.max(0.01, peak - from.y));
-		const time = this._flightTime(up, from.y, aimY, debris);
+		const arc = this._flightTime(up, from.y, aimY, debris);
+		// The arc is worked out at the physics' own pace; it is flown `flightSlowdown` times slower.
+		const slow = Math.max(1, this.flightSlowdown);
+		const time = arc * slow;
 		const aimX = target.x + this._playerVelocity.x * time * this.lead;
 		const aimZ = target.z + this._playerVelocity.z * time * this.lead;
 		const dx = aimX - from.x;
@@ -378,9 +403,11 @@ export class ZombieGirl extends Zombie {
 		const uz = length > 1e-3 ? dz / length : 0;
 		// Drag eats the speed along the floor as well: the way covered is v·(1 − e^(−k·t))/k.
 		const k = debris.linearDamping;
-		const reach = k * time > 1e-3 ? (1 - Math.exp(-k * time)) / k : time;
+		const reach = k * arc > 1e-3 ? (1 - Math.exp(-k * arc)) / k : arc;
 		const along = Math.max(0.01, length / reach);
 		debris.launch(body, ux, uz, along, up / along, this.throwSpin, this.node, this.throwGrace);
+		body.slowScale = 1 / slow;
+		body.slowFor = time;
 		body.lethalFor = time + this.lethalAfter;
 	}
 

@@ -1,4 +1,4 @@
-import { _decorator, Component, EventKeyboard, Input, input, KeyCode, v2, Vec2 } from "cc";
+import { _decorator, Component, director, Director, EventKeyboard, game, Game, Input, input, KeyCode, v2, Vec2 } from "cc";
 import GameEvent from "../../enums/GameEvent";
 import { gameEventTarget } from "../../plugins/GameEventTarget";
 
@@ -19,7 +19,10 @@ const KEYS: { [code: number]: [number, number] } = {
 // The player moved from the keyboard — WASD and the arrows — the way the on-screen joystick
 // moves them: the same events go out. A first key held is the finger down, the direction of
 // the keys held is where the knob points, the last one let go is the finger up. Two keys at
-// once go diagonally; opposite ones cancel out.
+// once go diagonally; opposite ones cancel out. It outlives the scenes (GameManager's node): keys
+// held across a change of level are told to the new one afresh, or its player would move with no
+// "finger down" heard — no run, no turning. Losing the page's focus lets every key go, since
+// their key-ups will never come.
 @ccclass("KeyboardInput")
 export class KeyboardInput extends Component {
 	private _held = new Set<number>();
@@ -29,11 +32,29 @@ export class KeyboardInput extends Component {
 	protected onEnable(): void {
 		input.on(Input.EventType.KEY_DOWN, this._onKeyDown, this);
 		input.on(Input.EventType.KEY_UP, this._onKeyUp, this);
+		director.on(Director.EVENT_AFTER_SCENE_LAUNCH, this._announce, this);
+		game.on(Game.EVENT_HIDE, this._releaseAll, this);
+		typeof window !== "undefined" && window.addEventListener("blur", this._onBlur);
 	}
 
 	protected onDisable(): void {
 		input.off(Input.EventType.KEY_DOWN, this._onKeyDown, this);
 		input.off(Input.EventType.KEY_UP, this._onKeyUp, this);
+		director.off(Director.EVENT_AFTER_SCENE_LAUNCH, this._announce, this);
+		game.off(Game.EVENT_HIDE, this._releaseAll, this);
+		typeof window !== "undefined" && window.removeEventListener("blur", this._onBlur);
+		this._releaseAll();
+	}
+
+	private _onBlur = (): void => this._releaseAll();
+
+	/** A new scene: whatever is held down is news to it — the finger down, the way, the move. */
+	private _announce(): void {
+		this._down = false;
+		this._held.size && this._update();
+	}
+
+	private _releaseAll(): void {
 		this._held.clear();
 		this._update();
 	}

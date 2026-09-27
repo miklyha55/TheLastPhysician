@@ -56,7 +56,7 @@ export class Gargoyle extends Component {
 	@property({ tooltip: "Balls ready in the set — as many as can be in the air at once" })
 	balls: number = 4;
 	@property({ tooltip: "A ball gone this far with nothing hit goes out" })
-	maxRange: number = 14;
+	maxRange: number = 20;
 	@property({ tooltip: "The first stretch out of the mouth, where the head's own wall is no obstacle" })
 	clearance: number = 0.3;
 
