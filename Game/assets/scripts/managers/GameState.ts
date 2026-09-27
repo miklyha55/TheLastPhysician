@@ -2,6 +2,7 @@ import { assetManager, Director, director } from "cc";
 import GameEvent from "../enums/GameEvent";
 import { gameEventTarget } from "../plugins/GameEventTarget";
 import { LoadingScreen } from "./LoadingScreen";
+import { Prewarm } from "./Prewarm";
 
 /** One thing on the stack on the player's back: a potion, or a key of a colour. */
 export interface StackItem {
@@ -10,14 +11,37 @@ export interface StackItem {
 }
 
 // What lives across the levels, and how the game goes from one to the next. Every level is a
-// scene of its own; they come in the order of `levels`. Leaving a level through its gate
+// scene of its own, Level_1 … Level_N; they come in the order of their numbers. Leaving a level through its gate
 // takes what the player carries — the stack on the back, potions and keys, bottom to top —
 // into the next one, where it is laid back on the stack as it was. The player who dies plays
 // the level again from its start, with what they came in with. The switch of scenes is hidden
 // behind the loading screen, its bar filling as the next scene loads.
 export class GameState {
-	/** The level scenes, in the order they are played. */
-	static readonly levels: string[] = ["Level_1", "Level_2", "Level_3", "Level_4", "Level_5", "Level_6", "Level_7", "Level_8", "Level_9", "Level_10"];
+	private static _levels: string[] = null;
+
+	/**
+	 * The level scenes, in the order they are played: every scene called Level_<number> in the
+	 * game, by that number — Level_1 … Level_N, however many there are. A new level is just a
+	 * new scene named so.
+	 */
+	static get levels(): string[] {
+		if (GameState._levels && GameState._levels.length) {
+			return GameState._levels;
+		}
+		const found: { name: string; index: number }[] = [];
+		const bundle = assetManager.main;
+		const names: string[] = [];
+		// The bundle's scenes, keyed by their paths (a Cache: walked with forEach).
+		bundle && bundle.config.scenes.forEach((info, key) => names.push(key));
+		for (const key of names) {
+			const name = key.split("/").pop().replace(/\.scene$/, "");
+			const match = /^Level_(\d+)$/.exec(name);
+			match && found.push({ name, index: Number(match[1]) });
+		}
+		found.sort((a, b) => a.index - b.index);
+		GameState._levels = found.map((level) => level.name);
+		return GameState._levels;
+	}
 
 	private static _level = -1;
 	/** What the player brings into the level being loaded; null — the level's own start. */
@@ -25,6 +49,11 @@ export class GameState {
 	/** What the player came into the current level with, for playing it again. */
 	private static _entry: StackItem[] = null;
 	private static _loading = false;
+
+	/** What the loading screen calls the level being played. */
+	static get title(): string {
+		return GameState._level >= 0 ? `Уровень ${GameState._level + 1}` : "";
+	}
 
 	/** Index of the level being played in `levels`, or -1 in a scene that is not one of them. */
 	static get level(): number {
@@ -114,8 +143,9 @@ export class GameState {
 					}
 					GameState._carried = carried;
 					const started = director.loadScene(scene, () => {
-						// Uncovered once the new scene has drawn its first frame.
-						director.once(Director.EVENT_AFTER_DRAW, () => LoadingScreen.hide());
+						// Uncovered by the level's warm-up once it is done (Prewarm); a scene that has
+						// none is uncovered as soon as it has drawn its first frame.
+						director.once(Director.EVENT_AFTER_DRAW, () => !Prewarm.active && LoadingScreen.hide());
 					});
 					if (!started) {
 						GameState._fail(scene, null);

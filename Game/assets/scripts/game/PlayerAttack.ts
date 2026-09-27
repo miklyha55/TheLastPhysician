@@ -2,6 +2,7 @@ import { _decorator, AnimationClip, Component, instantiate, math, Node, Prefab, 
 import GameEvent from "../enums/GameEvent";
 import { CameraManager } from "../managers/camera/CameraManager";
 import { GameState, StackItem } from "../managers/GameState";
+import { Prewarm } from "../managers/Prewarm";
 import { gameEventTarget } from "../plugins/GameEventTarget";
 import { AnimationController } from "./AnimationController";
 import { Blood } from "./Blood";
@@ -172,6 +173,8 @@ export class PlayerAttack extends Component {
 		// Brought from the last level: potions and keys, as they lay on the stack. Otherwise
 		// the level's own start — `ammo` potions.
 		const carried = GameState.enter();
+		// Everything drawn once behind the loading screen before the level is played.
+		Prewarm.run(GameState.title);
 		if (!carried) {
 			this.stack && this.stack.fill(this.ammo);
 			return;

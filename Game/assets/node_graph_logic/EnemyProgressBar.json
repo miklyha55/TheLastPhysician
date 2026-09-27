@@ -1,0 +1,133 @@
+{
+    "version": 4,
+    "name": "EnemyProgressBar",
+    "view": {
+        "x": 434,
+        "y": 224,
+        "scale": 1.12
+    },
+    "nodes": [
+        {
+            "id": "n1",
+            "name": "Node 1",
+            "x": 658,
+            "y": 33,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Ве зомби из папки.",
+            "payload": {
+                "kind": "folder",
+                "uuid": "b1da6393-8d09-4abd-8660-1551d91fb801",
+                "name": "enemys",
+                "type": "Folder",
+                "importer": "directory",
+                "url": "db://assets/prefabs/enemys",
+                "path": "db://assets/prefabs/enemys"
+            }
+        },
+        {
+            "id": "n2",
+            "name": "Node 2",
+            "x": -161,
+            "y": -92,
+            "width": 227,
+            "height": 471,
+            "previewHeight": 96,
+            "prompt": "Цепляется на зомби выше головы.  Появляется при первом дамаге и исчезает вместе со смертью зомби.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "e4857879-570a-47bb-9d69-76685f0f02db",
+                "name": "EnemyProgressBar.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/enemys/EnemyProgressBar.prefab",
+                "path": "db://assets/prefabs/enemys/EnemyProgressBar.prefab"
+            }
+        },
+        {
+            "id": "n4",
+            "name": "Node 3",
+            "x": 226,
+            "y": -32,
+            "width": 283,
+            "height": 477,
+            "previewHeight": 96,
+            "prompt": "Привязывает UI к ноде мировой.",
+            "payload": {
+                "kind": "component",
+                "uuid": "e4250970-7cc0-4539-8fac-1c85a82e6c1f",
+                "name": "PinUiToWorld",
+                "type": "PinUiToWorld",
+                "cid": "e4250lwfMBFOY+sHIWoLmwf",
+                "builtin": false,
+                "group": "Scripts",
+                "importer": "typescript",
+                "url": "db://assets/scripts/auxiliaryComponents/PinUiToWorld.ts",
+                "path": "Scripts/PinUiToWorld"
+            }
+        },
+        {
+            "id": "n7",
+            "name": "Node 4",
+            "x": -814,
+            "y": -251,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "node",
+                "uuid": "45tdIUrMVJ4qmqk/2KKZ6M",
+                "name": "Player",
+                "type": "cc.Node",
+                "path": "Level_1/World/Player"
+            }
+        },
+        {
+            "id": "n11",
+            "name": "Node 6",
+            "x": -452,
+            "y": -260,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Уменьшается при ударе плеера. Зависит от счетчика жизней. Меняется Active у бара.",
+            "payload": {
+                "kind": "component",
+                "uuid": "804b0c3c-ba8b-496c-9a54-1e3e53f33fef",
+                "name": "ProgressBar",
+                "type": "ProgressBar",
+                "cid": "804b0w8uotJbJpUHj5T8z/v",
+                "builtin": false,
+                "group": "Scripts",
+                "importer": "typescript",
+                "url": "db://assets/scripts/auxiliaryComponents/ProgressBar.ts",
+                "path": "Scripts/ProgressBar"
+            }
+        }
+    ],
+    "links": [
+        {
+            "id": "l5",
+            "from": "n2",
+            "to": "n4"
+        },
+        {
+            "id": "l6",
+            "from": "n4",
+            "to": "n1"
+        },
+        {
+            "id": "l12",
+            "from": "n7",
+            "to": "n11",
+            "label": "Плеер бьет зомби"
+        },
+        {
+            "id": "l13",
+            "from": "n11",
+            "to": "n2"
+        }
+    ]
+}

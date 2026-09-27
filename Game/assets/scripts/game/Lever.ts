@@ -3,10 +3,9 @@ import { PlayerAttack } from "./PlayerAttack";
 
 const { ccclass, property } = _decorator;
 
-// A lever on a floor tile. The player bumps into it — it is solid (WallCollision's
-// solidPrefabs) — and it flips: on, then off at the next bump, and so on. A bump counts once:
-// to flip it again the player steps away and comes back. What it drives watches `isOn` —
-// a gate opens and shuts with it.
+// A lever on a floor tile. Off from the start; the player bumps into it — it is solid
+// (WallCollision's solidPrefabs) — and it goes on, once and for good: after that it takes no
+// notice of bumps. What it drives watches `isOn` — a gate opens with it.
 @ccclass("Lever")
 export class Lever extends Component {
 	@property({ type: Node, tooltip: "The handle, turning on its pivot around Z" })
@@ -45,7 +44,10 @@ export class Lever extends Component {
 		const distance = Math.hypot(them.x - at.x, them.z - at.z);
 		if (!this._touching && distance <= this.touchRadius) {
 			this._touching = true;
-			this.flip();
+			// On for good: once thrown, touching it again does nothing.
+			if (!this._on) {
+				this.flip();
+			}
 		} else if (this._touching && distance > this.touchRadius + this.releaseMargin) {
 			this._touching = false;
 		}

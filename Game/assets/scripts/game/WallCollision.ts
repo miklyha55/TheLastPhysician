@@ -53,6 +53,10 @@ export class WallCollision extends Component {
 	private _doors: { door: Opening; node: Node; cells: Uint8Array }[] = [];
 	// Cells any such layer covers, so the common case — none here — is one lookup.
 	private _doorCells: Uint8Array = null;
+	/** Top of whatever fills each cell, world height: a thing flying higher passes over it. */
+	private _tops: Float32Array = null;
+	private _fillTops: number[] = null;
+	private _fillTop = 0;
 	private _cols: number = 0;
 	private _rows: number = 0;
 	private _originX: number = 0;
@@ -166,6 +170,31 @@ export class WallCollision extends Component {
 		return moved;
 	}
 
+	/**
+	 * Top of the highest thing that blocks the way within `reach` of a point on the floor — a
+	 * wall, a table, a shut door; below 0 when nothing does. A thing flying above it passes over.
+	 */
+	topNear(x: number, z: number, reach: number): number {
+		if (!this._cells || !this._tops) {
+			return -1;
+		}
+		const size = this.cellSize;
+		const c0 = Math.max(0, Math.floor((x - reach - this._originX) / size));
+		const c1 = Math.min(this._cols - 1, Math.floor((x + reach - this._originX) / size));
+		const r0 = Math.max(0, Math.floor((z - reach - this._originZ) / size));
+		const r1 = Math.min(this._rows - 1, Math.floor((z + reach - this._originZ) / size));
+		let top = -1;
+		for (let r = r0; r <= r1; r++) {
+			for (let c = c0; c <= c1; c++) {
+				const at = r * this._cols + c;
+				if ((this._cells[at] || this._closedDoorAt(at)) && this._tops[at] > top) {
+					top = this._tops[at];
+				}
+			}
+		}
+		return top;
+	}
+
 	/** Can something of the player's radius go from `a` to `b` in a straight line? */
 	isPathClear(a: Vec3, b: Vec3): boolean {
 		if (!this._cells) {
@@ -260,46 +289,47 @@ export class WallCollision extends Component {
 
 	private _build(): void {
 		const walls: number[] = [];
-		const doors: { door: Opening; triangles: number[] }[] = [];
+		const wallTops: number[] = [];
+		const doors: { door: Opening; triangles: number[]; tops: number[] }[] = [];
 		for (const wall of this._wallInstances()) {
 			// Every leaf, with what opens it and how it stands when shut.
-			const leaves = new Map<Node, { triangles: number[]; closed: Quat }>();
+			const leaves = new Map<Node, { triangles: number[]; tops: number[]; closed: Quat }>();
 			for (const door of wall.getComponentsInChildren(Door)) {
 				if (door.leaf) {
-					const group = { door: door as Opening, triangles: [] as number[] };
+					const group = { door: door as Opening, triangles: [] as number[], tops: [] as number[] };
 					doors.push(group);
-					leaves.set(door.leaf, { triangles: group.triangles, closed: door.closedRotation });
+					leaves.set(door.leaf, { triangles: group.triangles, tops: group.tops, closed: door.closedRotation });
 				}
 			}
 			// A gate: both leaves one opening; shut, they stand square (Gate turns them from zero).
 			// Looked up by name — Gate reaches back to the player, and so to this script.
 			for (const gate of wall.getComponentsInChildren("Gate") as (Component & Opening & { leftLeaf: Node; rightLeaf: Node })[]) {
-				const group = { door: gate as Opening, triangles: [] as number[] };
+				const group = { door: gate as Opening, triangles: [] as number[], tops: [] as number[] };
 				doors.push(group);
 				for (const leaf of [gate.leftLeaf, gate.rightLeaf]) {
-					leaf && leaves.set(leaf, { triangles: group.triangles, closed: Quat.IDENTITY as Quat });
+					leaf && leaves.set(leaf, { triangles: group.triangles, tops: group.tops, closed: Quat.IDENTITY as Quat });
 				}
 			}
 			for (const renderer of wall.getComponentsInChildren(MeshRenderer)) {
 				const leaf = this._leafOf(renderer.node, leaves);
 				if (!leaf) {
-					this._collect(renderer, walls);
+					this._collect(renderer, walls, wallTops);
 					continue;
 				}
 				// Laid out shut, whatever the door is doing right now.
 				const entry = leaves.get(leaf);
 				const now = leaf.rotation.clone();
 				leaf.setRotation(entry.closed);
-				this._collect(renderer, entry.triangles);
+				this._collect(renderer, entry.triangles, entry.tops);
 				leaf.setRotation(now);
 			}
 		}
 		// Solid things, each a layer of its own, laid out by all their meshes as they stand now.
-		const solids: { node: Node; triangles: number[] }[] = [];
+		const solids: { node: Node; triangles: number[]; tops: number[] }[] = [];
 		for (const solid of this._instancesOf(this.solidPrefabs)) {
-			const group = { node: solid, triangles: [] as number[] };
+			const group = { node: solid, triangles: [] as number[], tops: [] as number[] };
 			for (const renderer of solid.getComponentsInChildren(MeshRenderer)) {
-				this._collect(renderer, group.triangles);
+				this._collect(renderer, group.triangles, group.tops);
 			}
 			group.triangles.length && solids.push(group);
 		}
@@ -321,10 +351,11 @@ export class WallCollision extends Component {
 		this._cols = Math.ceil((maxX - minX + pad * 2) / this.cellSize) + 1;
 		this._rows = Math.ceil((maxZ - minZ + pad * 2) / this.cellSize) + 1;
 
-		this._cells = this._rasterize(walls);
+		this._tops = new Float32Array(this._cols * this._rows);
+		this._cells = this._rasterize(walls, wallTops);
 		this._doors = doors
-			.map((group) => ({ door: group.door, node: null as Node, cells: this._rasterize(group.triangles) }))
-			.concat(solids.map((group) => ({ door: null as Opening, node: group.node, cells: this._rasterize(group.triangles) })));
+			.map((group) => ({ door: group.door, node: null as Node, cells: this._rasterize(group.triangles, group.tops) }))
+			.concat(solids.map((group) => ({ door: null as Opening, node: group.node, cells: this._rasterize(group.triangles, group.tops) })));
 		this._doorCells = new Uint8Array(this._cols * this._rows);
 		for (const layer of this._doors) {
 			for (let i = 0; i < layer.cells.length; i++) {
@@ -344,7 +375,7 @@ export class WallCollision extends Component {
 	}
 
 	/** A renderer's triangles on the floor, as x,z pairs, leaving out the floor under the walls and what is overhead. */
-	private _collect(renderer: MeshRenderer, out: number[]): void {
+	private _collect(renderer: MeshRenderer, out: number[], tops: number[] = null): void {
 		const mesh = renderer.mesh;
 		if (!mesh) {
 			return;
@@ -373,16 +404,20 @@ export class WallCollision extends Component {
 				}
 				if (top > Math.max(this.minHeight, this.stepHeight) && bottom < this.maxHeight) {
 					out.push(...tri);
+					tops && tops.push(top);
 				}
 			}
 		}
 	}
 
-	private _rasterize(triangles: number[]): Uint8Array {
+	private _rasterize(triangles: number[], tops: number[] = null): Uint8Array {
 		const cells = new Uint8Array(this._cols * this._rows);
+		this._fillTops = tops;
 		for (let i = 0; i < triangles.length; i += 6) {
+			this._fillTop = tops ? tops[i / 6] : Infinity;
 			this._fill(cells, triangles[i], triangles[i + 1], triangles[i + 2], triangles[i + 3], triangles[i + 4], triangles[i + 5]);
 		}
+		this._fillTops = null;
 		return cells;
 	}
 
@@ -427,7 +462,11 @@ export class WallCollision extends Component {
 
 	private _mark(cells: Uint8Array, c: number, r: number): void {
 		if (c >= 0 && r >= 0 && c < this._cols && r < this._rows) {
-			cells[r * this._cols + c] = 1;
+			const at = r * this._cols + c;
+			cells[at] = 1;
+			if (this._fillTops && this._tops && this._fillTop > this._tops[at]) {
+				this._tops[at] = this._fillTop;
+			}
 		}
 	}
 

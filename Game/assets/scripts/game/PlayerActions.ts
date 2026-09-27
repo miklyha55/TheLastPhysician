@@ -133,7 +133,7 @@ export class PlayerActions extends Component {
 	@property({ tooltip: "Taller than this — no jump" })
 	vaultMaxHeight: number = 1;
 	@property({ tooltip: "Deeper than this across — no jump" })
-	vaultMaxDepth: number = 1.35;
+	vaultMaxDepth: number = 0.6;
 	@property({ tooltip: "The player's radius on the floor" })
 	radius: number = 0.2;
 

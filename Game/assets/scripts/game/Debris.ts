@@ -545,6 +545,12 @@ export class Debris extends Component {
 			return;
 		}
 		const position = body.node.worldPosition.clone();
+		// Flying higher than what stands there — a table, a bench — it passes over it. Its lowest
+		// point whichever way it is turned: as far down as its box reaches from its middle.
+		const reach = Math.max(-body.boxMin.x, body.boxMax.x, -body.boxMin.y, body.boxMax.y, -body.boxMin.z, body.boxMax.z);
+		if (position.y - reach > this._walls.topNear(position.x, position.z, body.radius + this._walls.radius)) {
+			return;
+		}
 		this._before.set(position);
 		this._walls.pushOut(position);
 		if (this._walls.isBlocked(position.x, position.z)) {

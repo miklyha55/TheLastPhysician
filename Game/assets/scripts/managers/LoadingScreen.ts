@@ -1,6 +1,7 @@
 // A loading screen in the page itself, over the game's canvas: it hides the switch from one
 // level scene to the next. Dark, with a spinning ring, the name of what is coming and a bar
-// that fills as the scene loads. It fades in, and fades out once the new scene is up. Where
+// that fills as the scene loads. It fades in, and fades out once the new scene is up and warmed
+// up (Prewarm). Where
 // there is no page — a native build — it does nothing and the scene simply changes.
 export class LoadingScreen {
 	private static _root: HTMLDivElement = null;
@@ -32,6 +33,26 @@ export class LoadingScreen {
 			root.classList.add("tlp-loading--shown");
 			setTimeout(onShown, LoadingScreen.fadeTime * 1000);
 		});
+	}
+
+	/** Covers the game at once, no fade — the very start, before anything has been seen. */
+	static cover(title: string): void {
+		if (!LoadingScreen._available) {
+			return;
+		}
+		LoadingScreen._build();
+		clearTimeout(LoadingScreen._hideTimer);
+		const root = LoadingScreen._root;
+		LoadingScreen._title.textContent = title;
+		if (root.style.display === "flex" && root.classList.contains("tlp-loading--shown")) {
+			return; // already up — the switch from the last level
+		}
+		root.style.transition = "none";
+		root.style.display = "flex";
+		root.classList.add("tlp-loading--shown");
+		LoadingScreen.progress(1);
+		// Back to fading for when it goes.
+		requestAnimationFrame(() => (root.style.transition = ""));
 	}
 
 	/** How much is loaded, 0..1. */
