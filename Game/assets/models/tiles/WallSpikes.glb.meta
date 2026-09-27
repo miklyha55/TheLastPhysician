@@ -1,0 +1,131 @@
+{
+  "ver": "2.3.14",
+  "importer": "gltf",
+  "imported": true,
+  "uuid": "490b5b55-eb82-4e88-b131-2433d2ca0dbd",
+  "files": [],
+  "subMetas": {
+    "18856": {
+      "importer": "gltf-scene",
+      "uuid": "490b5b55-eb82-4e88-b131-2433d2ca0dbd@18856",
+      "displayName": "",
+      "id": "18856",
+      "name": "WallSpikes.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "21180": {
+      "importer": "gltf-mesh",
+      "uuid": "490b5b55-eb82-4e88-b131-2433d2ca0dbd@21180",
+      "displayName": "",
+      "id": "21180",
+      "name": "Floor_Tile_Wall_Spikes.mesh",
+      "userData": {
+        "gltfIndex": 1,
+        "triangleCount": 108
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "68017": {
+      "importer": "gltf-mesh",
+      "uuid": "490b5b55-eb82-4e88-b131-2433d2ca0dbd@68017",
+      "displayName": "",
+      "id": "68017",
+      "name": "Tile_Wall_Spikes_Blades.mesh",
+      "userData": {
+        "gltfIndex": 2,
+        "triangleCount": 228
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "e5eb3": {
+      "importer": "gltf-mesh",
+      "uuid": "490b5b55-eb82-4e88-b131-2433d2ca0dbd@e5eb3",
+      "displayName": "",
+      "id": "e5eb3",
+      "name": "Tile_Wall_Spikes.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 316
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "5742b": {
+      "importer": "gltf-material",
+      "uuid": "490b5b55-eb82-4e88-b131-2433d2ca0dbd@5742b",
+      "displayName": "",
+      "id": "5742b",
+      "name": "TilesPalette.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "490b5b55-eb82-4e88-b131-2433d2ca0dbd@e5eb3",
+        "490b5b55-eb82-4e88-b131-2433d2ca0dbd@21180",
+        "490b5b55-eb82-4e88-b131-2433d2ca0dbd@68017"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "490b5b55-eb82-4e88-b131-2433d2ca0dbd@5742b"
+      ],
+      "scenes": [
+        "490b5b55-eb82-4e88-b131-2433d2ca0dbd@18856"
+      ]
+    }
+  }
+}

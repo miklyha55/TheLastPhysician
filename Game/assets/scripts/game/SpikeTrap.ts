@@ -1,11 +1,13 @@
-import { _decorator, Component, Node, v3, Vec3 } from "cc";
+import { _decorator, Component, Mat4, Node, v3, Vec3 } from "cc";
 import { PlayerAttack } from "./PlayerAttack";
 
 const { ccclass, property } = _decorator;
 
-// Spikes in a floor tile. Hidden under the floor from the start, then round and round for
-// good: hidden for `closedTime`, shoot up, stay up for `openTime`, sink back. The player
-// standing on the tile while they are up dies.
+// Spikes in a tile — out of the floor, or out of a wall. Hidden from the start, then round and
+// round for good: hidden for `closedTime`, shoot out, stay out for `openTime`, draw back. The
+// player where they reach while they are out dies. Floor spikes hide straight down and hurt on
+// a square round the tile's centre; wall spikes hide back into the wall (`hideDirection`) and
+// hurt in a box in front of it (`useBox`), in the tile's own axes — so turned with it.
 @ccclass("SpikeTrap")
 export class SpikeTrap extends Component {
 	@property({ type: Node, tooltip: "The spikes, moving up and down" })
@@ -20,19 +22,40 @@ export class SpikeTrap extends Component {
 	sinkTime: number = 0.25;
 	@property({ tooltip: "How far below their raised place the spikes hide" })
 	hiddenDepth: number = 0.18;
-	@property({ tooltip: "Half the side of the square that hurts, around the tile's centre" })
+	@property({ tooltip: "Which way, in the tile's axes, the spikes draw back to hide: down into the floor, back into a wall" })
+	hideDirection: Vec3 = v3(0, -1, 0);
+	@property({ tooltip: "Hide by squashing towards the tile's middle along hideDirection instead of sliding: blades longer than their wall is thick" })
+	squash: boolean = false;
+	@property({ tooltip: "With squash: how much of their length is left when hidden, 0..1" })
+	squashTo: number = 0.25;
+	@property({ tooltip: "With squash: how far they shoot out, against their modelled length — past it, they stretch" })
+	squashOut: number = 1;
+	@property({ tooltip: "Half the side of the square that hurts, around the tile's centre (without useBox)" })
 	halfSize: number = 0.3;
+	@property({ tooltip: "Hurts in a box in the tile's own axes instead of the square: wall spikes, reaching out in front" })
+	useBox: boolean = false;
+	@property({ tooltip: "Near corner of the box that hurts, in the tile's axes — where the player's middle may be" })
+	boxMin: Vec3 = v3(-0.45, -1, 0);
+	@property({ tooltip: "Far corner of the box that hurts, in the tile's axes" })
+	boxMax: Vec3 = v3(0.45, 2, 0.45);
 	@property({ tooltip: "Seconds into the cycle it starts at, so neighbouring traps can take turns" })
 	phase: number = 0;
 
 	private _up = v3();
+	private _scale = v3(1, 1, 1);
+	private _hide = v3();
 	private _time = 0;
 	private _hurt = false;
+	private _inverse = new Mat4();
+	private _local = v3();
 
 	protected onLoad(): void {
 		if (this.spikes) {
 			this._up.set(this.spikes.position);
+			this._scale.set(this.spikes.scale);
 		}
+		this._hide.set(this.hideDirection);
+		this._hide.lengthSqr() > 1e-8 ? this._hide.normalize() : this._hide.set(0, -1, 0);
 		this._time = this.phase;
 		this._place();
 	}
@@ -68,7 +91,16 @@ export class SpikeTrap extends Component {
 		}
 		raised = Math.max(0, Math.min(1, raised));
 		if (this.spikes) {
-			this.spikes.setPosition(this._up.x, this._up.y - this.hiddenDepth * (1 - raised), this._up.z);
+			if (this.squash) {
+				// Along the hiding axis only: from full length to `squashTo` of it, into the wall.
+				const k = this.squashTo + (this.squashOut - this.squashTo) * raised;
+				const h = this._hide;
+				const along = (axis: number) => 1 + (k - 1) * Math.abs(axis);
+				this.spikes.setScale(this._scale.x * along(h.x), this._scale.y * along(h.y), this._scale.z * along(h.z));
+			} else {
+				const back = this.hiddenDepth * (1 - raised);
+				this.spikes.setPosition(this._up.x + this._hide.x * back, this._up.y + this._hide.y * back, this._up.z + this._hide.z * back);
+			}
 		}
 		return raised;
 	}
@@ -80,6 +112,19 @@ export class SpikeTrap extends Component {
 		}
 		const at = this.node.worldPosition;
 		const them = player.node.worldPosition;
+		if (this.useBox) {
+			Mat4.invert(this._inverse, this.node.worldMatrix);
+			const p = Vec3.transformMat4(this._local, them, this._inverse);
+			const min = this.boxMin;
+			const max = this.boxMax;
+			if (p.x < min.x || p.x > max.x || p.y < min.y || p.y > max.y || p.z < min.z || p.z > max.z) {
+				return;
+			}
+			this._hurt = true;
+			// From the wall: the splash flies away from it.
+			player.takeHit(new Vec3(at.x, them.y, at.z));
+			return;
+		}
 		if (Math.abs(them.x - at.x) <= this.halfSize && Math.abs(them.z - at.z) <= this.halfSize) {
 			this._hurt = true;
 			// From below: the splash flies up out of the floor.

@@ -1,4 +1,4 @@
-import { _decorator, Component, instantiate, math, Prefab, v3, Vec3 } from "cc";
+import { _decorator, Component, instantiate, math, MeshRenderer, Node, Prefab, v3, Vec3 } from "cc";
 import { DroppedPotion, DropSettings } from "./DroppedPotion";
 import { PlayerAttack } from "./PlayerAttack";
 import { Zombie } from "./Zombie";
@@ -24,8 +24,8 @@ export class PotionDrops extends Component {
 	scatter: Vec3 = v3(0.35, 0.9, 0);
 	@property({ tooltip: "World size of a dropped potion" })
 	size: number = 2;
-	@property({ tooltip: "Height of a lying potion's middle above the floor" })
-	lieHeight: number = 0.05;
+	@property({ tooltip: "Height of the floor's top: a lying potion rests on it, its middle one potion-radius higher" })
+	floorHeight: number = 0.018;
 	@property({ tooltip: "How high their arc rises over the straight line" })
 	arcHeight: number = 0.55;
 	@property({ tooltip: "Seconds the arc takes" })
@@ -93,12 +93,24 @@ export class PotionDrops extends Component {
 			// Next to the zombie, not under it: it sinks away and is gone, the potions stay.
 			parent.addChild(node);
 			node.setWorldScale(this.size, this.size, this.size);
+			const lie = this.floorHeight + this._radius(node);
 			node.addComponent(DroppedPotion).launch(
 				v3(at.x, at.y + this.dropHeight, at.z),
-				v3(at.x + Math.cos(angle) * reach, at.y + this.lieHeight, at.z + Math.sin(angle) * reach),
+				v3(at.x + Math.cos(angle) * reach, at.y + lie, at.z + Math.sin(angle) * reach),
 				settings,
 			);
 		}
+	}
+
+	/** How far a potion lying along the floor reaches up from it: its mesh's half-thickness, in the world. */
+	private _radius(node: Node): number {
+		const renderer = node.getComponentInChildren(MeshRenderer);
+		const struct = renderer && renderer.mesh && renderer.mesh.struct;
+		if (!struct || !struct.minPosition || !struct.maxPosition) {
+			return 0.05;
+		}
+		const half = Math.max(Math.abs(struct.minPosition.y), Math.abs(struct.maxPosition.y), Math.abs(struct.minPosition.z), Math.abs(struct.maxPosition.z));
+		return half * renderer.node.worldScale.y;
 	}
 
 	private _prefab(): Prefab {

@@ -32,7 +32,7 @@ const _to = v3();
 const _rotation = new Quat();
 
 // A potion a zombie dropped (PotionDrops): it flies in an arc from where the zombie fell to its
-// spot on the floor, tumbling, hops once and lies there on its side. The player walking up to
+// spot on the floor, tumbling, hops once and lies there along the floor, resting on its side. The player walking up to
 // it takes it — it arcs onto the top of the stack on their back and is a shot more to fire.
 // It lives on its own, so it outlasts the zombie sinking away.
 @ccclass("DroppedPotion")
@@ -87,8 +87,8 @@ export class DroppedPotion extends Component {
 		Vec3.lerp(_at, this._start, this._end, t);
 		_at.y += this._height * 4 * t * (1 - t);
 		this.node.setWorldPosition(_at);
-		// Tumbling end over end, and coming down on its side.
-		this._turn(90 + this._spin * (this._time - this._duration));
+		// Tumbling end over end, and coming down lying along the floor (its long axis is its local X).
+		this._turn(this._spin * (this._time - this._duration));
 		if (t >= 1) {
 			this._state = State.Bouncing;
 			this._time = 0;
@@ -101,7 +101,7 @@ export class DroppedPotion extends Component {
 		_at.set(this._end);
 		_at.y += settings.bounceHeight * 4 * t * (1 - t);
 		this.node.setWorldPosition(_at);
-		this._turn(90);
+		this._turn(0);
 		if (t >= 1) {
 			this._state = State.Lying;
 			this._time = 0;
@@ -146,7 +146,7 @@ export class DroppedPotion extends Component {
 		Vec3.lerp(_at, this._start, _to, t);
 		_at.y += settings.collectArc * 4 * t * (1 - t);
 		this.node.setWorldPosition(_at);
-		this._turn(90 * (1 - t) - settings.spinSpeed * this._time);
+		this._turn(-settings.spinSpeed * this._time);
 	}
 
 	private _turn(roll: number): void {

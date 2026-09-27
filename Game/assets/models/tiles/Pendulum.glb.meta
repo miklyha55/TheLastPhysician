@@ -1,0 +1,112 @@
+{
+  "ver": "2.3.14",
+  "importer": "gltf",
+  "imported": true,
+  "uuid": "624c1aef-8ec6-4e83-975b-d3110fa0d164",
+  "files": [],
+  "subMetas": {
+    "7f76f": {
+      "importer": "gltf-mesh",
+      "uuid": "624c1aef-8ec6-4e83-975b-d3110fa0d164@7f76f",
+      "displayName": "",
+      "id": "7f76f",
+      "name": "Tile_Floor_Pendulum.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 164
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "755a1": {
+      "importer": "gltf-mesh",
+      "uuid": "624c1aef-8ec6-4e83-975b-d3110fa0d164@755a1",
+      "displayName": "",
+      "id": "755a1",
+      "name": "Tile_Pendulum.mesh",
+      "userData": {
+        "gltfIndex": 1,
+        "triangleCount": 180
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "5742b": {
+      "importer": "gltf-material",
+      "uuid": "624c1aef-8ec6-4e83-975b-d3110fa0d164@5742b",
+      "displayName": "",
+      "id": "5742b",
+      "name": "TilesPalette.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "11edc": {
+      "importer": "gltf-scene",
+      "uuid": "624c1aef-8ec6-4e83-975b-d3110fa0d164@11edc",
+      "displayName": "",
+      "id": "11edc",
+      "name": "Pendulum.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "624c1aef-8ec6-4e83-975b-d3110fa0d164@7f76f",
+        "624c1aef-8ec6-4e83-975b-d3110fa0d164@755a1"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "624c1aef-8ec6-4e83-975b-d3110fa0d164@5742b"
+      ],
+      "scenes": [
+        "624c1aef-8ec6-4e83-975b-d3110fa0d164@11edc"
+      ]
+    }
+  }
+}

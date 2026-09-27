@@ -310,7 +310,19 @@ export class WallCollision extends Component {
 					leaf && leaves.set(leaf, { triangles: group.triangles, tops: group.tops, closed: Quat.IDENTITY as Quat });
 				}
 			}
+			// What moves on a wall tile — spikes shooting out, a pendulum swinging — comes and goes:
+			// only what stands still stands in the way.
+			const moving = new Map<Node, unknown>();
+			for (const trap of wall.getComponentsInChildren("SpikeTrap") as (Component & { spikes: Node })[]) {
+				trap.spikes && moving.set(trap.spikes, true);
+			}
+			for (const pendulum of wall.getComponentsInChildren("Pendulum") as (Component & { arm: Node })[]) {
+				pendulum.arm && moving.set(pendulum.arm, true);
+			}
 			for (const renderer of wall.getComponentsInChildren(MeshRenderer)) {
+				if (moving.size && this._leafOf(renderer.node, moving)) {
+					continue;
+				}
 				const leaf = this._leafOf(renderer.node, leaves);
 				if (!leaf) {
 					this._collect(renderer, walls, wallTops);
