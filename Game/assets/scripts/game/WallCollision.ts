@@ -210,8 +210,11 @@ export class WallCollision extends Component {
 		return true;
 	}
 
-	/** Is there no wall or shut door on the line between two points, however thin? */
-	lineOfSight(a: Vec3, b: Vec3): boolean {
+	/**
+	 * Is there no wall or shut door on the line between two points, however thin? Whatever is no
+	 * higher than `over` above `a` — a table in front of a zombie that tall — is looked over.
+	 */
+	lineOfSight(a: Vec3, b: Vec3, over: number = 0): boolean {
 		if (!this._cells) {
 			return true;
 		}
@@ -224,7 +227,7 @@ export class WallCollision extends Component {
 				continue;
 			}
 			const at = r * this._cols + c;
-			if (this._cells[at] || this._closedDoorAt(at)) {
+			if ((this._cells[at] || this._closedDoorAt(at)) && !(over > 0 && this._tops[at] <= a.y + over)) {
 				return false;
 			}
 		}

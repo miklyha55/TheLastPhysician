@@ -155,7 +155,7 @@ export class ZombieGirl extends Zombie {
 			return false;
 		}
 		const walls = this._walls();
-		if (walls && !walls.lineOfSight(this.node.worldPosition, at)) {
+		if (walls && !walls.lineOfSight(this.node.worldPosition, at, this.height)) {
 			return (this._unseen += dt) < this.loseSightTime;
 		}
 		this._unseen = 0;
@@ -248,7 +248,7 @@ export class ZombieGirl extends Zombie {
 
 	private _inRoom(point: Vec3): boolean {
 		const walls = this._walls();
-		return !walls || walls.lineOfSight(this.node.worldPosition, point);
+		return !walls || walls.lineOfSight(this.node.worldPosition, point, this.height);
 	}
 
 	/** To the thing picked, round the walls; there — she picks it up. */

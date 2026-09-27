@@ -74,6 +74,8 @@ export class Zombie extends Component {
 	loseRadius: number = 3.5;
 	@property({ tooltip: "A chased player hidden behind walls this long, seconds, is lost; the short wait keeps a door jamb from breaking the chase" })
 	loseSightTime: number = 0.5;
+	@property({ tooltip: "How tall the zombie stands: a table, a chest — anything lower does not hide the player from it, nor it from the player" })
+	height: number = 0.75;
 	@property({ tooltip: "Distance from the player at which the zombie strikes" })
 	attackDistance: number = 0.45;
 	@property({ tooltip: "Point of the strike clip, 0..1, at which the hit lands", slide: true, range: [0, 1, 0.05] })
@@ -269,7 +271,7 @@ export class Zombie extends Component {
 			return false;
 		}
 		const walls = this._walls();
-		return !walls || walls.lineOfSight(this.node.worldPosition, at);
+		return !walls || walls.lineOfSight(this.node.worldPosition, at, this.height);
 	}
 
 	/** After reeling: after the player if they are near, back to wandering if not. */
@@ -329,7 +331,7 @@ export class Zombie extends Component {
 		}
 		// Out of sight behind the walls for long enough — the zombie loses them.
 		const walls = this._walls();
-		if (walls && !walls.lineOfSight(this.node.worldPosition, target)) {
+		if (walls && !walls.lineOfSight(this.node.worldPosition, target, this.height)) {
 			if ((this._unseen += dt) >= this.loseSightTime) {
 				return this._goHome();
 			}

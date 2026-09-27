@@ -313,7 +313,8 @@ export class PlayerAttack extends Component {
 		if (Vec3.distance(at, this.node.worldPosition) > this.shootRadius) {
 			return false;
 		}
-		return !this._walls || this._walls.lineOfSight(this.node.worldPosition, at);
+		// Over what is lower than the zombie: it stands out above a table, and is seen.
+		return !this._walls || this._walls.lineOfSight(this.node.worldPosition, at, zombie.height);
 	}
 
 	// --- potions

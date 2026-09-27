@@ -118,6 +118,13 @@ export class Explosives extends Component {
 		this._chain(ground);
 	}
 
+	/** A blast with no barrel behind it — a fireball bursting: the barrel's fire and the shake, nothing thrown about. */
+	fireBlast(at: Vec3): void {
+		this.barrelFire && this.barrelFire.burst(at);
+		const camera = CameraManager.instance;
+		camera && camera.shake(this.shake, this.shakeFor);
+	}
+
 	/** Barrels lying near go off too, one after another. */
 	private _chain(at: Vec3): void {
 		const next = this._barrelsNear(at, this.chainRadius).filter((body) => !this._pending.has(body));
