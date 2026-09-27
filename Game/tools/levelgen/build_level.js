@@ -122,7 +122,7 @@ const stray = scene.children.filter((c) => /^Tile_|^Key_|^Chest|^Furn_|^Zombie/.
 if (!stray) await req('save-scene');
 await wait(600);
 return {
-	scene: scene.name, walls: world.getChildByName('Player').getComponent('WallCollision').wallPrefabs.length, created: res.created, removed: res.removed, errors: res.errors,
+	scene: scene.name, walls: world.getChildByName('Player').getComponent('WallCollision').wallPrefabs.length, created: res.created, removed: res.removed, kept: res.kept, turned: res.turned, errors: res.errors,
 	groups: level.children.map((c) => c.name + ':' + c.children.length),
 	doors: { opened, shut }, gate: !!gateNode.getComponent('Gate').lever,
 	buttons: level.getComponentsInChildren('FloorButton').map((b) => b.doors.length),

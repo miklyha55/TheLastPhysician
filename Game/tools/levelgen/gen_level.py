@@ -120,11 +120,17 @@ def generate(spec):
             elif ch == 'O': floor.append([c, r, sid('Button'), 0])
             elif ch == 'F': floor.append([c, r, sid('Fire'), 0])
             elif ch == 'M':
-                # Only on open floor: a pendulum in a doorway or a one-cell passage cannot be got past.
-                around = [at(c + dc, r + dr) for dc, dr in DIRS.values()]
-                assert all(a in PASS and a != 'M' for a in around), ('pendulum not on open floor', spec['name'], c, r, around)
                 # swings across the tile along its local X: turned 90 it swings north-south
                 turn, _ = spec.get('pendulums', {}).get((c, r), (0, 0))
+                # Never a door: open floor both ways it swings, so it can be got past under the
+                # blade; across it a wall may stand on one side (a snake round the pendulums),
+                # never on both.
+                along = ('E', 'W') if turn % 180 == 0 else ('N', 'S')
+                across = ('N', 'S') if turn % 180 == 0 else ('E', 'W')
+                way = [at(c + DIRS[d][0], r + DIRS[d][1]) for d in along]
+                side = [at(c + DIRS[d][0], r + DIRS[d][1]) for d in across]
+                assert all(a in PASS and a != 'M' for a in way), ('pendulum blocked where it swings', spec['name'], c, r, way)
+                assert any(a in PASS and a != 'M' for a in side), ('pendulum walled in on both sides', spec['name'], c, r, side)
                 floor.append([c, r, sid('Pendulum'), turn])
             elif ch == 'L': floor.append([c, r, sid('FA'), 0]); levers.append([c, r, sid('Lever'), 0])
             elif ch == '~':

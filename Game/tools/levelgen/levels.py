@@ -795,6 +795,12 @@ def _route(m):
     return tiles
 
 
+# Heads placed by hand, where the level's author wants them: they replace the ones found by the rules.
+GARGOYLES = {
+    11: {(0, 7): 'E', (7, 7): 'E', (13, 7): 'E'},  # the corridor's west end and the snake's upper walls, each firing down its stretch
+}
+
+
 def place_gargoyles(spec, n):
     """Fire-spitting heads in the walls, each shooting across the player's way: the line it
     fires along cuts the level so that the player has to cross it to reach a key, the lever or
@@ -803,6 +809,18 @@ def place_gargoyles(spec, n):
     ball is crossed in front of or behind, not outrun. A head looks south, east or west (a
     wall's back is out of sight), stands in a plain stretch of wall away from doors, clear of
     the player's start and of the other heads. Neighbouring heads fire out of step."""
+    if n in GARGOYLES:
+        m = [list(r) for r in spec['map']]
+        chosen = {}
+        for i, ((c, r), side) in enumerate(sorted(GARGOYLES[n].items())):
+            assert m[r][c] == '#', (spec['name'], 'no plain wall for a head at', c, r, m[r][c])
+            m[r][c] = 'H'
+            # Out of step, spread over one cycle (2.6 s): a wave along them.
+            chosen[(c, r)] = (side, round(i * 2.6 / len(GARGOYLES[n]), 2))
+        spec['map'] = [''.join(r) for r in m]
+        spec['gargoyles'] = chosen
+        print(spec['name'], 'gargoyles by hand', chosen)
+        return
     count = gargoyle_count(n)
     if not count:
         return
@@ -942,6 +960,62 @@ def scale_down(spec, factor):
     print(spec['name'], '/' + str(factor), 'Z %d->%d, V %d->%d, C %d->%d' % (
         before['Z'], len(cells('Z')), before['V'], len(cells('V')), before['C'], len(chests)))
 
+def close_pendulum_lanes(spec):
+    """A pendulum over a passage three tiles wide leaves a lane either side of its blade to walk
+    past by. Floor spikes on those two tiles — beside the pendulum, across the passage — make
+    going round it a gamble too: past the blade, or over the spikes while they are down.
+    Pendulums one after another down the same passage make a snake instead: beside each, one
+    side is walled off, the other side by turns — below the first, above the next — and there
+    only spikes; the way winds from side to side, past every blade. Only where it is such a
+    lane: floor on both sides of the pendulum, a wall right past each; furniture there — not."""
+    m = [list(r) for r in spec['map']]
+    H, W = len(m), len(m[0])
+    at = lambda c, r: m[r][c] if 0 <= r < H and 0 <= c < W else ' '
+    wallch = '#WDrbgEXH '
+    spikes = {tuple(map(int, k.split(','))) if isinstance(k, str) else k: v for k, v in spec.get('spikes', {}).items()}
+    furniture = {(fc, fr) for _, fc, fr, _ in spec.get('furniture', [])}
+    found = []  # (pendulum, the axis of the passage, its two lane tiles)
+    for r in range(H):
+        for c in range(W):
+            if m[r][c] != 'M':
+                continue
+            # The passage runs along the axis with floor on both sides; the lanes lie across it.
+            for (ac, ar), (lc, lr) in (((1, 0), (0, 1)), ((0, 1), (1, 0))):
+                if at(c + ac, r + ar) in wallch or at(c - ac, r - ar) in wallch:
+                    continue  # not along this axis
+                lanes = [(c + lc, r + lr), (c - lc, r - lr)]
+                if not all(at(*p) == '.' and p not in furniture for p in lanes):
+                    continue
+                if not all(at(p[0] + (p[0] - c), p[1] + (p[1] - r)) in wallch for p in lanes):
+                    continue  # the passage is wider: that is open floor, not a lane
+                found.append(((c, r), (ac, ar), lanes))
+                break
+    # Pendulums in one passage: the same line along the same axis.
+    runs = {}
+    for p, axis, lanes in found:
+        line = (axis, p[1] if axis == (1, 0) else p[0])
+        runs.setdefault(line, []).append((p, lanes))
+    added, walled = [], []
+    for run in runs.values():
+        run.sort()
+        for k, (p, lanes) in enumerate(run):
+            if len(run) >= 2:
+                wall, spike = (lanes[0], lanes[1]) if k % 2 == 0 else (lanes[1], lanes[0])
+                m[wall[1]][wall[0]] = '#'
+                walled.append(wall)
+                m[spike[1]][spike[0]] = 'S'
+                spikes[spike] = (k % 2) * 1.5
+                added.append(spike)
+            else:
+                for i, q in enumerate(lanes):
+                    m[q[1]][q[0]] = 'S'
+                    spikes[q] = i * 1.5
+                added += lanes
+    spec['map'] = [''.join(r) for r in m]
+    spec['spikes'] = spikes
+    if added:
+        print(spec['name'], 'pendulum lanes: spikes at', added, 'walls at', walled)
+
 for n in sorted(L):
     if n in PENDULUMS: place_pendulums(L[n], PENDULUMS[n])
     if n <= 10: double(L[n], n)
@@ -952,6 +1026,7 @@ for n in sorted(L):
     if L[n].get('barrels'): place_barrels(L[n])
     barrels_at_crowds(L[n])
     if n in GIRLS or n > 10: place_throwables(L[n], rnd_seed=n)
+    close_pendulum_lanes(L[n])
     close_spike_lanes(L[n])
     close_fire_lanes(L[n])
     drop_hidden_wall_spikes(L[n])
