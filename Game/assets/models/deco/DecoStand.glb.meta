@@ -1,0 +1,131 @@
+{
+  "ver": "2.3.14",
+  "importer": "gltf",
+  "imported": true,
+  "uuid": "17e24190-e065-4235-b2fa-d26a69067ed4",
+  "files": [],
+  "subMetas": {
+    "77365": {
+      "importer": "gltf-mesh",
+      "uuid": "17e24190-e065-4235-b2fa-d26a69067ed4@77365",
+      "displayName": "",
+      "id": "77365",
+      "name": "Deco_Urn.mesh",
+      "userData": {
+        "gltfIndex": 2,
+        "triangleCount": 596
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "23f5e": {
+      "importer": "gltf-mesh",
+      "uuid": "17e24190-e065-4235-b2fa-d26a69067ed4@23f5e",
+      "displayName": "",
+      "id": "23f5e",
+      "name": "Deco_Brazier.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 276
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "c6e08": {
+      "importer": "gltf-mesh",
+      "uuid": "17e24190-e065-4235-b2fa-d26a69067ed4@c6e08",
+      "displayName": "",
+      "id": "c6e08",
+      "name": "Deco_Weapon_Rack.mesh",
+      "userData": {
+        "gltfIndex": 1,
+        "triangleCount": 174
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "8d1dd": {
+      "importer": "gltf-material",
+      "uuid": "17e24190-e065-4235-b2fa-d26a69067ed4@8d1dd",
+      "displayName": "",
+      "id": "8d1dd",
+      "name": "DecoPalette.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "c1f50": {
+      "importer": "gltf-scene",
+      "uuid": "17e24190-e065-4235-b2fa-d26a69067ed4@c1f50",
+      "displayName": "",
+      "id": "c1f50",
+      "name": "DecoStand.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "17e24190-e065-4235-b2fa-d26a69067ed4@23f5e",
+        "17e24190-e065-4235-b2fa-d26a69067ed4@c6e08",
+        "17e24190-e065-4235-b2fa-d26a69067ed4@77365"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "17e24190-e065-4235-b2fa-d26a69067ed4@8d1dd"
+      ],
+      "scenes": [
+        "17e24190-e065-4235-b2fa-d26a69067ed4@c1f50"
+      ]
+    }
+  }
+}
