@@ -21,8 +21,8 @@ function isRussian(): boolean {
  *
  *   explosion −14 · player's death −16 · intro −18 · girl's throw −18 · gate −20 · prop hit −20
  *   chest −22 · shot, throw −22
- *   jump −23 · door −24 · zombie's strike −24 · fire −24 · key −24 · potion −26 · zombies −28 · music −30
- *   steps −33 · level's results −20 (a card over the game, not from a place)
+ *   jump −23 · door −24 · fire −24 · key −24 · potion −26 · zombie's strike −26.5 · music −30 · zombies −30.5
+ *   steps −35.5 · level's results −20 (a card over the game, not from a place)
  *
  * gain = 10^((level − file's loudness) / 20), never above 1 — the zombies' voices and the
  * quietest step are recorded quieter than their level and play as they are, and so the rest of
@@ -40,17 +40,17 @@ const GAIN: { [path: string]: number } = {
 	"shoot": 1.0, // −20.4 (the quieter new file): as loud as it goes — the −16 asked for by ear would need 1.7
 	"throw": 0.27, // −10.7
 	"traps/fire": 0.13, // −6.4, and five seconds long
-	// Steps 0.16 of their level by ear: barely there, under everything.
-	"walk/walk1": 0.16, // −33.4
-	"walk/walk2": 0.08, // −24.7
-	"walk/walk3": 0.14, // −29.0
-	"walk/walk4": 0.1, // −26.2
-	// Zombies 0.55 of the file by ear: under the music.
-	"zombie/zombie-speak-1": 0.55, // −30.7
-	"zombie/zombie-speak-2": 0.55, // −29.4
-	"zombie/zombie-speak-3": 0.55, // −29.2
-	"zombie/zombie-speak-4": 0.55, // −28.0
-	"zombie/zombie-speak-5": 0.55, // −32.3
+	// Steps 0.12 of their level by ear: barely there, under everything.
+	"walk/walk1": 0.12, // −33.4
+	"walk/walk2": 0.06, // −24.7
+	"walk/walk3": 0.105, // −29.0
+	"walk/walk4": 0.075, // −26.2
+	// Zombies 0.41 of the file by ear: under the music.
+	"zombie/zombie-speak-1": 0.41, // −30.7
+	"zombie/zombie-speak-2": 0.41, // −29.4
+	"zombie/zombie-speak-3": 0.41, // −29.2
+	"zombie/zombie-speak-4": 0.41, // −28.0
+	"zombie/zombie-speak-5": 0.41, // −32.3
 	// Recorded quiet, all of them: as they are.
 	"get_potion": 1.0, // −30.6
 	"get_key": 1.0, // −32.6
@@ -60,7 +60,7 @@ const GAIN: { [path: string]: number } = {
 	"gate_open": 0.8, // −23.9, a touch down by ear
 	"kick_from_fly_prop": 0.32, // −12.4: −22 by ear, a thing flying into someone
 	"throw_zombie_wooman": 0.45, // −11.1, to −18: the girl's throw, a warning to hear
-	"zombie_man_attack": 0.36, // −15.2, to −24: a zombie's swing, a little over their voices
+	"zombie_man_attack": 0.27, // −15.2, to −26.5: a zombie's swing, a little over their voices
 	"show_results_by_level": 1.0, // −28.4, recorded quiet: as it is
 };
 

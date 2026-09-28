@@ -30713,9 +30713,9 @@
     "height": 0.04,
     "color": {
       "__type__": "cc.Color",
-      "r": 255,
-      "g": 214,
-      "b": 64,
+      "r": 96,
+      "g": 232,
+      "b": 112,
       "a": 235
     },
     "turnSpeed": 540,
@@ -30723,6 +30723,16 @@
     "routeEvery": 0.15,
     "pathCell": 0.25,
     "pulse": 0.08,
+    "markSize": 1,
+    "markColor": {
+      "__type__": "cc.Color",
+      "r": 80,
+      "g": 230,
+      "b": 110,
+      "a": 130
+    },
+    "gateLift": 0.06,
+    "passDistance": 0.45,
     "_id": "d4zlv9BWNDfaCbgw0KGkGF"
   },
   {

@@ -1,4 +1,4 @@
-import { _decorator, Color, Component, director, Material, Mesh, MeshRenderer, Node, utils, v3, Vec3 } from "cc";
+import { _decorator, Color, Component, director, Material, Mesh, MeshRenderer, Node, primitives, utils, v3, Vec3 } from "cc";
 import { Prewarm } from "../managers/Prewarm";
 import { Door } from "./Door";
 import { FloorButton } from "./FloorButton";
@@ -11,7 +11,8 @@ import { PlayerKeys } from "./PlayerKeys";
 
 const { ccclass, property } = _decorator;
 
-// builtin-unlit technique 3 — alpha blend.
+// builtin-unlit techniques: 2 — additive, 3 — alpha blend.
+const ADD = 2;
 const BLEND = 3;
 
 const _to = v3();
@@ -24,6 +25,12 @@ const _color = new Color();
 // of what can be reached, by the way there, not as the crow flies. It points along that way,
 // round the walls, to its first corner, and is gone while the player is close to the thing.
 // What can be reached is what the walls leave open now: a shut door, a shut gate is a wall.
+// The thing itself glows: a disc of light on the floor under it, the way a fire's mouth glows,
+// breathing — there while it is the goal, near or far, and moving on with the goal. A door that
+// was a goal of its own — unlocked with a key, or held open by a button — glows first when the
+// way goes through it: the nearest one ahead, until the player is through. A plain door open from
+// the start is only a doorway, and does not. While such a door is the glowing step, the arrow
+// hides close to it as it does at the goal.
 @ccclass("ObjectiveArrow")
 export class ObjectiveArrow extends Component {
 	@property({ tooltip: "Hidden while the player is this close to the goal, on the floor" })
@@ -36,7 +43,7 @@ export class ObjectiveArrow extends Component {
 	width: number = 0.26;
 	@property({ tooltip: "Height above the floor it lies at: over the tiles' top" })
 	height: number = 0.04;
-	@property color: Color = new Color(255, 214, 64, 235);
+	@property color: Color = new Color(96, 232, 112, 235);
 	@property({ tooltip: "Degrees a second it turns to a new way" })
 	turnSpeed: number = 540;
 	@property({ tooltip: "Seconds between choosing the goal again" })
@@ -47,6 +54,15 @@ export class ObjectiveArrow extends Component {
 	pathCell: number = 0.25;
 	@property({ tooltip: "How much it swells and shrinks, a beat a second" })
 	pulse: number = 0.08;
+	@property({ tooltip: "Width of the glow on the floor under the goal" })
+	markSize: number = 1;
+	@property markColor: Color = new Color(80, 230, 110, 130);
+	@property({ tooltip: "How much higher than the arrow the glow lies, off the floor" })
+	markHeight: number = 0.03;
+	@property({ tooltip: "How much higher the glow lies in the gateway: over the gate's threshold" })
+	gateLift: number = 0.06;
+	@property({ tooltip: "An open door on the way stops glowing once the player is this close to it: going through" })
+	passDistance: number = 0.45;
 
 	private _node: Node = null;
 	private _material: Material = null;
@@ -60,6 +76,21 @@ export class ObjectiveArrow extends Component {
 	private _routeIn = 0;
 	private _time = 0;
 	private _path: Vec3[] = [];
+	private _mark: Node = null;
+	private _markMaterial: Material = null;
+	/** Where the goal's glow should be, and where it is — it fades out before it moves on. */
+	private _markWant: Vec3 = null;
+	private _markAt = v3();
+	/** Raised off the floor — in the gateway, over the threshold. */
+	private _markLift = 0;
+	private _markWantLift = 0;
+	/** The goal's own glow, when no open door on the way comes first. */
+	private _goalMark: Vec3 = null;
+	private _goalLift = 0;
+	private _doors: Door[] = [];
+	/** The door on the way that glows now, if one does: the arrow hides near it too. */
+	private _wayDoor: Vec3 = null;
+	private _markShown = 0;
 
 	protected start(): void {
 		this._node = new Node("ObjectiveArrow");
@@ -72,10 +103,22 @@ export class ObjectiveArrow extends Component {
 		this._material.initialize({ effectName: "builtin-unlit", technique: BLEND });
 		renderer.setSharedMaterial(this._material, 0);
 		this._node.setScale(0, 0, 0);
+		// The goal's glow: a flat disc of light on the floor, like a fire's mouth.
+		this._mark = new Node("ObjectiveMark");
+		director.getScene().addChild(this._mark);
+		const glow = this._mark.addComponent(MeshRenderer);
+		glow.mesh = utils.MeshUtils.createMesh(primitives.cylinder(0.5, 0.5, 1, { radialSegments: 24, capped: true }));
+		glow.shadowCastingMode = MeshRenderer.ShadowCastingMode.OFF;
+		glow.receiveShadow = MeshRenderer.ShadowReceivingMode.OFF;
+		this._markMaterial = new Material();
+		this._markMaterial.initialize({ effectName: "builtin-unlit", technique: ADD });
+		glow.setSharedMaterial(this._markMaterial, 0);
+		this._mark.setScale(0, 0, 0);
 	}
 
 	protected onDestroy(): void {
 		this._node && this._node.isValid && this._node.destroy();
+		this._mark && this._mark.isValid && this._mark.destroy();
 	}
 
 	protected lateUpdate(dt: number): void {
@@ -95,7 +138,8 @@ export class ObjectiveArrow extends Component {
 			this._route();
 		}
 		const at = this.node.worldPosition;
-		const far = !!this._goal && Math.hypot(this._goal.x - at.x, this._goal.z - at.z) > this.hideDistance;
+		const near = this._wayDoor || this._goal;
+		const far = !!near && Math.hypot(near.x - at.x, near.z - at.z) > this.hideDistance;
 		const want = alive && far && this._hasWay ? 1 : 0;
 		// Comes and goes quickly, not at once.
 		this._shown += Math.sign(want - this._shown) * Math.min(Math.abs(want - this._shown), dt * 6);
@@ -112,6 +156,26 @@ export class ObjectiveArrow extends Component {
 		this._node.setScale(size, size, size);
 		_color.set(this.color.r, this.color.g, this.color.b, Math.round(this.color.a * this._shown));
 		this._material.setProperty("mainColor", _color);
+		this._glow(alive && this._hasWay, dt);
+	}
+
+	/** The glow under the goal: breathing while it is the goal; out, then over to the next one. */
+	private _glow(on: boolean, dt: number): void {
+		const want = this._markWant;
+		const moved = !!want && Math.hypot(want.x - this._markAt.x, want.z - this._markAt.z) > 0.05;
+		const target = on && want && !moved ? 1 : 0;
+		this._markShown += Math.sign(target - this._markShown) * Math.min(Math.abs(target - this._markShown), dt * 4);
+		if (moved && this._markShown <= 0) {
+			this._markAt.set(want.x, 0, want.z);
+			this._markLift = this._markWantLift;
+		}
+		const breath = 0.5 + 0.5 * Math.sin(this._time * Math.PI * 2 * 0.8);
+		const width = this.markSize * this._markShown * (0.9 + 0.1 * breath);
+		this._mark.setWorldPosition(this._markAt.x, this.height - 0.01 + this.markHeight + this._markLift, this._markAt.z);
+		this._mark.setScale(width, 0.01, width);
+		const c = this.markColor;
+		_color.set(c.r, c.g, c.b, Math.round(c.a * this._markShown * (0.7 + 0.3 * breath)));
+		this._markMaterial.setProperty("mainColor", _color);
 	}
 
 	// --- what is wanted next
@@ -121,8 +185,12 @@ export class ObjectiveArrow extends Component {
 		const scene = director.getScene();
 		const gate = scene.getComponentsInChildren(Gate)[0];
 		this._goal = null;
+		this._goalMark = null;
+		this._markWant = null;
+		this._doors = scene.getComponentsInChildren(Door);
 		if (gate && gate.isOpen) {
-			this._set((gate.exit || gate.node).worldPosition);
+			// The way leads out behind it; the glow lies in the gateway.
+			this._set((gate.exit || gate.node).worldPosition, gate.node.worldPosition, this.gateLift);
 			return;
 		}
 		const lever = gate && gate.lever;
@@ -157,7 +225,7 @@ export class ObjectiveArrow extends Component {
 				const length = this._reach(spot);
 				if (length >= 0 && (best < 0 || length < best)) {
 					best = length;
-					this._set(spot);
+					this._set(spot, node.worldPosition);
 				}
 			}
 		}
@@ -177,8 +245,13 @@ export class ObjectiveArrow extends Component {
 		return out;
 	}
 
-	private _set(at: Vec3): void {
+	/** The goal the way leads to, and the thing that glows — the same but at a door or the gate. */
+	private _set(at: Vec3, mark: Vec3 = at, lift = 0): void {
 		this._goal = at.clone();
+		this._goalMark = mark.clone();
+		this._goalLift = lift;
+		this._markWant = this._goalMark;
+		this._markWantLift = lift;
 	}
 
 	/** Length of the way from the player to `to`, or -1 when there is none. */
@@ -209,11 +282,60 @@ export class ObjectiveArrow extends Component {
 	private _route(): void {
 		if (!this._goal || this._reach(this._goal) < 0) {
 			this._hasWay = false;
+			this._wayDoor = null;
 			this._chooseIn = 0;
 			return;
 		}
 		this._next.set(this._path[0]);
 		this._hasWay = true;
+		this._markOnWay();
+	}
+
+	/** A door that stood in the way: locked, or shut until a button opens it — not one open from the start. */
+	private _wasGoal(door: Door): boolean {
+		return !!door.getComponent(LockedDoor) || !door.startOpen;
+	}
+
+	/** The glow on the first such open door the way goes through, if any lies ahead; else on the goal. */
+	private _markOnWay(): void {
+		const from = this.node.worldPosition;
+		let x = from.x;
+		let z = from.z;
+		let along = 0;
+		let best: Vec3 = null;
+		let bestAlong = Infinity;
+		for (const point of this._path) {
+			const dx = point.x - x;
+			const dz = point.z - z;
+			const length = Math.hypot(dx, dz);
+			for (const door of this._doors) {
+				if (!door.isValid || !door.isOpen || !this._wasGoal(door)) {
+					continue;
+				}
+				const at = door.node.worldPosition;
+				// The one being walked through now is behind already.
+				if (Math.hypot(at.x - from.x, at.z - from.z) < this.passDistance) {
+					continue;
+				}
+				const t = length > 1e-6 ? Math.max(0, Math.min(1, ((at.x - x) * dx + (at.z - z) * dz) / (length * length))) : 0;
+				if (Math.hypot(x + dx * t - at.x, z + dz * t - at.z) < 0.5 && along + t * length < bestAlong) {
+					bestAlong = along + t * length;
+					best = at;
+				}
+			}
+			along += length;
+			x = point.x;
+			z = point.z;
+		}
+		if (best) {
+			this._markWant = best.clone();
+			this._markWantLift = 0;
+			this._wayDoor = this._markWant;
+		} else {
+			this._markWant = this._goalMark;
+			this._markWantLift = this._goalLift;
+			this._wayDoor = null;
+		}
 	}
 
 	private _pathFinder(): PathFinder {
