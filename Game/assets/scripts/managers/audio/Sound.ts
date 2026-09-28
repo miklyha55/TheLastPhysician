@@ -1,4 +1,4 @@
-import { AudioClip, AudioSource, Director, director, Node, resources, v3, Vec3 } from "cc";
+import { AssetManager, assetManager, AudioClip, AudioSource, Director, director, Node, v3, Vec3 } from "cc";
 import { CameraManager } from "../camera/CameraManager";
 import GameEvent from "../../enums/GameEvent";
 import { gameEventTarget } from "../../plugins/GameEventTarget";
@@ -21,7 +21,7 @@ export interface SoundOptions {
 	far?: number;
 }
 
-/** A sound: a path in the resources bundle ("audio/shot"), or the clip itself. */
+/** A sound: a path in the sound bundle ("walk/walk1"), or the clip itself. */
 export type SoundRef = string | AudioClip;
 
 const _focus = v3();
@@ -40,8 +40,8 @@ interface Channel {
 }
 
 // Sound for the whole game, from anywhere, with nothing to set up in a scene: the clips are
-// taken straight from the assets — a path in the resources bundle (assets/resources/…) or an
-// AudioClip in hand — loaded the first time they are asked for and kept. The way AudioManager
+// taken straight from the assets — a path in the sound bundle (`bundle`, the assets/audio
+// folder: "shoot", "walk/walk1") or an AudioClip in hand — loaded the first time they are asked for and kept. The way AudioManager
 // plays its presets, only static: a sound with an id plays on a channel of its own that can be
 // paused, stopped and turned down (music, loops); short effects go out as one-shots and overlap.
 // It lives on a node of its own kept across scenes, so a level change does not cut it off. The
@@ -52,6 +52,8 @@ interface Channel {
 // player is — the quieter, full within `near`, silent past `far`. A channel's is kept up with
 // the camera every frame; a one-shot's is fixed when it starts.
 export class Sound {
+	/** The bundle the paths are in: the assets/audio folder. */
+	static bundle = "audio";
 	/** Full volume within this of where the camera looks, units on the floor. */
 	static near = 3;
 	/** Silent past this. */
@@ -310,20 +312,51 @@ export class Sound {
 		let loading = Sound._loading.get(path);
 		if (!loading) {
 			loading = new Promise<AudioClip>((resolve, reject) => {
-				resources.load(path, AudioClip, (error, clip) => {
-					Sound._loading.delete(path);
-					if (error || !clip) {
-						console.warn(`Sound: no clip "${path}" in resources`, error || "");
+				Sound._bundle().then(
+					(bundle) =>
+						bundle.load(path, AudioClip, (error, clip) => {
+							Sound._loading.delete(path);
+							if (error || !clip) {
+								console.warn(`Sound: no clip "${path}" in the "${Sound.bundle}" bundle`, error || "");
+								reject(error);
+								return;
+							}
+							Sound._clips.set(path, clip);
+							resolve(clip);
+						}),
+					(error) => {
+						Sound._loading.delete(path);
 						reject(error);
-						return;
-					}
-					Sound._clips.set(path, clip);
-					resolve(clip);
-				});
+					},
+				);
 			});
 			Sound._loading.set(path, loading);
 		}
 		return loading;
+	}
+
+	private static _bundlePromise: Promise<AssetManager.Bundle> = null;
+
+	/** The sound bundle, loaded once. */
+	private static _bundle(): Promise<AssetManager.Bundle> {
+		const known = assetManager.getBundle(Sound.bundle);
+		if (known) {
+			return Promise.resolve(known);
+		}
+		if (!Sound._bundlePromise) {
+			Sound._bundlePromise = new Promise((resolve, reject) =>
+				assetManager.loadBundle(Sound.bundle, (error, bundle) => {
+					if (error || !bundle) {
+						console.warn(`Sound: no "${Sound.bundle}" bundle`, error || "");
+						Sound._bundlePromise = null;
+						reject(error);
+						return;
+					}
+					resolve(bundle);
+				}),
+			);
+		}
+		return Sound._bundlePromise;
 	}
 
 	/** The game's volume from the ad network, once: its global flag, and its volume events. */

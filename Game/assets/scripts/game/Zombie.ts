@@ -3,6 +3,7 @@ import { PathFinder } from "./PathFinder";
 import { PlayerAttack } from "./PlayerAttack";
 import { WallCollision } from "./WallCollision";
 import { LevelStats } from "../managers/LevelStats";
+import { Sfx } from "../managers/audio/Sfx";
 
 const { ccclass, property } = _decorator;
 
@@ -45,6 +46,12 @@ export class Zombie extends Component {
 			"Baked animation while the level runs — cheap, many zombies at once. The prefab keeps it off, so the editor shows the model by its bones, standing where its nodes are: the model's own bind pose is off to one side.",
 	})
 	bakeInPlay: boolean = true;
+	@property({ tooltip: "Chance it groans when it sets off a new way wandering, 0..1", slide: true, range: [0, 1, 0.05] })
+	wanderSpeakChance: number = 0.35;
+	@property({ tooltip: "Seconds at the least between two of its sounds" })
+	speakGap: number = 1.5;
+	@property({ tooltip: "Volume of its sounds, on top of their own in the mix (Sfx)" })
+	speakVolume: number = 1;
 	@property(AnimationClip) idleClip: AnimationClip = null;
 	@property(AnimationClip) runClip: AnimationClip = null;
 	@property({ type: AnimationClip, tooltip: "The strike at the player" })
@@ -108,6 +115,8 @@ export class Zombie extends Component {
 	protected _timer: number = 0;
 	private _struck: boolean = false;
 	protected _path: Vec3[] = [];
+	/** When it last made a sound, seconds. */
+	private _spokeAt = -Infinity;
 	protected _repath: number = 0;
 	protected _unseen: number = 0;
 	private _homeTries: number = 0;
@@ -186,7 +195,7 @@ export class Zombie extends Component {
 		switch (this._mode) {
 			case Mode.Idle:
 				if (this._notices(player)) {
-					return this._engage();
+					return this._aggro();
 				}
 				if ((this._timer -= dt) <= 0) {
 					this._wander();
@@ -194,7 +203,7 @@ export class Zombie extends Component {
 				break;
 			case Mode.Wander:
 				if (this._notices(player)) {
-					return this._engage();
+					return this._aggro();
 				}
 				this._timer -= dt;
 				if (this._follow(this.wanderSpeed, dt) || this._timer <= 0) {
@@ -203,7 +212,7 @@ export class Zombie extends Component {
 				break;
 			case Mode.Return:
 				if (this._notices(player)) {
-					return this._engage();
+					return this._aggro();
 				}
 				if (this._follow(this.wanderSpeed, dt)) {
 					// Home, or stuck on the way: a stuck zombie looks for the way again, a few times.
@@ -260,6 +269,8 @@ export class Zombie extends Component {
 				this._path.length = 0;
 				this._path.push(this._goal.clone());
 				this._mode = Mode.Wander;
+				// Off another way: now and then it groans.
+				this._speak(this.wanderSpeakChance);
 				// Long enough to get there; bumping into another zombie ends it early.
 				this._timer = (distance / Math.max(this.wanderSpeed, 0.01)) * 1.5 + 0.5;
 				this._play(RUN);
@@ -287,7 +298,7 @@ export class Zombie extends Component {
 	/** After reeling: after the player if they are near, back to wandering if not. */
 	protected _lookAround(player: PlayerAttack): void {
 		if (this._notices(player)) {
-			this._engage();
+			this._aggro();
 		} else {
 			this._goHome();
 		}
@@ -309,6 +320,25 @@ export class Zombie extends Component {
 		}
 		this._mode = Mode.Return;
 		this._play(RUN);
+	}
+
+	/** The player noticed: a growl, and after them. */
+	protected _aggro(): void {
+		this._speak(1);
+		this._engage();
+	}
+
+	/**
+	 * A zombie's voice from where it stands, at random of its set — `chance` of it, and not
+	 * sooner than `speakGap` after its last.
+	 */
+	protected _speak(chance: number): void {
+		const now = Date.now() / 1000;
+		if (now - this._spokeAt < this.speakGap || Math.random() > chance) {
+			return;
+		}
+		this._spokeAt = now;
+		Sfx.at(Sfx.zombie, this.node, this.speakVolume);
 	}
 
 	/** The player noticed: after them. A plain zombie runs at them; other kinds do their own thing. */
@@ -402,6 +432,9 @@ export class Zombie extends Component {
 		this._forget();
 		this._play(DEATH, true);
 		LevelStats.killed++;
+		// Its last sound, whatever it said a moment ago.
+		this._spokeAt = -Infinity;
+		this._speak(1);
 		for (const listener of Zombie.deathListeners.slice()) {
 			listener(this);
 		}

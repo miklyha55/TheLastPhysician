@@ -7,6 +7,7 @@ import { PlayerAttack } from "./PlayerAttack";
 import { PlayerMovement } from "./PlayerMovement";
 import { WallCollision } from "./WallCollision";
 import { Zombie } from "./Zombie";
+import { Sfx } from "../managers/audio/Sfx";
 
 const { ccclass, property } = _decorator;
 
@@ -259,6 +260,7 @@ export class PlayerActions extends Component {
 	private _release(): void {
 		const toss = this._throw;
 		toss.released = true;
+		Sfx.at(Sfx.throw, this.node);
 		toss.picked = true;
 		const from = this.hand ? Vec3.add(this._at, this.hand.worldPosition, this.holdOffset) : this._at.set(this.node.worldPosition);
 		toss.body.node.setWorldPosition(from);
@@ -480,6 +482,7 @@ export class PlayerActions extends Component {
 	}
 
 	private _startJump(to: Vec3, arc: number): void {
+		Sfx.at(Sfx.jump, this.node);
 		const length = this.animationController ? this.animationController.override(this.jumpClip, "jump", this.jumpSpeed) : 0.5;
 		this._jump = {
 			from: this.node.worldPosition.clone(),

@@ -1,0 +1,297 @@
+{
+    "version": 4,
+    "name": "Audio",
+    "view": {
+        "x": 899,
+        "y": -649,
+        "scale": 1.033
+    },
+    "nodes": [
+        {
+            "id": "n1",
+            "name": "Node 1",
+            "x": -499,
+            "y": -261,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Музыка игры запускается со старта игры и проигрывается циклично, тоже самое с музыкой на финал, после прохождения всех уровней.",
+            "payload": {
+                "kind": "folder",
+                "uuid": "64c08564-528d-42d1-b93f-e9ad12b81a31",
+                "name": "music",
+                "type": "Folder",
+                "importer": "directory",
+                "url": "db://assets/audio/music",
+                "path": "db://assets/audio/music"
+            }
+        },
+        {
+            "id": "n2",
+            "name": "Node 2",
+            "x": -251,
+            "y": -256,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Плеер ходит воспроизведя рандомные звуи хотьбы. Надо синхронизироваться с ударами ног по полу. ",
+            "payload": {
+                "kind": "folder",
+                "uuid": "645c309f-7d18-4be5-930d-8c86ad8ac8d1",
+                "name": "walk",
+                "type": "Folder",
+                "importer": "directory",
+                "url": "db://assets/audio/walk",
+                "path": "db://assets/audio/walk"
+            }
+        },
+        {
+            "id": "n3",
+            "name": "Node 3",
+            "x": 633,
+            "y": -92,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Интро в зависимости от локализации воспроизводится со старта игры",
+            "payload": {
+                "kind": "folder",
+                "uuid": "1845575c-2e2e-4552-aa61-cff59d4f2877",
+                "name": "intro",
+                "type": "Folder",
+                "importer": "directory",
+                "url": "db://assets/audio/intro",
+                "path": "db://assets/audio/intro"
+            }
+        },
+        {
+            "id": "n6",
+            "name": "Блок",
+            "x": 302,
+            "y": -240,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Блок управления со старта игры",
+            "payload": {
+                "kind": "node",
+                "uuid": "57P+WUxI9IA5avMRQCxNjX",
+                "name": "Input",
+                "type": "cc.Node",
+                "path": "Level_7/Canvas/Ui/Hiddable/Input"
+            },
+            "state": true
+        },
+        {
+            "id": "n7",
+            "name": "Разблокировка",
+            "x": 936,
+            "y": -305,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "по окончанию интро разблокируется",
+            "payload": {
+                "kind": "node",
+                "uuid": "57P+WUxI9IA5avMRQCxNjX",
+                "name": "Input",
+                "type": "cc.Node",
+                "path": "Level_7/Canvas/Ui/Hiddable/Input"
+            },
+            "state": true
+        },
+        {
+            "id": "n10",
+            "name": "Node 5",
+            "x": -176,
+            "y": 325,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Воспроизводится рандомно на агр зомби, при смене направления при прогулке, или их смерть.",
+            "payload": {
+                "kind": "folder",
+                "uuid": "454970b8-b1a4-4065-b7b5-17fdf75e9c6c",
+                "name": "zombie",
+                "type": "Folder",
+                "importer": "directory",
+                "url": "db://assets/audio/zombie",
+                "path": "db://assets/audio/zombie"
+            }
+        },
+        {
+            "id": "n11",
+            "name": "Node 6",
+            "x": 216,
+            "y": 353,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "asset",
+                "uuid": "6b60ec55-a1cd-4eaa-8de9-0171a4ccdcea",
+                "name": "Zombie1.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/enemys/Zombie1.prefab",
+                "path": "db://assets/prefabs/enemys/Zombie1.prefab"
+            }
+        },
+        {
+            "id": "n13",
+            "name": "Node 7",
+            "x": 170,
+            "y": 765,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "",
+            "payload": {
+                "kind": "asset",
+                "uuid": "aaf8c8c6-319b-4149-9d50-c135834c0fa9",
+                "name": "ZombieGirl.prefab",
+                "type": "cc.Prefab",
+                "importer": "prefab",
+                "url": "db://assets/prefabs/enemys/ZombieGirl.prefab",
+                "path": "db://assets/prefabs/enemys/ZombieGirl.prefab"
+            }
+        },
+        {
+            "id": "n15",
+            "name": "Node 8",
+            "x": -712,
+            "y": 155,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Звуки на появления ловушек.",
+            "payload": {
+                "kind": "folder",
+                "uuid": "5071f517-a384-4ae6-a738-e33d5961d687",
+                "name": "traps",
+                "type": "Folder",
+                "importer": "directory",
+                "url": "db://assets/audio/traps",
+                "path": "db://assets/audio/traps"
+            }
+        },
+        {
+            "id": "n16",
+            "name": "Node 9",
+            "x": -1116,
+            "y": 137,
+            "width": 272,
+            "height": 494,
+            "previewHeight": 96,
+            "prompt": "На подрыв бочек.",
+            "payload": {
+                "kind": "asset",
+                "uuid": "2032b2d5-e2d0-4dd4-a893-703df4370d75",
+                "name": "explosion.mp3",
+                "type": "cc.AudioClip",
+                "importer": "audio-clip",
+                "url": "db://assets/audio/explosion.mp3",
+                "path": "db://assets/audio/explosion.mp3"
+            }
+        },
+        {
+            "id": "n17",
+            "name": "Node 10",
+            "x": -1473,
+            "y": 213,
+            "width": 219,
+            "height": 499,
+            "previewHeight": 96,
+            "prompt": "Прыжок плеера",
+            "payload": {
+                "kind": "asset",
+                "uuid": "420813b3-af07-41e1-b029-d82f89352025",
+                "name": "jump.mp3",
+                "type": "cc.AudioClip",
+                "importer": "audio-clip",
+                "url": "db://assets/audio/jump.mp3",
+                "path": "db://assets/audio/jump.mp3"
+            }
+        },
+        {
+            "id": "n18",
+            "name": "Node 11",
+            "x": -703,
+            "y": 609,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "Смерть плеера",
+            "payload": {
+                "kind": "asset",
+                "uuid": "5b86ce03-b38e-4ef5-bf93-1a0c44cef59b",
+                "name": "player_die.mp3",
+                "type": "cc.AudioClip",
+                "importer": "audio-clip",
+                "url": "db://assets/audio/player_die.mp3",
+                "path": "db://assets/audio/player_die.mp3"
+            }
+        },
+        {
+            "id": "n19",
+            "name": "Node 12",
+            "x": -1084,
+            "y": 816,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "стрельба",
+            "payload": {
+                "kind": "asset",
+                "uuid": "0c1f1561-3a12-4258-b2c0-a7aee816d647",
+                "name": "shoot.mp3",
+                "type": "cc.AudioClip",
+                "importer": "audio-clip",
+                "url": "db://assets/audio/shoot.mp3",
+                "path": "db://assets/audio/shoot.mp3"
+            }
+        },
+        {
+            "id": "n20",
+            "name": "Node 13",
+            "x": -336,
+            "y": 798,
+            "width": 220,
+            "height": 330,
+            "previewHeight": 96,
+            "prompt": "кидок пропа плеера",
+            "payload": {
+                "kind": "asset",
+                "uuid": "dbff27fc-f803-4dad-95fa-4c6ae32159bb",
+                "name": "throw.mp3",
+                "type": "cc.AudioClip",
+                "importer": "audio-clip",
+                "url": "db://assets/audio/throw.mp3",
+                "path": "db://assets/audio/throw.mp3"
+            }
+        }
+    ],
+    "links": [
+        {
+            "id": "l8",
+            "from": "n6",
+            "to": "n3"
+        },
+        {
+            "id": "l9",
+            "from": "n3",
+            "to": "n7"
+        },
+        {
+            "id": "l12",
+            "from": "n10",
+            "to": "n11"
+        },
+        {
+            "id": "l14",
+            "from": "n10",
+            "to": "n13"
+        }
+    ]
+}

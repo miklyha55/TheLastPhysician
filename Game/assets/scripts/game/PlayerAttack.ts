@@ -18,6 +18,8 @@ import { PlayerMovement } from "./PlayerMovement";
 import { WallCollision } from "./WallCollision";
 import { Zombie } from "./Zombie";
 import { LevelStats } from "../managers/LevelStats";
+import { Sfx } from "../managers/audio/Sfx";
+import { Footsteps } from "./Footsteps";
 
 const { ccclass, property } = _decorator;
 
@@ -180,6 +182,9 @@ export class PlayerAttack extends Component {
 		// Brought from the last level: potions and keys, as they lay on the stack. Otherwise
 		// the level's own start — `ammo` potions.
 		const carried = GameState.enter();
+		// Steps in time with the feet; the sounds that play often, loaded ahead.
+		this.getComponent(Footsteps) || this.addComponent(Footsteps);
+		Sfx.preload();
 		// A fresh count for the level: every zombie in it has registered by now (their onLoad).
 		LevelStats.begin(Zombie.all.length);
 		// Everything drawn once behind the loading screen before the level is played.
@@ -343,6 +348,7 @@ export class PlayerAttack extends Component {
 		node.setWorldPosition(start);
 		const aim = this._aim(target, v3());
 		this.gunEffects && this.gunEffects.fire(start, aim);
+		Sfx.at(Sfx.shoot, start);
 		const distance = Math.hypot(aim.x - start.x, aim.z - start.z);
 		const duration = Math.max(0.1, distance / Math.max(this.projectileSpeed, 0.01));
 		// Point-blank the potion barely rises; lobbed across the whole radius it rises to arcHeight.
@@ -367,6 +373,7 @@ export class PlayerAttack extends Component {
 		const start = (this.muzzle ? this.muzzle.worldPosition : this.node.worldPosition).clone();
 		const aim = at.clone();
 		this.gunEffects && this.gunEffects.fire(start, aim);
+		Sfx.at(Sfx.shoot, start);
 		const duration = Math.max(0.05, Vec3.distance(start, aim) / Math.max(this.barrelShotSpeed, 0.01));
 		if (!this.projectile) {
 			Explosives.instance && Explosives.instance.explode(barrel);
@@ -468,6 +475,7 @@ export class PlayerAttack extends Component {
 
 	private _die(): void {
 		this._dead = true;
+		Sfx.at(Sfx.playerDie, this.node);
 		this._throwIn = -1;
 		this._occlusion && this._occlusion.setTarget(null);
 		// What the player carried falls off their back and scatters over the floor.

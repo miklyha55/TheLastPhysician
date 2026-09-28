@@ -6,6 +6,7 @@ import { Explosions } from "./Explosions";
 import { PlayerAttack } from "./PlayerAttack";
 import { Zombie } from "./Zombie";
 import { LevelStats } from "../managers/LevelStats";
+import { Sfx } from "../managers/audio/Sfx";
 
 const { ccclass, property } = _decorator;
 
@@ -98,6 +99,7 @@ export class Explosives extends Component {
 		const ground = body.node.worldPosition.clone();
 		const at = v3(ground.x, ground.y + this.fireHeight, ground.z);
 		this.barrelFire && this.barrelFire.burst(at);
+		Sfx.at(Sfx.explosion, at);
 		this.barrelShards && this.barrelShards.splash(at, v3(at.x, at.y - 1, at.z), 1.5);
 		const camera = CameraManager.instance;
 		camera && camera.shake(this.shake, this.shakeFor);

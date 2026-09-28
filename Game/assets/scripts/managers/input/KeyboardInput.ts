@@ -25,11 +25,21 @@ const KEYS: { [code: number]: [number, number] } = {
 // their key-ups will never come.
 @ccclass("KeyboardInput")
 export class KeyboardInput extends Component {
+	private static _blocked = false;
+	private static _instance: KeyboardInput = null;
+
+	/** Keys held down let go, and no more heard until unblocked — the controls locked (InputLock). */
+	static setBlocked(value: boolean): void {
+		KeyboardInput._blocked = value;
+		value && KeyboardInput._instance && KeyboardInput._instance._releaseAll();
+	}
+
 	private _held = new Set<number>();
 	private _direction: Vec2 = v2();
 	private _down = false;
 
 	protected onEnable(): void {
+		KeyboardInput._instance = this;
 		input.on(Input.EventType.KEY_DOWN, this._onKeyDown, this);
 		input.on(Input.EventType.KEY_UP, this._onKeyUp, this);
 		director.on(Director.EVENT_AFTER_SCENE_LAUNCH, this._announce, this);
@@ -60,7 +70,7 @@ export class KeyboardInput extends Component {
 	}
 
 	private _onKeyDown(event: EventKeyboard): void {
-		if (!KEYS[event.keyCode] || this._held.has(event.keyCode)) {
+		if (KeyboardInput._blocked || !KEYS[event.keyCode] || this._held.has(event.keyCode)) {
 			return;
 		}
 		this._held.add(event.keyCode);

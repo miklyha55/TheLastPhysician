@@ -6,6 +6,9 @@ import { LoadingScreen } from "./LoadingScreen";
 import { Prewarm } from "./Prewarm";
 import { ResultsScreen, ResultsRow } from "./ResultsScreen";
 import { SplashScreen } from "./SplashScreen";
+import { Sfx } from "./audio/Sfx";
+import { Sound } from "./audio/Sound";
+import { InputLock } from "./input/InputLock";
 
 /** One thing on the stack on the player's back: a potion, or a key of a colour. */
 export interface StackItem {
@@ -122,6 +125,7 @@ export class GameState {
 						clearInterval(watch);
 						held && director.resume();
 						SplashScreen.hide();
+						GameState._startSound();
 					},
 				},
 			],
@@ -208,6 +212,8 @@ export class GameState {
 		GameState._attempt = 1;
 		GameState._entry = null;
 		GameState._totals = GameState._freshTotals();
+		// The game's own tune again, if the final one was playing.
+		Sfx.playMusic();
 		GameState._load(GameState.levels[0], null, onCovered);
 	}
 
@@ -226,6 +232,34 @@ export class GameState {
 		t.deaths += GameState._attempt - 1;
 	}
 
+	/**
+	 * The game starts — the "play" button, the first touch the browser lets sound out on: the
+	 * music round and round, and the intro in the player's language, the controls held till it
+	 * is over (and no longer than `introLimit`, should it never end).
+	 */
+	private static _startSound(): void {
+		// The music down under the voice while it speaks.
+		Sfx.duckMusic(true);
+		Sfx.playMusic();
+		InputLock.lock();
+		const done = () => {
+			clearTimeout(limit);
+			Sfx.duckMusic(false);
+			InputLock.unlock();
+		};
+		const limit = setTimeout(done, GameState.introLimit * 1000);
+		const player = director.getScene() && director.getScene().getComponentsInChildren("PlayerAttack")[0];
+		Sound.play(Sfx.intro, {
+			id: "intro",
+			volume: Sfx.gain(Sfx.intro),
+			at: player ? player.node : undefined,
+			onEnded: done,
+		});
+	}
+
+	/** Seconds the controls stay held at the most, waiting for the intro to end. */
+	static introLimit = 30;
+
 	/** Out of the last level: the final picture with what the player did over the whole game. */
 	private static _showFinal(): void {
 		const t = GameState._totals;
@@ -242,6 +276,7 @@ export class GameState {
 		rows.push({ icon: "⏱️", label: "Время", value: `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` });
 		rows.push({ icon: "💀", label: "Смертей", value: `${t.deaths}` });
 		gameEventTarget.emit(GameEvent.GAME_COMPLETE);
+		Sfx.playMusic(true);
 		SplashScreen.show({
 			image: "ui/final",
 			title: "Свобода!",
