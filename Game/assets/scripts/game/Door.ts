@@ -2,6 +2,7 @@ import { _decorator, Component, Node, Quat, quat, Tween, tween } from "cc";
 import GameEvent from "../enums/GameEvent";
 import { gameEventTarget } from "../plugins/GameEventTarget";
 import { PlayerAttack } from "./PlayerAttack";
+import { Sfx } from "../managers/audio/Sfx";
 
 const { ccclass, property } = _decorator;
 
@@ -115,6 +116,8 @@ export class Door extends Component {
 			return;
 		}
 		this._open = open;
+		// Opening, with a key or a button — the ones open from the start never swing.
+		open && Sfx.at(Sfx.doorOpen, this.node);
 		const target = open ? this._openRotation : this._closedRotation;
 		Tween.stopAllByTarget(this.leaf);
 		if (this.duration <= 0) {

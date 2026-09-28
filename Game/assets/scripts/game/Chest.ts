@@ -1,5 +1,6 @@
 import { _decorator, Component, instantiate, math, Node, Prefab, Quat, tween, v3, Vec3 } from "cc";
 import { PlayerAttack } from "./PlayerAttack";
+import { Sfx } from "../managers/audio/Sfx";
 
 const { ccclass, property } = _decorator;
 
@@ -47,6 +48,7 @@ export class Chest extends Component {
 	spinSpeed: number = 720;
 
 	private _given = false;
+	private _closing = false;
 	private _left = 0;
 	private _timer = 0;
 	private _flights: Flight[] = [];
@@ -145,7 +147,12 @@ export class Chest extends Component {
 		if (this._left > 0 || this._flights.length || !this.lid) {
 			return;
 		}
-		// Shut, then it shrinks away and the node goes, with everything in it.
+		if (this._closing) {
+			return;
+		}
+		this._closing = true;
+		// Every potion taken: the lid slams shut, then it shrinks away and the node goes, with everything in it.
+		Sfx.at(Sfx.chestClose, this.node);
 		tween(this.lid)
 			.to(this.closeTime, { eulerAngles: v3(0, 0, 0) }, { easing: "backIn" })
 			.call(() => {

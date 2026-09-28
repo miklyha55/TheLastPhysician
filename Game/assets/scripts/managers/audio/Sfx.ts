@@ -19,8 +19,8 @@ function isRussian(): boolean {
  * never tiring. Worked out from how loud each file is while it sounds (its loud part, in dB)
  * against a level for what it is for:
  *
- *   explosion −14 · player's death −16 · intro −18 · shot, throw −22 · jump −23 · fire −24
- *   music −28 · zombies −28 · steps −30
+ *   explosion −14 · player's death −16 · intro −18 · gate −20 · chest −22 · shot, throw −22
+ *   jump −23 · door −24 · fire −24 · key −24 · potion −26 · music −28 · zombies −28 · steps −30
  *
  * gain = 10^((level − file's loudness) / 20), never above 1 — the zombies' voices and the
  * quietest step are recorded quieter than their level and play as they are, and so the rest of
@@ -28,25 +28,33 @@ function isRussian(): boolean {
  * volume. Measured files: new or changed ones need measuring again.
  */
 const GAIN: { [path: string]: number } = {
-	"explosion": 0.61, // −9.7 dB
+	"explosion": 0.4, // −9.7 dB; down from its −14 level by ear
 	"intro/intro_eng": 0.98, // −17.8
 	"intro/intro_ru": 0.98, // −17.8
 	"jump": 0.32, // −13.2
 	"music/music_final": 0.19, // −13.7
 	"music/music_game": 0.17, // −12.6
-	"player_die": 0.54, // −10.7
-	"shoot": 0.29, // −11.1
+	"player_die": 0.35, // −10.7; down from its −16 level by ear
+	"shoot": 0.58, // −11.1; twice the −22 level by ear: a shot should punch
 	"throw": 0.27, // −10.7
 	"traps/fire": 0.13, // −6.4, and five seconds long
-	"walk/walk1": 1.0, // −33.4
-	"walk/walk2": 0.54, // −24.7
-	"walk/walk3": 0.89, // −29.0
-	"walk/walk4": 0.65, // −26.2
-	"zombie/zombie-speak-1": 1.0, // −30.7
-	"zombie/zombie-speak-2": 1.0, // −29.4
-	"zombie/zombie-speak-3": 1.0, // −29.2
-	"zombie/zombie-speak-4": 1.0, // −28.0
-	"zombie/zombie-speak-5": 1.0, // −32.3
+	// Steps 0.22 of their level by ear: barely there, under everything.
+	"walk/walk1": 0.22, // −33.4
+	"walk/walk2": 0.11, // −24.7
+	"walk/walk3": 0.19, // −29.0
+	"walk/walk4": 0.14, // −26.2
+	// Zombies 0.8 of the file by ear: a touch under the music.
+	"zombie/zombie-speak-1": 0.8, // −30.7
+	"zombie/zombie-speak-2": 0.8, // −29.4
+	"zombie/zombie-speak-3": 0.8, // −29.2
+	"zombie/zombie-speak-4": 0.8, // −28.0
+	"zombie/zombie-speak-5": 0.8, // −32.3
+	// Recorded quiet, all of them: as they are.
+	"get_potion": 1.0, // −30.6
+	"get_key": 1.0, // −32.6
+	"door_open_key_or_button": 0.75, // −27.6, a touch down by ear
+	"chest_appear": 1.0, // −22.2
+	"gate_open": 0.8, // −23.9, a touch down by ear
 };
 
 /** How much quieter the music goes under the intro's voice. */
@@ -68,6 +76,12 @@ export const Sfx = {
 	playerDie: "player_die",
 	shoot: "shoot",
 	throw: "throw",
+	getPotion: "get_potion",
+	getKey: "get_key",
+	doorOpen: "door_open_key_or_button",
+	/** The chest shutting once its last potion is taken (the file is called chest_appear). */
+	chestClose: "chest_appear",
+	gateOpen: "gate_open",
 
 	get intro(): string {
 		return isRussian() ? "intro/intro_ru" : "intro/intro_eng";
@@ -103,7 +117,7 @@ export const Sfx = {
 
 	/** Loads what plays often, so its first time is not late. */
 	preload(): void {
-		Sound.preload([...Sfx.walk, ...Sfx.zombie, Sfx.explosion, Sfx.jump, Sfx.playerDie, Sfx.shoot, Sfx.throw]);
+		Sound.preload([...Sfx.walk, ...Sfx.zombie, Sfx.explosion, Sfx.jump, Sfx.playerDie, Sfx.shoot, Sfx.throw, Sfx.getPotion, Sfx.getKey, Sfx.doorOpen, Sfx.chestClose, Sfx.gateOpen]);
 	},
 
 	_musicPath: "music/music_game",

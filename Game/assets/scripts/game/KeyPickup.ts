@@ -3,6 +3,7 @@ import KeyColor from "../enums/KeyColor";
 import { PlayerAttack } from "./PlayerAttack";
 import { PlayerKeys } from "./PlayerKeys";
 import { PotionStack } from "./PotionStack";
+import { Sfx } from "../managers/audio/Sfx";
 
 const { ccclass, property } = _decorator;
 
@@ -68,6 +69,7 @@ export class KeyPickup extends Component {
 
 	private _take(keys: PlayerKeys): void {
 		this._taken = true;
+		Sfx.at(Sfx.getKey, this.visual || this.node);
 		// Theirs from now on, whatever the key is doing in the air.
 		keys.add(this.color);
 		const stack = PlayerAttack.instance && PlayerAttack.instance.stack;

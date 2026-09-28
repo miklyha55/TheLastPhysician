@@ -8,7 +8,6 @@ import { ResultsScreen, ResultsRow } from "./ResultsScreen";
 import { SplashScreen } from "./SplashScreen";
 import { Sfx } from "./audio/Sfx";
 import { Sound } from "./audio/Sound";
-import { InputLock } from "./input/InputLock";
 
 /** One thing on the stack on the player's back: a potion, or a key of a colour. */
 export interface StackItem {
@@ -234,18 +233,17 @@ export class GameState {
 
 	/**
 	 * The game starts — the "play" button, the first touch the browser lets sound out on: the
-	 * music round and round, and the intro in the player's language, the controls held till it
-	 * is over (and no longer than `introLimit`, should it never end).
+	 * music round and round, and the intro in the player's language over it while the game goes
+	 * on — the music down under the voice till it is over (and no longer than `introLimit`,
+	 * should it never end).
 	 */
 	private static _startSound(): void {
-		// The music down under the voice while it speaks.
+		// The music down under the voice while it speaks; the game goes on meanwhile.
 		Sfx.duckMusic(true);
 		Sfx.playMusic();
-		InputLock.lock();
 		const done = () => {
 			clearTimeout(limit);
 			Sfx.duckMusic(false);
-			InputLock.unlock();
 		};
 		const limit = setTimeout(done, GameState.introLimit * 1000);
 		const player = director.getScene() && director.getScene().getComponentsInChildren("PlayerAttack")[0];
@@ -257,7 +255,7 @@ export class GameState {
 		});
 	}
 
-	/** Seconds the controls stay held at the most, waiting for the intro to end. */
+	/** Seconds the music stays down at the most, waiting for the intro to end. */
 	static introLimit = 30;
 
 	/** Out of the last level: the final picture with what the player did over the whole game. */

@@ -2,6 +2,7 @@ import { _decorator, Component, Mat4, Node, Tween, tween, v3, Vec3 } from "cc";
 import { GameState } from "../managers/GameState";
 import { Lever } from "./Lever";
 import { PlayerAttack } from "./PlayerAttack";
+import { Sfx } from "../managers/audio/Sfx";
 
 const { ccclass, property } = _decorator;
 
@@ -77,6 +78,8 @@ export class Gate extends Component {
 
 	/** Leaves open or shut. They hinge on opposite sides, so they turn opposite ways to swing to one side. */
 	private _swing(open: boolean): void {
+		// Opening at the lever's pull; shutting behind the player is silent.
+		open && !this._open && Sfx.at(Sfx.gateOpen, this.node);
 		this._open = open;
 		const angle = open ? this.openAngle : 0;
 		for (const [leaf, sign] of [[this.leftLeaf, 1], [this.rightLeaf, -1]] as [Node, number][]) {

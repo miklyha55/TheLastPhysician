@@ -108,6 +108,8 @@ export class PlayerAttack extends Component {
 	private _throwAt: Zombie = null;
 	private _dead = false;
 	private _shots: Shot[] = [];
+	/** When the last potion-in sound went out, ms. */
+	private _potionSoundAt = 0;
 	private _spare: Node[] = [];
 	private _to = v3();
 
@@ -220,6 +222,12 @@ export class PlayerAttack extends Component {
 	addAmmo(count: number, visual: Node = null): void {
 		this.ammo += count;
 		LevelStats.collected += count;
+		// A clink for each potion in; a stream of them from a chest not all at once.
+		const now = Date.now();
+		if (now - this._potionSoundAt >= 60) {
+			this._potionSoundAt = now;
+			Sfx.at(Sfx.getPotion, this.node);
+		}
 		for (let i = 0; i < count; i++) {
 			if (this.stack) {
 				this.stack.push(i === 0 ? visual : null);
