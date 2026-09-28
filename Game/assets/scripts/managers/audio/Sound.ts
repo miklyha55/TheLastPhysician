@@ -192,6 +192,19 @@ export class Sound {
 		return !!channel && channel.source.playing;
 	}
 
+	/**
+	 * Where a channel's clip is: seconds played and its whole length; null while there is no clip
+	 * on it yet (still loading). What follows the sound itself — the intro's text — reads this.
+	 */
+	static progress(id: string): { time: number; duration: number } | null {
+		const channel = Sound._channels.get(id);
+		const source = channel && channel.source;
+		if (!source || !source.isValid || !source.clip) {
+			return null;
+		}
+		return { time: source.currentTime, duration: source.duration };
+	}
+
 	// --- inside
 
 	/** A channel's volume as it comes through now: its own, the distance, the game's. */

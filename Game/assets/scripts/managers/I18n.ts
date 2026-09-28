@@ -43,6 +43,9 @@ const RU: { [key: string]: Text } = {
 	"hint.note": "Остановись — и он сам метнёт склянку в зомби",
 	"hint.tailKeys": "нажми любую клавишу",
 	"hint.tailTouch": "коснись экрана",
+
+	"skip.keys": "Esc — пропустить",
+	"skip.touch": "пропустить",
 };
 
 const EN: { [key: string]: Text } = {
@@ -81,6 +84,9 @@ const EN: { [key: string]: Text } = {
 	"hint.note": "Stop — and he throws a potion at the zombie himself",
 	"hint.tailKeys": "press any key",
 	"hint.tailTouch": "touch the screen",
+
+	"skip.keys": "Esc — skip",
+	"skip.touch": "skip",
 };
 
 const WORDS: { [language: string]: { [key: string]: Text } } = { ru: RU, en: EN };

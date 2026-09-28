@@ -3,8 +3,8 @@ import { EDITOR } from "cc/env";
 import GameEvent from "../enums/GameEvent";
 import { gameEventTarget } from "../plugins/GameEventTarget";
 import { LevelStats } from "./LevelStats";
-import { ControlsHint } from "./ControlsHint";
 import { I18n } from "./I18n";
+import { Intro } from "./Intro";
 import { LoadingScreen } from "./LoadingScreen";
 import { Prewarm } from "./Prewarm";
 import { ResultsScreen, ResultsRow } from "./ResultsScreen";
@@ -125,8 +125,11 @@ export class GameState {
 			Sound.volume = GameState._volumeBefore;
 			GameState._running() && Yandex.play();
 		};
-		// A level uncovered is a level to play.
-		LoadingScreen.onHidden = () => GameState._running() && Yandex.play();
+		// A level uncovered is a level to play — and the first one, opened again from scratch, has its intro.
+		LoadingScreen.onHidden = () => {
+			GameState._running() && Yandex.play();
+			GameState._level === 0 && !SplashScreen.shown && Intro.arm();
+		};
 		// The tab out of sight: gameplay stops — off the platform no event says so, and the order of
 		// the platform's own and this one is promised by nobody; the repeats Yandex drops.
 		typeof document !== "undefined" &&
@@ -208,8 +211,6 @@ export class GameState {
 						Yandex.loaded();
 						Yandex.play();
 						GameState._startSound();
-						// The first level teaches the controls: once, as the game starts.
-						GameState._level === 0 && ControlsHint.show();
 					},
 				},
 			],
@@ -327,6 +328,8 @@ export class GameState {
 		GameState._attempt = 1;
 		GameState._entry = null;
 		GameState._totals = GameState._freshTotals();
+		// All from the start, as at the first launch: the intro speaks again on the first level.
+		Intro.reset();
 		// The game's own tune again, if the final one was playing.
 		Sfx.playMusic();
 		GameState._load(GameState.levels[0], null, onCovered);
@@ -349,35 +352,14 @@ export class GameState {
 
 	/**
 	 * The game starts — the "play" button, the first touch the browser lets sound out on: the
-	 * music round and round, and the intro in the player's language over it while the game goes
-	 * on — the music down under the voice till it is over (and no longer than `introLimit`,
-	 * should it never end). The intro only on the first level: a game started on another (a
-	 * preview of it) gets the music alone.
+	 * music round and round. On the first level the intro is set: the controls hint goes up, and
+	 * the player's first move starts the voice, its text typed under it (Intro). A game started on
+	 * another level (a preview of it) gets the music alone.
 	 */
 	private static _startSound(): void {
-		if (GameState._level !== 0) {
-			Sfx.playMusic();
-			return;
-		}
-		// The music down under the voice while it speaks; the game goes on meanwhile.
-		Sfx.duckMusic(true);
 		Sfx.playMusic();
-		const done = () => {
-			clearTimeout(limit);
-			Sfx.duckMusic(false);
-		};
-		const limit = setTimeout(done, GameState.introLimit * 1000);
-		const player = director.getScene() && director.getScene().getComponentsInChildren("PlayerAttack")[0];
-		Sound.play(Sfx.intro, {
-			id: "intro",
-			volume: Sfx.gain(Sfx.intro),
-			at: player ? player.node : undefined,
-			onEnded: done,
-		});
+		GameState._level === 0 && Intro.arm();
 	}
-
-	/** Seconds the music stays down at the most, waiting for the intro to end. */
-	static introLimit = 30;
 
 	/** Out of the last level: the final picture with what the player did over the whole game. */
 	private static _showFinal(): void {
@@ -481,6 +463,9 @@ export class GameState {
 		GameState._loading = true;
 		// The level goes: gameplay stops the moment the world does, under the loading screen.
 		Yandex.pause();
+		// Leaving the level the intro speaks on cuts it off; the same level again (a death) does not.
+		const current = GameState._level >= 0 ? GameState.levels[GameState._level] : null;
+		current !== scene && Intro.stop();
 		const level = GameState.levels.indexOf(scene);
 		const title = level >= 0 ? I18n.t("level.title", level + 1) : "";
 		// Covered first; then the scene is fetched with the bar filling, and started.
