@@ -919,6 +919,35 @@ def walls_by_hand(spec, n):
     print(spec['name'], 'walls by hand', WALLS[n], 'zombies moved', moved)
 
 
+# Spikes placed by hand: floor spikes {cell: phase}, wall spikes {cell: (side the blades face, phase)}.
+FLOOR_SPIKES = {
+    4: {(10, 7): 0, (10, 11): 1.5},  # before the first pendulum and after the second
+}
+WALL_SPIKES_BY_HAND = {
+    4: {(10, 6): ('S', 0)},  # the wall above the first spikes, in step with them
+}
+
+
+def spikes_by_hand(spec, n):
+    if n not in FLOOR_SPIKES and n not in WALL_SPIKES_BY_HAND:
+        return
+    m = [list(r) for r in spec['map']]
+    spikes = {tuple(map(int, k.split(','))) if isinstance(k, str) else k: v for k, v in spec.get('spikes', {}).items()}
+    for (c, r), phase in FLOOR_SPIKES.get(n, {}).items():
+        assert m[r][c] in '.S', (spec['name'], 'no free floor for spikes at', c, r, m[r][c])
+        m[r][c] = 'S'
+        spikes[(c, r)] = phase
+    ws = dict(spec.get('wall_spikes', {}))
+    for (c, r), (side, phase) in WALL_SPIKES_BY_HAND.get(n, {}).items():
+        assert m[r][c] in '#X', (spec['name'], 'no plain wall for wall spikes at', c, r, m[r][c])
+        m[r][c] = 'X'
+        ws[(c, r)] = (side, phase)
+    spec['map'] = [''.join(r) for r in m]
+    spec['spikes'] = spikes
+    spec['wall_spikes'] = ws
+    print(spec['name'], 'spikes by hand', FLOOR_SPIKES.get(n), WALL_SPIKES_BY_HAND.get(n))
+
+
 # Barrels placed by hand, where the level's author wants them: kept as they are, on top of the
 # ones the crowd rule places.
 BARRELS = {
@@ -1088,6 +1117,7 @@ for n in sorted(k for k in L if k <= LEVEL_COUNT):
     drop_hidden_wall_spikes(L[n])
     place_gargoyles(L[n], n)
     walls_by_hand(L[n], n)
+    spikes_by_hand(L[n], n)
     spec = L[n]
     spec['buttons'] = [(tuple(b), [tuple(d) for d in ds]) for b, ds in spec.get('buttons', [])]
     spec['fire'] = {tuple(map(int, k.split(','))) if isinstance(k, str) else k: v for k, v in spec.get('fire', {}).items()}

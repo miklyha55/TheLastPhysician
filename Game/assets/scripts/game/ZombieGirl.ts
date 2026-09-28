@@ -87,7 +87,7 @@ export class ZombieGirl extends Zombie {
 	@property({ tooltip: "Share of the player's run she throws ahead of them, 0..1", slide: true, range: [0, 1, 0.05] })
 	lead: number = 0.5;
 	@property({ tooltip: "How many times slower a thrown thing flies than it would fall by itself — the same arc, more time to see it coming" })
-	flightSlowdown: number = 2;
+	flightSlowdown: number = 1.6;
 	@property({ tooltip: "Seconds past the planned landing a thrown thing is still deadly" })
 	lethalAfter: number = 0.25;
 	@property({ tooltip: "Tumble of a thrown thing, radians per second" })
