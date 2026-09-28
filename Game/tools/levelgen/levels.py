@@ -92,7 +92,7 @@ L[6] = {"name": "Level_6", "ammo": 3, "map": [
  "#...F.....F.....#",
  "########E########"],
  "fire": {f"{c},{r}": p for (c, r), p in fire6.items()},
- "furniture": [["Crate",8,1,0],["Chair",14,5,0],["Table",11,2,0],["Crate",7,11,0],["Chair",14,11,0],["Bed",1,11,0]]}
+ "furniture": [["Crate",8,1,0],["Chair",14,5,0],["Table",11,2,0],["Crate",7,11,0],["Chair",12,11,0],["Bed",1,11,0]]}
 
 L[7] = {"name": "Level_7", "ammo": 3, "map": [
  "###################",
@@ -598,7 +598,7 @@ PENDULUMS = {
     # A pendulum swings along the way through it; its frame's posts stand at the sides.
     # Only on open floor, never in a doorway or a one-cell passage: it has to be possible to get past.
     4: {(10, 8): (90, 0), (10, 10): (90, 1.1)},  # in the lower hall, a pair out of step on the way from the far button to its door
-    6: {(14, 10): (0, 0.6)},  # the room below, on the way to the gate
+    6: {(14, 9): (0, 0.6), (14, 11): (0, 1.7)},  # the room below, a pair out of step on the way to the gate
     10: {(4, 9): (90, 0)},    # the green key's room, on the way to it
 }
 
@@ -888,6 +888,7 @@ def place_gargoyles(spec, n):
 # made of those cells; a zombie standing there steps to the nearest free floor.
 WALLS = {
     3: [(c, 5) for c in range(5, 11)],  # the middle wall run on to the east: the way between the rooms narrows
+    5: [(c, 6) for c in range(5, 10)],  # the stream's west half walled over: the rooms meet only over the stream past the cross
 }
 
 
@@ -913,15 +914,28 @@ def walls_by_hand(spec, n):
                     if t not in seen and 0 <= t[0] < W and 0 <= t[1] < H and m[t[1]][t[0]] not in '#WDrbgEXH':
                         seen.add(t); q.append(t)
         else:
-            assert ch in '.#', (spec['name'], 'a hand wall over', ch, 'at', c, r)
+            assert ch in '.#~', (spec['name'], 'a hand wall over', ch, 'at', c, r)
         assert (c, r) not in furniture, (spec['name'], 'furniture under a hand wall at', c, r)
+    # A trap in a wall that now faces into the new wall has nothing to face: a plain wall.
+    D4 = {'N': (0, -1), 'S': (0, 1), 'W': (-1, 0), 'E': (1, 0)}
+    for key in ('wall_spikes', 'gargoyles'):
+        traps = dict(spec.get(key, {}))
+        for (tc, tr), v in list(traps.items()):
+            side = v[0] if isinstance(v, tuple) else v
+            dc, dr = D4[side]
+            if (tc + dc, tr + dr) in WALLS[n]:
+                del traps[(tc, tr)]
+                m[tr][tc] = '#'
+                moved.append(('trap made a plain wall', (tc, tr)))
+        spec[key] = traps
     spec['map'] = [''.join(r) for r in m]
-    print(spec['name'], 'walls by hand', WALLS[n], 'zombies moved', moved)
+    print(spec['name'], 'walls by hand', WALLS[n], 'moved', moved)
 
 
 # Spikes placed by hand: floor spikes {cell: phase}, wall spikes {cell: (side the blades face, phase)}.
 FLOOR_SPIKES = {
     4: {(10, 7): 0, (10, 11): 1.5},  # before the first pendulum and after the second
+    5: {(9, 2): 0, (9, 4): 1.5, (11, 8): 0, (11, 10): 1.5, (13, 7): 0, (15, 7): 1.5},  # three pairs, each taking turns
 }
 WALL_SPIKES_BY_HAND = {
     4: {(10, 6): ('S', 0)},  # the wall above the first spikes, in step with them
@@ -953,14 +967,21 @@ def spikes_by_hand(spec, n):
 BARRELS = {
     2: [(7, 3)],  # just inside the door of the first zombie room
     4: [(12, 4)],
+    5: [(11, 5)],
 }
 
 
 def barrels_by_hand(spec, n):
+    m = [list(row) for row in spec['map']]
     for c, r in BARRELS.get(n, []):
-        assert spec['map'][r][c] == '.', (spec['name'], 'no free floor for a barrel at', c, r, spec['map'][r][c])
-        assert all((f[1], f[2]) != (c, r) for f in spec.get('furniture', [])), (spec['name'], 'furniture already at', c, r)
-        spec.setdefault('furniture', []).append(['Barrel', c, r, 0])
+        # The author's scene is what counts: whatever the rules put on that cell makes way.
+        if m[r][c] in 'CZVRBG':
+            print(spec['name'], 'a hand barrel takes the place of', m[r][c], 'at', (c, r))
+            m[r][c] = '.'
+        assert m[r][c] == '.', (spec['name'], 'no free floor for a barrel at', c, r, m[r][c])
+        spec['furniture'] = [f for f in spec.get('furniture', []) if (f[1], f[2]) != (c, r)]
+        spec['furniture'].append(['Barrel', c, r, 0])
+    spec['map'] = [''.join(row) for row in m]
     if n in BARRELS:
         print(spec['name'], 'barrels by hand', BARRELS[n])
 

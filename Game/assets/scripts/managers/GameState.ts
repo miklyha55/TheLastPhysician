@@ -5,6 +5,7 @@ import { LevelStats } from "./LevelStats";
 import { LoadingScreen } from "./LoadingScreen";
 import { Prewarm } from "./Prewarm";
 import { ResultsScreen, ResultsRow } from "./ResultsScreen";
+import { SplashScreen } from "./SplashScreen";
 
 /** One thing on the stack on the player's back: a potion, or a key of a colour. */
 export interface StackItem {
@@ -55,6 +56,14 @@ export class GameState {
 	private static _loading = false;
 	/** Which try at the current level this is: 1, and one more after every death. */
 	private static _attempt = 1;
+	/** The game has been started with the start screen's button — or it is up now. */
+	private static _started = false;
+	/** What the player did over all the levels done so far in this run of the game. */
+	private static _totals = GameState._freshTotals();
+
+	private static _freshTotals() {
+		return { levels: 0, zombies: 0, killed: 0, byTraps: 0, byBarrels: 0, thrown: 0, collected: 0, barrels: 0, seconds: 0, deaths: 0 };
+	}
 
 	/** What the loading screen calls the level being played. */
 	static get title(): string {
@@ -77,7 +86,46 @@ export class GameState {
 		const carried = GameState._carried;
 		GameState._carried = null;
 		GameState._entry = carried ? carried.slice() : null;
+		// The very first level of a run: the start screen over it, with the button to play.
+		if (!GameState._started) {
+			GameState._started = true;
+			GameState._showStart();
+		}
 		return carried;
+	}
+
+	/**
+	 * The start picture with "play". The level warms up under it (Prewarm); once that is done
+	 * and the button still not pressed, the game is held still until it is.
+	 */
+	private static _showStart(): void {
+		let held = false;
+		const watch = setInterval(() => {
+			if (!SplashScreen.shown) {
+				clearInterval(watch);
+				return;
+			}
+			if (!held && !Prewarm.active) {
+				held = true;
+				director.pause();
+			}
+		}, 100);
+		SplashScreen.show({
+			image: "ui/start",
+			title: "The Last Physician",
+			subtitle: "Выберись из подземелья",
+			buttons: [
+				{
+					text: "Играть",
+					primary: true,
+					onClick: () => {
+						clearInterval(watch);
+						held && director.resume();
+						SplashScreen.hide();
+					},
+				},
+			],
+		});
 	}
 
 	/**
@@ -98,9 +146,14 @@ export class GameState {
 		}
 		const last = GameState._level < 0 || next >= GameState.levels.length;
 		const carried = stack.slice();
+		GameState._addToTotals();
 		// The results first, the game held still under them; on with the button.
 		GameState._loading = true;
 		director.pause();
+		if (last) {
+			GameState._showFinal();
+			return;
+		}
 		ResultsScreen.show(
 			GameState._level >= 0 ? `Уровень ${GameState._level + 1} пройден!` : "Уровень пройден!",
 			LevelStats.killed >= LevelStats.zombies && LevelStats.zombies > 0 ? "Все зомби повержены" : "Отличная работа",
@@ -154,7 +207,59 @@ export class GameState {
 		}
 		GameState._attempt = 1;
 		GameState._entry = null;
+		GameState._totals = GameState._freshTotals();
 		GameState._load(GameState.levels[0], null, onCovered);
+	}
+
+	/** The level just done, into the run's totals. */
+	private static _addToTotals(): void {
+		const t = GameState._totals;
+		t.levels++;
+		t.zombies += LevelStats.zombies;
+		t.killed += LevelStats.killed;
+		t.byTraps += LevelStats.byTraps;
+		t.byBarrels += LevelStats.byBarrels;
+		t.thrown += LevelStats.thrown;
+		t.collected += LevelStats.collected;
+		t.barrels += LevelStats.barrels;
+		t.seconds += LevelStats.seconds;
+		t.deaths += GameState._attempt - 1;
+	}
+
+	/** Out of the last level: the final picture with what the player did over the whole game. */
+	private static _showFinal(): void {
+		const t = GameState._totals;
+		const seconds = Math.round(t.seconds);
+		const rows: ResultsRow[] = [
+			{ icon: "🏰", label: "Уровней пройдено", value: `${t.levels}` },
+			{ icon: "🧟", label: "Зомби убито", value: `${t.killed} / ${t.zombies}` },
+		];
+		t.byTraps > 0 && rows.push({ icon: "🔥", label: "ловушками", value: `${t.byTraps}`, minor: true });
+		t.byBarrels > 0 && rows.push({ icon: "💥", label: "взрывами бочек", value: `${t.byBarrels}`, minor: true });
+		rows.push({ icon: "🧪", label: "Склянок брошено", value: `${t.thrown}` });
+		rows.push({ icon: "🎁", label: "Склянок собрано", value: `${t.collected}` });
+		t.barrels > 0 && rows.push({ icon: "🛢️", label: "Бочек взорвано", value: `${t.barrels}` });
+		rows.push({ icon: "⏱️", label: "Время", value: `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` });
+		rows.push({ icon: "💀", label: "Смертей", value: `${t.deaths}` });
+		gameEventTarget.emit(GameEvent.GAME_COMPLETE);
+		SplashScreen.show({
+			image: "ui/final",
+			title: "Свобода!",
+			subtitle: "Подземелье пройдено",
+			rows,
+			buttons: [
+				{
+					text: "Играть снова",
+					primary: true,
+					onClick: () => {
+						director.resume();
+						// The final screen held the loading flag: a new run starts clean.
+						GameState._loading = false;
+						GameState.restartGame(() => SplashScreen.hide());
+					},
+				},
+			],
+		});
 	}
 
 	/** The lines of the results screen, from what LevelStats counted. */
