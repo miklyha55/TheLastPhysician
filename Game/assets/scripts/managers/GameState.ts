@@ -234,8 +234,8 @@ export class GameState {
 			{ icon: "🏰", label: "Уровней пройдено", value: `${t.levels}` },
 			{ icon: "🧟", label: "Зомби убито", value: `${t.killed} / ${t.zombies}` },
 		];
-		t.byTraps > 0 && rows.push({ icon: "🔥", label: "ловушками", value: `${t.byTraps}`, minor: true });
-		t.byBarrels > 0 && rows.push({ icon: "💥", label: "взрывами бочек", value: `${t.byBarrels}`, minor: true });
+		const how = GameState._how(t.byTraps, t.byBarrels);
+		how && rows.push(how);
 		rows.push({ icon: "🧪", label: "Склянок брошено", value: `${t.thrown}` });
 		rows.push({ icon: "🎁", label: "Склянок собрано", value: `${t.collected}` });
 		t.barrels > 0 && rows.push({ icon: "🛢️", label: "Бочек взорвано", value: `${t.barrels}` });
@@ -262,11 +262,25 @@ export class GameState {
 		});
 	}
 
+	/** How the zombies died besides the potions, in one small line: by traps, by barrels; null — neither. */
+	private static _how(traps: number, barrels: number): ResultsRow {
+		if (traps > 0 && barrels > 0) {
+			return { icon: "🔥", label: "ловушки · бочки", value: `${traps} · ${barrels}`, minor: true };
+		}
+		if (traps > 0) {
+			return { icon: "🔥", label: "ловушками", value: `${traps}`, minor: true };
+		}
+		if (barrels > 0) {
+			return { icon: "💥", label: "взрывами бочек", value: `${barrels}`, minor: true };
+		}
+		return null;
+	}
+
 	/** The lines of the results screen, from what LevelStats counted. */
 	private static _results(): ResultsRow[] {
 		const rows: ResultsRow[] = [{ icon: "🧟", label: "Зомби убито", value: `${LevelStats.killed} / ${LevelStats.zombies}` }];
-		LevelStats.byTraps > 0 && rows.push({ icon: "🔥", label: "ловушками", value: `${LevelStats.byTraps}`, minor: true });
-		LevelStats.byBarrels > 0 && rows.push({ icon: "💥", label: "взрывами бочек", value: `${LevelStats.byBarrels}`, minor: true });
+		const how = GameState._how(LevelStats.byTraps, LevelStats.byBarrels);
+		how && rows.push(how);
 		rows.push({ icon: "🧪", label: "Склянок брошено", value: `${LevelStats.thrown}` });
 		rows.push({ icon: "🎁", label: "Склянок собрано", value: `${LevelStats.collected}` });
 		LevelStats.barrels > 0 && rows.push({ icon: "🛢️", label: "Бочек взорвано", value: `${LevelStats.barrels}` });
