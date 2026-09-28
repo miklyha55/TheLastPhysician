@@ -56,7 +56,7 @@ export class ObjectiveArrow extends Component {
 	pulse: number = 0.08;
 	@property({ tooltip: "Width of the glow on the floor under the goal" })
 	markSize: number = 1;
-	@property markColor: Color = new Color(80, 230, 110, 130);
+	@property markColor: Color = new Color(80, 230, 110, 65);
 	@property({ tooltip: "How much higher than the arrow the glow lies, off the floor" })
 	markHeight: number = 0.03;
 	@property({ tooltip: "How much higher the glow lies in the gateway: over the gate's threshold" })
