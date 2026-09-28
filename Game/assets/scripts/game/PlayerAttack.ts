@@ -17,6 +17,7 @@ import { PlayerKeys } from "./PlayerKeys";
 import { PlayerMovement } from "./PlayerMovement";
 import { WallCollision } from "./WallCollision";
 import { Zombie } from "./Zombie";
+import { LevelStats } from "../managers/LevelStats";
 
 const { ccclass, property } = _decorator;
 
@@ -93,7 +94,7 @@ export class PlayerAttack extends Component {
 	orbitSpeed: number = 20;
 	@property({ tooltip: "Height above the fallen player's feet the camera looks at" })
 	orbitLookHeight: number = 0.2;
-	@property({ tooltip: "Seconds from dying to playing the level again from its start; 0 — never" })
+	@property({ tooltip: "Seconds from dying to the card with \"again\" and \"from the start\" — the fall and the camera circling are seen first" })
 	restartDelay: number = 3;
 
 	private _walls: WallCollision = null;
@@ -179,6 +180,8 @@ export class PlayerAttack extends Component {
 		// Brought from the last level: potions and keys, as they lay on the stack. Otherwise
 		// the level's own start — `ammo` potions.
 		const carried = GameState.enter();
+		// A fresh count for the level: every zombie in it has registered by now (their onLoad).
+		LevelStats.begin(Zombie.all.length);
 		// Everything drawn once behind the loading screen before the level is played.
 		Prewarm.run(GameState.title);
 		if (!carried) {
@@ -211,6 +214,7 @@ export class PlayerAttack extends Component {
 	 */
 	addAmmo(count: number, visual: Node = null): void {
 		this.ammo += count;
+		LevelStats.collected += count;
 		for (let i = 0; i < count; i++) {
 			if (this.stack) {
 				this.stack.push(i === 0 ? visual : null);
@@ -270,6 +274,7 @@ export class PlayerAttack extends Component {
 				// The potion is spent only now, as it leaves the gun: a shot broken off costs nothing.
 				if (this._throwAt && this._throwAt.isValid && !this._throwAt.isDead && this.ammo > 0) {
 					this.ammo--;
+					LevelStats.thrown++;
 					this.stack && this.stack.pop();
 					this._throw(this._throwAt);
 				}
@@ -356,6 +361,7 @@ export class PlayerAttack extends Component {
 			return false;
 		}
 		this.ammo--;
+		LevelStats.thrown++;
 		this.stack && this.stack.pop();
 		const at = barrel.node.worldPosition;
 		const start = (this.muzzle ? this.muzzle.worldPosition : this.node.worldPosition).clone();
@@ -496,8 +502,7 @@ export class PlayerAttack extends Component {
 		camera && camera.orbit(this.node, this.orbitSpeed, v3(0, this.orbitLookHeight, 0));
 		this.enabled = false;
 		// The component is off now, so the wait is kept outside it.
-		if (this.restartDelay > 0) {
-			setTimeout(() => GameState.restart(), this.restartDelay * 1000);
-		}
+		// After the fall has been seen: the card with "again" and "from the start".
+		setTimeout(() => GameState.died(), Math.max(0, this.restartDelay) * 1000);
 	}
 }

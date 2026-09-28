@@ -597,7 +597,7 @@ def place_wall_spikes(spec, where):
 PENDULUMS = {
     # A pendulum swings along the way through it; its frame's posts stand at the sides.
     # Only on open floor, never in a doorway or a one-cell passage: it has to be possible to get past.
-    4: {(10, 9): (90, 0)},    # in the lower hall, on the way from the far button to its door
+    4: {(10, 8): (90, 0), (10, 10): (90, 1.1)},  # in the lower hall, a pair out of step on the way from the far button to its door
     6: {(14, 10): (0, 0.6)},  # the room below, on the way to the gate
     10: {(4, 9): (90, 0)},    # the green key's room, on the way to it
 }
@@ -884,6 +884,58 @@ def place_gargoyles(spec, n):
     print(spec['name'], 'gargoyles on the way', chosen, 'of', len(cands), 'places')
 
 
+# Walls placed by hand, where the level's author wants them — laid last, over whatever the rules
+# made of those cells; a zombie standing there steps to the nearest free floor.
+WALLS = {
+    3: [(c, 5) for c in range(5, 11)],  # the middle wall run on to the east: the way between the rooms narrows
+}
+
+
+def walls_by_hand(spec, n):
+    if n not in WALLS:
+        return
+    m = [list(r) for r in spec['map']]
+    H, W = len(m), len(m[0])
+    furniture = {(f[1], f[2]) for f in spec.get('furniture', [])}
+    moved = []
+    for c, r in WALLS[n]:
+        ch = m[r][c]
+        m[r][c] = '#'
+        if ch in 'ZV':
+            # To the nearest free floor tile, not into the new wall.
+            seen = {(c, r)}; q = _deque([(c, r)])
+            while q:
+                p = q.popleft()
+                if m[p[1]][p[0]] == '.' and p not in furniture and p not in WALLS[n]:
+                    m[p[1]][p[0]] = ch; moved.append(((c, r), p)); break
+                for dc, dr in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    t = (p[0] + dc, p[1] + dr)
+                    if t not in seen and 0 <= t[0] < W and 0 <= t[1] < H and m[t[1]][t[0]] not in '#WDrbgEXH':
+                        seen.add(t); q.append(t)
+        else:
+            assert ch in '.#', (spec['name'], 'a hand wall over', ch, 'at', c, r)
+        assert (c, r) not in furniture, (spec['name'], 'furniture under a hand wall at', c, r)
+    spec['map'] = [''.join(r) for r in m]
+    print(spec['name'], 'walls by hand', WALLS[n], 'zombies moved', moved)
+
+
+# Barrels placed by hand, where the level's author wants them: kept as they are, on top of the
+# ones the crowd rule places.
+BARRELS = {
+    2: [(7, 3)],  # just inside the door of the first zombie room
+    4: [(12, 4)],
+}
+
+
+def barrels_by_hand(spec, n):
+    for c, r in BARRELS.get(n, []):
+        assert spec['map'][r][c] == '.', (spec['name'], 'no free floor for a barrel at', c, r, spec['map'][r][c])
+        assert all((f[1], f[2]) != (c, r) for f in spec.get('furniture', [])), (spec['name'], 'furniture already at', c, r)
+        spec.setdefault('furniture', []).append(['Barrel', c, r, 0])
+    if n in BARRELS:
+        print(spec['name'], 'barrels by hand', BARRELS[n])
+
+
 def barrels_at_crowds(spec, blast=2.1, apart=2.0):
     """Barrels where the zombies crowd: each one on the tile whose blast (`blast`, the barrel's
     reach) catches the most zombies still uncaught — two at the least — so one shot at it
@@ -1028,12 +1080,14 @@ for n in sorted(k for k in L if k <= LEVEL_COUNT):
     scale_down(L[n], 1.4)
     if L[n].get('barrels'): place_barrels(L[n])
     barrels_at_crowds(L[n])
+    barrels_by_hand(L[n], n)
     if n in GIRLS or n > 10: place_throwables(L[n], rnd_seed=n)
     close_pendulum_lanes(L[n])
     close_spike_lanes(L[n])
     close_fire_lanes(L[n])
     drop_hidden_wall_spikes(L[n])
     place_gargoyles(L[n], n)
+    walls_by_hand(L[n], n)
     spec = L[n]
     spec['buttons'] = [(tuple(b), [tuple(d) for d in ds]) for b, ds in spec.get('buttons', [])]
     spec['fire'] = {tuple(map(int, k.split(','))) if isinstance(k, str) else k: v for k, v in spec.get('fire', {}).items()}

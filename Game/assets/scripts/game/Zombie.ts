@@ -2,6 +2,7 @@ import { _decorator, AnimationClip, Component, math, SkeletalAnimation, tween, v
 import { PathFinder } from "./PathFinder";
 import { PlayerAttack } from "./PlayerAttack";
 import { WallCollision } from "./WallCollision";
+import { LevelStats } from "../managers/LevelStats";
 
 const { ccclass, property } = _decorator;
 
@@ -400,6 +401,7 @@ export class Zombie extends Component {
 		this.enabled = false;
 		this._forget();
 		this._play(DEATH, true);
+		LevelStats.killed++;
 		for (const listener of Zombie.deathListeners.slice()) {
 			listener(this);
 		}

@@ -1,8 +1,10 @@
 import { assetManager, Director, director } from "cc";
 import GameEvent from "../enums/GameEvent";
 import { gameEventTarget } from "../plugins/GameEventTarget";
+import { LevelStats } from "./LevelStats";
 import { LoadingScreen } from "./LoadingScreen";
 import { Prewarm } from "./Prewarm";
+import { ResultsScreen, ResultsRow } from "./ResultsScreen";
 
 /** One thing on the stack on the player's back: a potion, or a key of a colour. */
 export interface StackItem {
@@ -14,8 +16,10 @@ export interface StackItem {
 // scene of its own, Level_1 … Level_N; they come in the order of their numbers. Leaving a level through its gate
 // takes what the player carries — the stack on the back, potions and keys, bottom to top —
 // into the next one, where it is laid back on the stack as it was. The player who dies plays
-// the level again from its start, with what they came in with. The switch of scenes is hidden
-// behind the loading screen, its bar filling as the next scene loads.
+// the level again from its start, with what they came in with. Between two levels the results
+// of the one just left are shown (ResultsScreen) — what the player did on it (LevelStats) — and
+// the game waits there, paused, for the player to go on. The switch of scenes is hidden behind
+// the loading screen, its bar filling as the next scene loads.
 export class GameState {
 	private static _levels: string[] = null;
 
@@ -49,6 +53,8 @@ export class GameState {
 	/** What the player came into the current level with, for playing it again. */
 	private static _entry: StackItem[] = null;
 	private static _loading = false;
+	/** Which try at the current level this is: 1, and one more after every death. */
+	private static _attempt = 1;
 
 	/** What the loading screen calls the level being played. */
 	static get title(): string {
@@ -90,21 +96,90 @@ export class GameState {
 		if (GameState._level < 0) {
 			console.warn(`GameState: the scene "${director.getScene() && director.getScene().name}" is none of the levels`);
 		}
-		if (GameState._level < 0 || next >= GameState.levels.length) {
-			gameEventTarget.emit(GameEvent.GAME_COMPLETE);
+		const last = GameState._level < 0 || next >= GameState.levels.length;
+		const carried = stack.slice();
+		// The results first, the game held still under them; on with the button.
+		GameState._loading = true;
+		director.pause();
+		ResultsScreen.show(
+			GameState._level >= 0 ? `Уровень ${GameState._level + 1} пройден!` : "Уровень пройден!",
+			LevelStats.killed >= LevelStats.zombies && LevelStats.zombies > 0 ? "Все зомби повержены" : "Отличная работа",
+			GameState._results(),
+			[
+				{
+					text: last ? "Завершить" : "Продолжить",
+					primary: true,
+					onClick: () => {
+						director.resume();
+						if (last) {
+							ResultsScreen.hide();
+							GameState._loading = false;
+							gameEventTarget.emit(GameEvent.GAME_COMPLETE);
+							return;
+						}
+						GameState._attempt = 1;
+						// Under the loading screen once it covers them.
+						GameState._load(GameState.levels[next], carried, () => ResultsScreen.hide());
+					},
+				},
+			],
+		);
+	}
+
+	/**
+	 * The player has died, and the fall has been seen: the same card with what they did, and two
+	 * ways on — the level again, with what they came into it with, or the whole game again from
+	 * its first level, with nothing.
+	 */
+	static died(): void {
+		if (GameState._loading || !director.getScene()) {
 			return;
 		}
-		GameState._load(GameState.levels[next], stack.slice());
+		ResultsScreen.show(
+			"Вы погибли",
+			GameState._level >= 0 ? `Уровень ${GameState._level + 1}` : "",
+			GameState._results(),
+			[
+				{ text: "Ещё раз", primary: true, onClick: () => GameState.restart(() => ResultsScreen.hide()) },
+				{ text: "Заново", onClick: () => GameState.restartGame(() => ResultsScreen.hide()) },
+			],
+			true,
+		);
+	}
+
+	/** The game from its first level, carrying nothing — as if it had just been started. */
+	static restartGame(onCovered: () => void = null): void {
+		if (GameState._loading || !GameState.levels.length) {
+			return;
+		}
+		GameState._attempt = 1;
+		GameState._entry = null;
+		GameState._load(GameState.levels[0], null, onCovered);
+	}
+
+	/** The lines of the results screen, from what LevelStats counted. */
+	private static _results(): ResultsRow[] {
+		const rows: ResultsRow[] = [{ icon: "🧟", label: "Зомби убито", value: `${LevelStats.killed} / ${LevelStats.zombies}` }];
+		LevelStats.byTraps > 0 && rows.push({ icon: "🔥", label: "ловушками", value: `${LevelStats.byTraps}`, minor: true });
+		LevelStats.byBarrels > 0 && rows.push({ icon: "💥", label: "взрывами бочек", value: `${LevelStats.byBarrels}`, minor: true });
+		rows.push({ icon: "🧪", label: "Склянок брошено", value: `${LevelStats.thrown}` });
+		rows.push({ icon: "🎁", label: "Склянок собрано", value: `${LevelStats.collected}` });
+		LevelStats.barrels > 0 && rows.push({ icon: "🛢️", label: "Бочек взорвано", value: `${LevelStats.barrels}` });
+		const seconds = Math.round(LevelStats.seconds);
+		rows.push({ icon: "⏱️", label: "Время", value: `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` });
+		rows.push({ icon: "🔁", label: "Попытка", value: `${GameState._attempt}` });
+		return rows;
 	}
 
 	/** The current level again from its start, with what the player came into it with. */
-	static restart(): void {
+	static restart(onCovered: () => void = null): void {
 		const scene = director.getScene();
 		if (GameState._loading || !scene) {
 			return;
 		}
 		const name = GameState._level >= 0 ? GameState.levels[GameState._level] : scene.name;
-		GameState._load(name, GameState._entry ? GameState._entry.slice() : null);
+		GameState._attempt++;
+		GameState._load(name, GameState._entry ? GameState._entry.slice() : null, onCovered);
 	}
 
 	/**
@@ -126,13 +201,15 @@ export class GameState {
 		});
 	}
 
-	private static _load(scene: string, carried: StackItem[]): void {
+	/** `onCovered` — once the loading screen covers the game, before the scene is fetched. */
+	private static _load(scene: string, carried: StackItem[], onCovered: () => void = null): void {
 		console.log(`GameState: loading ${scene}`);
 		GameState._loading = true;
 		const level = GameState.levels.indexOf(scene);
 		const title = level >= 0 ? `Уровень ${level + 1}` : "";
 		// Covered first; then the scene is fetched with the bar filling, and started.
 		LoadingScreen.show(title, () => {
+			onCovered && onCovered();
 			director.preloadScene(
 				scene,
 				(done: number, total: number) => LoadingScreen.progress(total > 0 ? done / total : 0),

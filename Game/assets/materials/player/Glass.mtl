@@ -27,13 +27,20 @@
     {
       "mainColor": {
         "__type__": "cc.Color",
-        "r": 52,
-        "g": 178,
-        "b": 186,
+        "r": 96,
+        "g": 244,
+        "b": 255,
         "a": 255
       },
-      "roughness": 0.18,
-      "metallic": 0
+      "roughness": 0.12,
+      "metallic": 0,
+      "emissive": {
+        "__type__": "cc.Color",
+        "r": 40,
+        "g": 190,
+        "b": 210,
+        "a": 255
+      }
     }
   ]
 }

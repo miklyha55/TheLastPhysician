@@ -5,6 +5,7 @@ import { Body, Debris } from "./Debris";
 import { Explosions } from "./Explosions";
 import { PlayerAttack } from "./PlayerAttack";
 import { Zombie } from "./Zombie";
+import { LevelStats } from "../managers/LevelStats";
 
 const { ccclass, property } = _decorator;
 
@@ -93,6 +94,7 @@ export class Explosives extends Component {
 			return;
 		}
 		this._pending.delete(body);
+		LevelStats.barrels++;
 		const ground = body.node.worldPosition.clone();
 		const at = v3(ground.x, ground.y + this.fireHeight, ground.z);
 		this.barrelFire && this.barrelFire.burst(at);
@@ -112,6 +114,7 @@ export class Explosives extends Component {
 					const z = zombie.node.worldPosition;
 					blood.splash(v3(z.x, z.y + 0.4, z.z), ground, player.killSplash * 2);
 				}
+				LevelStats.byBarrels++;
 				zombie.kill();
 			}
 		}

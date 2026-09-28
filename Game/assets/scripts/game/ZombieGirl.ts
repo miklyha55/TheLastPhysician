@@ -26,6 +26,10 @@ interface Carry {
 	length: number;
 	grabbed: boolean;
 	released: boolean;
+	/** The player hidden at the moment to throw: she runs with it, looking for a clear line. */
+	seeking: boolean;
+	/** Seconds spent looking. */
+	seekFor: number;
 }
 
 const _hand = v3();
@@ -69,6 +73,10 @@ export class ZombieGirl extends Zombie {
 	stuckFor: number = 1.2;
 	@property({ tooltip: "Seconds a given-up thing is left alone" })
 	forgetFor: number = 3;
+	@property({ tooltip: "Seconds she keeps after a player she cannot see: with a thing in hand she runs round to a clear line and throws then; longer — she gives up" })
+	seekTime: number = 3;
+	@property({ tooltip: "Share of the throw clip she swings again before the release, once a clear line is found", slide: true, range: [0, 0.5, 0.01] })
+	windup: number = 0.18;
 	@property({ tooltip: "Seconds she stands after a throw" })
 	rest: number = 0.8;
 
@@ -123,11 +131,15 @@ export class ZombieGirl extends Zombie {
 		this._clock += dt;
 		this._trackPlayer(player, dt);
 		if (this._carry) {
-			// The player gone behind a wall with the thing still in her hand: she drops it and
-			// loses them, as any zombie does — no throwing blind over the walls.
-			if (!this._carry.released && !this._stillSees(player, dt)) {
+			const carry = this._carry;
+			// Gone, or run too far off: the thing drops and she gives them up.
+			if (!carry.released && (!player || player.isDead || Vec3.distance(player.node.worldPosition, this.node.worldPosition) > this.loseRadius)) {
 				this._interrupt();
 				this._goHome();
+				return;
+			}
+			if (carry.seeking) {
+				this._seek(player, dt);
 				return;
 			}
 			this._throwStep(player, dt);
@@ -165,10 +177,48 @@ export class ZombieGirl extends Zombie {
 		}
 		const walls = this._walls();
 		if (walls && !walls.lineOfSight(this.node.worldPosition, at, this.height)) {
-			return (this._unseen += dt) < this.loseSightTime;
+			// Out of sight she keeps after them a while — long enough to go round to a clear line.
+			return (this._unseen += dt) < Math.max(this.loseSightTime, this.seekTime);
 		}
 		this._unseen = 0;
 		return true;
+	}
+
+	/**
+	 * The thing in her hand, the player out of sight: she runs towards them round the walls
+	 * until nothing stands between them, then swings again and throws. Not found within
+	 * `seekTime` — the thing drops and she gives them up.
+	 */
+	private _seek(player: PlayerAttack, dt: number): void {
+		const carry = this._carry;
+		carry.seekFor += dt;
+		this._handPoint(_hand);
+		carry.body.node.setWorldPosition(_hand);
+		if (this._sees(player)) {
+			carry.seeking = false;
+			// The swing again, from a little before the release.
+			const from = Math.max(this.grabMoment, this.releaseMoment - this.windup);
+			carry.time = carry.length * from;
+			this._play(THROW, true);
+			const state = this.animation && this.animation.getState(THROW);
+			state && state.setTime(state.duration * from);
+			return;
+		}
+		if (carry.seekFor >= this.seekTime) {
+			this._interrupt();
+			this._goHome();
+			return;
+		}
+		const target = player.node.worldPosition;
+		if ((this._repath -= dt) <= 0 || !this._path.length) {
+			this._repath = this.repathInterval;
+			const finder = this._finder();
+			if (!finder || !finder.find(this.node.worldPosition, target, this._path)) {
+				this._path.length = 0;
+				this._path.push(target.clone());
+			}
+		}
+		this._follow(this.chaseSpeed, dt);
 	}
 
 	/** Nothing between her and the player that stands as tall as her: a wall, a shut door. */
@@ -331,7 +381,7 @@ export class ZombieGirl extends Zombie {
 		Debris.instance.hold(item);
 		this._item = null;
 		const length = this._duration(THROW);
-		this._carry = { body: item, from: item.node.worldPosition.clone(), time: 0, length, grabbed: false, released: false };
+		this._carry = { body: item, from: item.node.worldPosition.clone(), time: 0, length, grabbed: false, released: false, seeking: false, seekFor: 0 };
 		this._hunt = Hunt.Throw;
 		this._play(THROW, true);
 	}
@@ -352,11 +402,14 @@ export class ZombieGirl extends Zombie {
 			Vec3.lerp(_at, carry.from, _hand, k * k * (3 - 2 * k));
 			carry.body.node.setWorldPosition(_at);
 			if (share >= this.releaseMoment) {
-				// Out of the hand only at a player in plain sight; a wall between them now — the
-				// throw is off, the thing drops, and she gives them up.
+				// Out of the hand only at a player in plain sight. Something in the way — she
+				// does not throw: off she runs with it to where the way is clear.
 				if (!this._sees(player)) {
-					this._interrupt();
-					this._goHome();
+					carry.seeking = true;
+					carry.seekFor = 0;
+					this._path.length = 0;
+					this._repath = 0;
+					this._play("run");
 					return;
 				}
 				this._launch(carry, player);

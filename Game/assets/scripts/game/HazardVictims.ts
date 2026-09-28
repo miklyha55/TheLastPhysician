@@ -3,6 +3,7 @@ import { CameraManager } from "../managers/camera/CameraManager";
 import { Prewarm } from "../managers/Prewarm";
 import { PlayerAttack } from "./PlayerAttack";
 import { Zombie } from "./Zombie";
+import { LevelStats } from "../managers/LevelStats";
 
 const _screen = v3();
 const _point = v3();
@@ -69,6 +70,7 @@ export class HazardVictims {
 		if (zombie.isDead) {
 			return;
 		}
+		LevelStats.byTraps++;
 		const player = PlayerAttack.instance;
 		const blood = player && player.zombieBlood;
 		if (blood) {
