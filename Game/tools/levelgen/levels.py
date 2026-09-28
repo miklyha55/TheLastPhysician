@@ -113,24 +113,29 @@ L[7] = {"name": "Level_7", "ammo": 3, "map": [
  "spikes": {"5,12": 0, "5,13": 1.5, "8,10": 0, "10,10": 1.5},
  "furniture": [["Crate",4,7,0],["Chair",14,9,0],["Crate",8,4,0],["Chair",1,1,0],["Crate",17,1,0],["Table",11,12,0],["Bench",14,13,0],["Candelabra",17,7,0]]}
 
+# A mix of the ninth and the tenth, a little easier: a hall with the red key, behind its door a
+# band of spikes rising in a wave (the ninth's field, one tile wide) and the button that opens the
+# way down; below, a stream with pendulums beside it (the tenth) and a column of fire vents
+# (the tenth's, the ninth's rows) before the lever and the gate.
 L[8] = {"name": "Level_8", "ammo": 3, "map": [
  "###################",
- "#...#.............#",
- "#.P.D..Z.....Z....#",
- "#.C.#.............#",
- "#...#.....Z....Z..#",
- "#####.............#",
- "#...#~~~~~~~~~~~~~#",
- "#...#.............#",
- "#.L.g...Z....Z....#",
- "#...#.............#",
- "#...#......Z....G.#",
- "#...#.............#",
- "##E################"],
- "barrels": True,
- "furniture": [["Barrel",7,3,0],["Barrel",8,3,0],["Barrel",13,3,0],["Barrel",14,3,0],["Barrel",11,4,0],["Barrel",16,4,0],
-   ["Barrel",8,9,0],["Barrel",9,9,0],["Barrel",13,9,0],["Barrel",12,10,0],["Barrel",16,11,0],
-   ["Crate",6,1,0],["Chair",17,1,0],["Crate",6,11,0],["Chair",1,1,0]]}
+ "#....#.......#.S.O#",
+ "#.P..D..Z....r.S..#",
+ "#.C..#...R...#.S..#",
+ "#....#.Z...Z.#.S..#",
+ "#....#.......#.S..#",
+ "#################D#",
+ "#..........~......#",
+ "#.......F..~......#",
+ "#.L.....F..~...V..#",
+ "#.......F..~...C..#",
+ "#....Z.....~......#",
+ "######E############"],
+ "buttons": [[[17,1],[[17,6]]]],
+ "spikes": {f"15,{r}": round((r - 1) * 0.5, 2) for r in range(1, 6)},
+ "fire": {"8,8": 0, "8,9": 0.8, "8,10": 1.6},
+ "furniture": [["Barrel",7,1,0],["Barrel",10,5,0],["Barrel",12,1,0],  # moved to the crowds by the rule
+   ["Crate",1,1,0],["Chair",4,5,0],["Crate",17,11,0],["Table",14,8,0],["Bed",1,11,0],["Candelabra",17,7,0]]}
 
 field9 = [(c, r) for r in (1, 2, 3, 4) for c in range(8, 16)]
 rows9 = []
@@ -496,7 +501,7 @@ def place_barrels(spec, per=3, near=3.0, far=4.5, apart=2.0):
     print(spec['name'], 'barrels on the way in:', added)
 
 
-GIRLS = {4: 1, 5: 1, 6: 2, 7: 2, 8: 2, 9: 1, 10: 3}
+GIRLS = {4: 1, 5: 1, 6: 2, 7: 2, 8: 0, 9: 1, 10: 3}  # the eighth's one stands on its map
 THROWABLE = ('Crate', 'Chair', 'Candelabra')
 
 def _rooms(m):
@@ -600,6 +605,7 @@ PENDULUMS = {
     4: {(10, 8): (90, 0), (10, 10): (90, 1.1)},  # in the lower hall, a pair out of step on the way from the far button to its door
     6: {(14, 9): (0, 0.6), (14, 11): (0, 1.7)},  # the room below, a pair out of step on the way to the gate
     7: {(12, 10): (0, 0), (14, 10): (0, 1.1)},  # either side of the way to the green door, swinging into it together
+    8: {(12, 8): (90, 0), (12, 10): (90, 1.1)},  # beside the stream, out of step, on the way across it
     10: {(4, 9): (90, 0)},    # the green key's room, on the way to it
 }
 

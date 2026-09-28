@@ -19,9 +19,9 @@ function isRussian(): boolean {
  * never tiring. Worked out from how loud each file is while it sounds (its loud part, in dB)
  * against a level for what it is for:
  *
- *   explosion −14 · player's death −16 · intro −18 · gate −20 · prop hit −20 · girl's throw −20
+ *   explosion −14 · player's death −16 · intro −18 · girl's throw −18 · gate −20 · prop hit −20
  *   chest −22 · shot, throw −22
- *   jump −23 · door −24 · fire −24 · key −24 · potion −26 · music −28 · zombies −28 · steps −30
+ *   jump −23 · door −24 · fire −24 · key −24 · potion −26 · zombies −28 · music −30 · steps −33
  *
  * gain = 10^((level − file's loudness) / 20), never above 1 — the zombies' voices and the
  * quietest step are recorded quieter than their level and play as they are, and so the rest of
@@ -33,17 +33,17 @@ const GAIN: { [path: string]: number } = {
 	"intro/intro_eng": 0.98, // −17.8
 	"intro/intro_ru": 0.98, // −17.8
 	"jump": 0.32, // −13.2
-	"music/music_final": 0.19, // −13.7
-	"music/music_game": 0.17, // −12.6
+	"music/music_final": 0.14, // −13.7; a quarter down by ear
+	"music/music_game": 0.13, // −12.6; a quarter down by ear
 	"player_die": 0.35, // −10.7; down from its −16 level by ear
 	"shoot": 1.0, // −20.4 (the quieter new file): as loud as it goes — the −16 asked for by ear would need 1.7
 	"throw": 0.27, // −10.7
 	"traps/fire": 0.13, // −6.4, and five seconds long
-	// Steps 0.22 of their level by ear: barely there, under everything.
-	"walk/walk1": 0.22, // −33.4
-	"walk/walk2": 0.11, // −24.7
-	"walk/walk3": 0.19, // −29.0
-	"walk/walk4": 0.14, // −26.2
+	// Steps 0.16 of their level by ear: barely there, under everything.
+	"walk/walk1": 0.16, // −33.4
+	"walk/walk2": 0.08, // −24.7
+	"walk/walk3": 0.14, // −29.0
+	"walk/walk4": 0.1, // −26.2
 	// Zombies 0.55 of the file by ear: under the music.
 	"zombie/zombie-speak-1": 0.55, // −30.7
 	"zombie/zombie-speak-2": 0.55, // −29.4
@@ -58,7 +58,7 @@ const GAIN: { [path: string]: number } = {
 	"chest_appear": 1.0, // −22.2
 	"gate_open": 0.8, // −23.9, a touch down by ear
 	"kick_from_fly_prop": 0.32, // −12.4: −22 by ear, a thing flying into someone
-	"throw_zombie_wooman": 0.35, // −11.1, to −20: the girl's throw, a warning to hear
+	"throw_zombie_wooman": 0.45, // −11.1, to −18: the girl's throw, a warning to hear
 };
 
 /** How much quieter the music goes under the intro's voice. */
