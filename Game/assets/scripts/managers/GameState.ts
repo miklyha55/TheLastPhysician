@@ -2,6 +2,7 @@ import { assetManager, Director, director } from "cc";
 import GameEvent from "../enums/GameEvent";
 import { gameEventTarget } from "../plugins/GameEventTarget";
 import { LevelStats } from "./LevelStats";
+import { ControlsHint } from "./ControlsHint";
 import { LoadingScreen } from "./LoadingScreen";
 import { Prewarm } from "./Prewarm";
 import { ResultsScreen, ResultsRow } from "./ResultsScreen";
@@ -125,6 +126,8 @@ export class GameState {
 						held && director.resume();
 						SplashScreen.hide();
 						GameState._startSound();
+						// The first level teaches the controls: once, as the game starts.
+						GameState._level === 0 && ControlsHint.show();
 					},
 				},
 			],

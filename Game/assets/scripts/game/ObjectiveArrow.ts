@@ -59,8 +59,8 @@ export class ObjectiveArrow extends Component {
 	@property markColor: Color = new Color(80, 230, 110, 65);
 	@property({ tooltip: "How much higher than the arrow the glow lies, off the floor" })
 	markHeight: number = 0.03;
-	@property({ tooltip: "How much higher the glow lies in the gateway: over the gate's threshold" })
-	gateLift: number = 0.06;
+	@property({ tooltip: "How much higher the glow lies in the gateway than under the other goals; the gate has no threshold now" })
+	gateLift: number = 0;
 	@property({ tooltip: "An open door on the way stops glowing once the player is this close to it: going through" })
 	passDistance: number = 0.45;
 

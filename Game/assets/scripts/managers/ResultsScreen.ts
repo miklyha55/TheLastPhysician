@@ -1,3 +1,4 @@
+import { focusGame } from "./FocusGame";
 // The results of a level, in the page itself over the game's canvas: a card that bounces in
 // with what the player did on the level — zombies killed of how many, and how, potions thrown and
 // picked up, barrels, time, the attempt — and buttons: on to the next level, or, after a death,
@@ -62,6 +63,8 @@ export class ResultsScreen {
 					return;
 				}
 				ResultsScreen._pressed = true;
+				// The keys back to the game before the button is disabled with the focus on it.
+				focusGame();
 				bar.querySelectorAll("button").forEach((b) => ((b as HTMLButtonElement).disabled = true));
 				spec.onClick();
 			});

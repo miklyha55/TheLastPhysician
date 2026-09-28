@@ -1,4 +1,5 @@
 import { ImageAsset, resources } from "cc";
+import { focusGame } from "./FocusGame";
 import { ResultsButton, ResultsRow } from "./ResultsScreen";
 
 /** What a splash shows. */
@@ -125,6 +126,8 @@ export class SplashScreen {
 					return;
 				}
 				SplashScreen._pressed = true;
+				// The keys back to the game before the button is disabled with the focus on it.
+				focusGame();
 				bar.querySelectorAll("button").forEach((b) => ((b as HTMLButtonElement).disabled = true));
 				spec.onClick();
 			});
