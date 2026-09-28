@@ -124,7 +124,7 @@
     },
     "_materials": [
       {
-        "__uuid__": "a4a40ac8-ba56-45ef-9610-2b842d9ac35f",
+        "__uuid__": "59676f9c-86e4-40d5-bf3b-ce3e084d67ed",
         "__expectedType__": "cc.Material"
       }
     ],
@@ -265,7 +265,29 @@
     "riseTime": 0.08,
     "sinkTime": 0.25,
     "hiddenDepth": 0.2,
+    "hideDirection": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": -1,
+      "z": 0
+    },
+    "squash": false,
+    "squashTo": 0.25,
+    "squashOut": 1,
     "halfSize": 0.4,
+    "useBox": false,
+    "boxMin": {
+      "__type__": "cc.Vec3",
+      "x": -0.45,
+      "y": -1,
+      "z": 0
+    },
+    "boxMax": {
+      "__type__": "cc.Vec3",
+      "x": 0.45,
+      "y": 2,
+      "z": 0.45
+    },
     "phase": 0,
     "_id": ""
   },

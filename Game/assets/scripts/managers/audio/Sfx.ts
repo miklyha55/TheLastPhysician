@@ -57,7 +57,7 @@ const GAIN: { [path: string]: number } = {
 	"door_close": 0.15, // −9.3, to −26: level with the door opening
 	"chest_appear": 1.0, // −22.2
 	"gate_open": 0.8, // −23.9, a touch down by ear
-	"kick_from_fly_prop": 0.21, // −12.4, to −20, then halved by ear: a thing flying into someone
+	"kick_from_fly_prop": 0.32, // −12.4: −22 by ear, a thing flying into someone
 	"throw_zombie_wooman": 0.35, // −11.1, to −20: the girl's throw, a warning to hear
 };
 
