@@ -25,30 +25,30 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 26
-      },
-      {
-        "__id__": 28
-      },
-      {
         "__id__": 30
+      },
+      {
+        "__id__": 32
+      },
+      {
+        "__id__": 34
       }
     ],
     "_prefab": {
-      "__id__": 32
+      "__id__": 36
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 2,
+      "x": 0,
       "y": 0,
-      "z": -4
+      "z": 0
     },
     "_lrot": {
       "__type__": "cc.Quat",
       "x": 0,
-      "y": 1,
+      "y": 0,
       "z": 0,
-      "w": 6.123233995736766e-17
+      "w": 1
     },
     "_lscale": {
       "__type__": "cc.Vec3",
@@ -61,7 +61,7 @@
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": 180,
+      "y": 0,
       "z": 0
     },
     "_id": ""
@@ -145,6 +145,12 @@
       },
       {
         "__id__": 25
+      },
+      {
+        "__id__": 26
+      },
+      {
+        "__id__": 28
       }
     ],
     "removedComponents": []
@@ -387,6 +393,48 @@
     }
   },
   {
+    "__type__": "CCPropertyOverrideInfo",
+    "targetInfo": {
+      "__id__": 27
+    },
+    "propertyPath": [
+      "_lpos"
+    ],
+    "value": {
+      "__type__": "cc.Vec3",
+      "x": 2.4000000953674316,
+      "y": 1.0315955877304077,
+      "z": 0.0007952291052788496
+    }
+  },
+  {
+    "__type__": "cc.TargetInfo",
+    "localID": [
+      "f5j9Pn5BNWHJV9g9OCiPRa"
+    ]
+  },
+  {
+    "__type__": "CCPropertyOverrideInfo",
+    "targetInfo": {
+      "__id__": 29
+    },
+    "propertyPath": [
+      "_lpos"
+    ],
+    "value": {
+      "__type__": "cc.Vec3",
+      "x": 2.4000000953674316,
+      "y": 0,
+      "z": 0
+    }
+  },
+  {
+    "__type__": "cc.TargetInfo",
+    "localID": [
+      "73gUzZId1a/7M7N4+r6fIE"
+    ]
+  },
+  {
     "__type__": "6235d/PIbVL8YFNURTL8BPA",
     "_name": "",
     "_objFlags": 0,
@@ -396,7 +444,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 27
+      "__id__": 31
     },
     "animation": null,
     "idleClip": {
@@ -443,6 +491,7 @@
     "detectRadius": 3,
     "loseRadius": 3.5,
     "loseSightTime": 0.5,
+    "height": 0.75,
     "attackDistance": 0.45,
     "hitMoment": 0.5,
     "radius": 0.2,
@@ -467,7 +516,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 29
+      "__id__": 33
     },
     "potion": null,
     "chance": 0.25,
@@ -507,7 +556,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 31
+      "__id__": 35
     },
     "bar": {
       "__uuid__": "e4857879-570a-47bb-9d69-76685f0f02db",
