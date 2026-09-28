@@ -54,6 +54,11 @@ export class Yandex {
 			if (typeof document === "undefined") {
 				return false;
 			}
+			// Asked for quietly first: a script tag that fails is reported as an error over the game
+			// by the engine's preview; off the platform the address is simply not there.
+			if (!(await exists(SCRIPT, WAIT_FOR * 1000))) {
+				return false;
+			}
 			await load(SCRIPT, WAIT_FOR * 1000);
 			const games = (globalThis as any).YaGames;
 			if (!games) {
@@ -217,6 +222,18 @@ export function regainFocus(): void {
 		// the browser would not — the focus is where it was
 	}
 	focusGame();
+}
+
+/** Is there a file at `src`: asked without loading it, with a limit. */
+async function exists(src: string, wait: number): Promise<boolean> {
+	if (typeof fetch === "undefined") {
+		return true;
+	}
+	const timer = new Promise<boolean>((done) => setTimeout(() => done(false), wait));
+	const asked = fetch(src, { method: "HEAD", cache: "no-store" })
+		.then((answer) => answer.ok && !/text\/html/i.test(answer.headers.get("content-type") || ""))
+		.catch(() => false);
+	return Promise.race([asked, timer]);
 }
 
 /** Adds a script and waits for it, with a limit: off the platform the address is not there. */

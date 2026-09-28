@@ -64,6 +64,8 @@ export class GameState {
 	private static _attempt = 1;
 	/** The game has been started with the start screen's button — or it is up now. */
 	private static _started = false;
+	/** The start screen's "play" has been pressed: the game is being played, not waiting at its door. */
+	private static _begun = false;
 	/** What the player did over all the levels done so far in this run of the game. */
 	private static _totals = GameState._freshTotals();
 
@@ -128,7 +130,7 @@ export class GameState {
 		// A level uncovered is a level to play — and the first one, opened again from scratch, has its intro.
 		LoadingScreen.onHidden = () => {
 			GameState._running() && Yandex.play();
-			GameState._level === 0 && !SplashScreen.shown && Intro.arm();
+			GameState._begun && GameState._level === 0 && !SplashScreen.shown && Intro.arm();
 		};
 		// The tab out of sight: gameplay stops — off the platform no event says so, and the order of
 		// the platform's own and this one is promised by nobody; the repeats Yandex drops.
@@ -210,6 +212,7 @@ export class GameState {
 						SplashScreen.hide();
 						Yandex.loaded();
 						Yandex.play();
+						GameState._begun = true;
 						GameState._startSound();
 					},
 				},
