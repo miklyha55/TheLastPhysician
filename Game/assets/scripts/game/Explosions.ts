@@ -1,4 +1,5 @@
 import { _decorator, Color, Component, Material, MeshRenderer, Node, primitives, utils, Vec3 } from "cc";
+import { showModel } from "./ShowModel";
 
 const { ccclass, property } = _decorator;
 
@@ -62,8 +63,8 @@ export class Explosions extends Component {
 		blast.core.setWorldPosition(at);
 		blast.smoke.setWorldPosition(at);
 		blast.life = this.life;
-		blast.core.active = true;
-		blast.smoke.active = true;
+		showModel(blast.core, true);
+		showModel(blast.smoke, true);
 		this._draw(blast);
 	}
 
@@ -74,8 +75,8 @@ export class Explosions extends Component {
 			}
 			blast.life -= dt;
 			if (blast.life <= 0) {
-				blast.core.active = false;
-				blast.smoke.active = false;
+				showModel(blast.core, false);
+				showModel(blast.smoke, false);
 				continue;
 			}
 			this._draw(blast);
@@ -104,7 +105,7 @@ export class Explosions extends Component {
 		renderer.mesh = mesh;
 		renderer.setSharedMaterial(material, 0);
 		renderer.shadowCastingMode = MeshRenderer.ShadowCastingMode.OFF;
-		node.active = false;
+		showModel(node, false);
 		return { node, material };
 	}
 

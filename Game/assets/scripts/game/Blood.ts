@@ -4,6 +4,7 @@ const { ccclass, property } = _decorator;
 
 interface Drop {
 	node: Node;
+	renderer: MeshRenderer;
 	velocity: Vec3;
 	spin: Vec3;
 	size: number;
@@ -19,7 +20,8 @@ const _rotation = new Quat();
 // is up and shrink away rather than vanish. All drops share one mesh and one instanced
 // material, so however many are flying they draw as one batch. The set is a ring: when it runs
 // out, new drops take over the oldest. Sizes are ThroughTheDeadCity's scaled to this game's
-// smaller characters.
+// smaller characters. A drop's node stays on for good; only its model is switched on and off —
+// switching whole nodes on for a splash of two dozen drops cost a frame of its own.
 @ccclass("Blood")
 export class Blood extends Component {
 	@property color: Color = new Color(111, 191, 58, 255);
@@ -69,8 +71,8 @@ export class Blood extends Component {
 			renderer.setSharedMaterial(material, 0);
 			renderer.shadowCastingMode = MeshRenderer.ShadowCastingMode.OFF;
 			node.setScale(0, 0, 0);
-			node.active = false;
-			this._drops.push({ node, velocity: v3(), spin: v3(), size: 0, life: 0, full: 1 });
+			renderer.model && (renderer.model.enabled = false);
+			this._drops.push({ node, renderer, velocity: v3(), spin: v3(), size: 0, life: 0, full: 1 });
 		}
 	}
 
@@ -110,7 +112,7 @@ export class Blood extends Component {
 			drop.node.setScale(drop.size, drop.size, drop.size);
 			Quat.fromEuler(_rotation, drop.spin.x, drop.spin.y, drop.spin.z);
 			drop.node.setWorldRotation(_rotation);
-			drop.node.active = true;
+			drop.renderer.model && (drop.renderer.model.enabled = true);
 		}
 	}
 
@@ -121,7 +123,7 @@ export class Blood extends Component {
 			}
 			drop.life -= dt;
 			if (drop.life <= 0) {
-				drop.node.active = false;
+				drop.renderer.model && (drop.renderer.model.enabled = false);
 				continue;
 			}
 			const at = drop.node.worldPosition;

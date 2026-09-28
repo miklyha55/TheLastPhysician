@@ -28,6 +28,7 @@ interface Tongue {
 	size: number;
 	velocity: Vec3;
 	spin: Vec3;
+	euler: Vec3;
 }
 
 const _at = v3();
@@ -41,6 +42,10 @@ const FORWARD = v3(0, 0, 1);
 // as its flight — and bursts there in a puff of flame; a table below it it passes over. The
 // player it touches dies in a blast, the way a barrel blows up, and the ball is gone. Balls and
 // their tongues of flame come from a set made once and reused.
+//
+// Cheap to draw: a tongue keeps its colour for its whole life, the materials are shared by every
+// head, so all their fire goes in a few instanced batches, and the tongues' nodes stay on — only
+// a tongue's model is switched off while it waits to be lit again.
 @ccclass("Gargoyle")
 export class Gargoyle extends Component {
 	@property({ type: Node, tooltip: "Where the balls come out, facing the way they fly (its +Z)" })
@@ -87,18 +92,22 @@ export class Gargoyle extends Component {
 
 	private static _box: Mesh = null;
 	private static _sphere: Mesh = null;
+	/** Materials a colour, shared by every head of those colours. */
+	private static _shared = new Map<string, Material>();
 
 	private _time = 0;
 	private _fired = false;
 	private _root: Node = null;
 	private _balls: Ball[] = [];
-	private _pool: Tongue[] = [];
+	private _live: Tongue[] = [];
+	private _free: Tongue[] = [];
 	private _materials: Material[] = [];
 	private _coreMaterial: Material = null;
 	private _haloMaterial: Material = null;
 	private _glow: Node = null;
 	private _glowMaterial: Material = null;
 	private _debt = 0;
+	private _prewarmPending = false;
 
 	protected start(): void {
 		if (!Gargoyle._box) {
@@ -108,15 +117,9 @@ export class Gargoyle extends Component {
 		// The fire lives in the world, not in the head: the trail stays where the ball has been.
 		this._root = new Node("GargoyleFire");
 		this.node.scene.addChild(this._root);
-		for (let band = 0; band < 3; band++) {
-			this._materials.push(this._additive(true));
-			const color = [this.coreColor, this.midColor, this.tailColor][band];
-			this._materials[band].setProperty("mainColor", color);
-		}
-		this._coreMaterial = this._additive(true);
-		this._coreMaterial.setProperty("mainColor", this.coreColor);
-		this._haloMaterial = this._additive(true);
-		this._haloMaterial.setProperty("mainColor", this.midColor);
+		this._materials = [this.coreColor, this.midColor, this.tailColor].map((color) => Gargoyle._material(color));
+		this._coreMaterial = this._materials[0];
+		this._haloMaterial = this._materials[1];
 		for (let i = 0; i < this.balls; i++) {
 			const node = new Node("Fireball");
 			this._root.addChild(node);
@@ -132,9 +135,11 @@ export class Gargoyle extends Component {
 		for (let i = 0; i < this.tongues; i++) {
 			const node = new Node("Tongue");
 			this._root.addChild(node);
-			const renderer = this._renderer(node, Gargoyle._box, this._materials[0]);
-			node.active = false;
-			this._pool.push({ node, renderer, band: 0, age: 0, life: 0, size: 0, velocity: v3(), spin: v3() });
+			// Its colour dealt out here, once: white-hot, orange, red by turns.
+			const band = i % 3;
+			const renderer = this._renderer(node, Gargoyle._box, this._materials[band]);
+			renderer.model && (renderer.model.enabled = false);
+			this._free.push({ node, renderer, band, age: 0, life: 0, size: 0, velocity: v3(), spin: v3(), euler: v3() });
 		}
 		// The glow in the mouth as it gets ready to spit. With the fire, not in the head: the
 		// walls are laid out from the head's meshes, and the glow is no wall.
@@ -147,6 +152,10 @@ export class Gargoyle extends Component {
 		}
 		this._time = this.phase;
 		this._fired = this._cycle() >= this.interval - this.charge;
+		if (this._prewarmPending) {
+			this._prewarmPending = false;
+			this.prewarm();
+		}
 	}
 
 	protected onDestroy(): void {
@@ -169,6 +178,32 @@ export class Gargoyle extends Component {
 			ball.flying && this._fly(ball, dt);
 		}
 		this._burn(dt);
+	}
+
+	/**
+	 * The warm-up behind the loading screen: a puff of fire and a ball shown a moment at the
+	 * mouth, so their shaders are built before the first shot, not at it.
+	 */
+	prewarm(): void {
+		if (!this._balls.length) {
+			// Asked before its set is made: done as soon as it is.
+			this._prewarmPending = true;
+			return;
+		}
+		if (!this.mouth) {
+			return;
+		}
+		const at = this.mouth.worldPosition;
+		_step.set(0, 0, 0);
+		for (let i = 0; i < this.puff; i++) {
+			this._launch(at, _step, true);
+		}
+		const ball = this._balls.find((b) => !b.flying);
+		if (ball) {
+			ball.node.setWorldPosition(at);
+			ball.node.active = true;
+			this.scheduleOnce(() => !ball.flying && (ball.node.active = false), 0.3);
+		}
 	}
 
 	private _cycle(): number {
@@ -302,10 +337,12 @@ export class Gargoyle extends Component {
 
 	/** A tongue of fire at `at`: trailing a ball, or thrown out of a burst back the way `away` points. */
 	private _launch(at: Vec3, away: Vec3, burst: boolean): void {
-		const tongue = this._pool.find((t) => !t.node.active);
-		if (!tongue) {
+		const free = this._free;
+		if (!free.length) {
 			return;
 		}
+		// Of the free ones, any: the colours come mixed.
+		const tongue = free.splice(Math.floor(Math.random() * free.length), 1)[0];
 		const r = this.radius;
 		tongue.node.setWorldPosition(at.x + (Math.random() - 0.5) * r, at.y + (Math.random() - 0.5) * r, at.z + (Math.random() - 0.5) * r);
 		tongue.age = 0;
@@ -319,38 +356,43 @@ export class Gargoyle extends Component {
 				away.z * out + (Math.random() - 0.5) * 1.6,
 			);
 		} else {
-			tongue.life = this.tongueLife * (0.7 + Math.random() * 0.6);
+			// The hot ones short and close behind the ball, the red ones lingering.
+			tongue.life = this.tongueLife * [0.6, 0.9, 1.2][tongue.band] * (0.7 + Math.random() * 0.6);
 			tongue.size = this.tongueSize * (0.6 + Math.random() * 0.5);
 			// Left behind, rising a little as it burns out.
 			tongue.velocity.set((Math.random() - 0.5) * 0.3, 0.3 + Math.random() * 0.4, (Math.random() - 0.5) * 0.3);
 		}
 		tongue.spin.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().multiplyScalar(this.spinSpeed);
-		tongue.node.setRotationFromEuler(Math.random() * 360, Math.random() * 360, Math.random() * 360);
-		this._band(tongue, 0);
+		tongue.euler.set(Math.random() * 360, Math.random() * 360, Math.random() * 360);
+		tongue.node.setRotationFromEuler(tongue.euler.x, tongue.euler.y, tongue.euler.z);
 		tongue.node.setScale(0, 0, 0);
-		tongue.node.active = true;
+		tongue.renderer.model && (tongue.renderer.model.enabled = true);
+		this._live.push(tongue);
 	}
 
-	/** The tongues drift, spin, swell a moment, then shrink away, turning redder. */
+	/** The tongues drift, spin, swell a moment, then shrink away. */
 	private _burn(dt: number): void {
-		for (const tongue of this._pool) {
-			if (!tongue.node.active) {
-				continue;
-			}
+		const live = this._live;
+		for (let i = live.length - 1; i >= 0; i--) {
+			const tongue = live[i];
 			tongue.age += dt;
 			const share = tongue.age / tongue.life;
+			const node = tongue.node;
 			if (share >= 1) {
-				tongue.node.active = false;
+				tongue.renderer.model && (tongue.renderer.model.enabled = false);
+				live[i] = live[live.length - 1];
+				live.pop();
+				this._free.push(tongue);
 				continue;
 			}
-			const node = tongue.node;
-			Vec3.scaleAndAdd(_at, node.worldPosition, tongue.velocity, dt);
-			node.setWorldPosition(_at);
-			const euler = node.eulerAngles;
-			node.setRotationFromEuler(euler.x + tongue.spin.x * dt, euler.y + tongue.spin.y * dt, euler.z + tongue.spin.z * dt);
+			// The fire's root stands at the world's origin: local is world.
+			Vec3.scaleAndAdd(_at, node.position, tongue.velocity, dt);
+			node.setPosition(_at);
+			const euler = tongue.euler;
+			Vec3.scaleAndAdd(euler, euler, tongue.spin, dt);
+			node.setRotationFromEuler(euler.x, euler.y, euler.z);
 			const size = tongue.size * (share < 0.15 ? share / 0.15 : 1 - (share - 0.15) / 0.85);
 			node.setScale(size, size, size);
-			this._band(tongue, share < 0.3 ? 0 : share < 0.65 ? 1 : 2);
 		}
 	}
 
@@ -373,11 +415,17 @@ export class Gargoyle extends Component {
 		this._glowMaterial.setProperty("mainColor", _color);
 	}
 
-	private _band(tongue: Tongue, band: number): void {
-		if (tongue.band !== band || tongue.renderer.sharedMaterial !== this._materials[band]) {
-			tongue.band = band;
-			tongue.renderer.setSharedMaterial(this._materials[band], 0);
+	/** An additive instanced material of a colour — the same one for every head that asks for it. */
+	private static _material(color: Color): Material {
+		const key = `${color.r},${color.g},${color.b},${color.a}`;
+		let material = Gargoyle._shared.get(key);
+		if (!material || !material.isValid) {
+			material = new Material();
+			material.initialize({ effectName: "builtin-unlit", technique: ADD, defines: { USE_INSTANCING: true } });
+			material.setProperty("mainColor", color);
+			Gargoyle._shared.set(key, material);
 		}
+		return material;
 	}
 
 	private _additive(instanced: boolean): Material {

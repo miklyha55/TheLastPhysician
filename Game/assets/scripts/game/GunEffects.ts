@@ -1,4 +1,5 @@
 import { _decorator, Camera, Color, Component, Material, Mesh, MeshRenderer, Node, primitives, SphereLight, utils, v3, Vec3 } from "cc";
+import { showModel } from "./ShowModel";
 
 const { ccclass, property } = _decorator;
 
@@ -212,7 +213,7 @@ export class GunEffects extends Component {
 		meshRenderer.mesh = mesh;
 		meshRenderer.setSharedMaterial(material, 0);
 		meshRenderer.shadowCastingMode = MeshRenderer.ShadowCastingMode.OFF;
-		node.active = false;
+		showModel(node, false);
 		return { node, material, life: 0, full: 1, size: 1, velocity: v3() };
 	}
 
@@ -233,7 +234,7 @@ export class GunEffects extends Component {
 	private _show(item: Item, color: Color, opacity: number): void {
 		// Facing the camera from the first frame, not only from the next update.
 		this.camera && item.node.setWorldRotation(this.camera.node.worldRotation);
-		item.node.active = true;
+		showModel(item.node, true);
 		this._fade(item, color, opacity);
 	}
 
@@ -250,7 +251,7 @@ export class GunEffects extends Component {
 		item.life -= dt;
 		if (item.life <= 0) {
 			item.life = 0;
-			item.node.active = false;
+			showModel(item.node, false);
 			return false;
 		}
 		return true;

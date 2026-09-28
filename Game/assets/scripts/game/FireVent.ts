@@ -17,6 +17,7 @@ interface Tongue {
 	size: number;
 	velocity: Vec3;
 	spin: Vec3;
+	euler: Vec3;
 }
 
 const _color = new Color();
@@ -26,9 +27,16 @@ const _at = v3();
 // `onTime`, round and round for good. The flame swells up out of the pipe and dies down
 // smoothly, never at once. While it burns strong the player anywhere near the pipe dies —
 // the circle reaches past the tile's middle, so a row of pipes is a wall of fire with no gap
-// to slip through. The flame is tongues of fire — spinning cubes that rise, shrink and go from
-// white-hot to red as they burn out — with sparks flying higher out of it and a glow over the
-// mouth, flickering; all of it ready in a set and reused.
+// to slip through. The flame is tongues of fire — spinning cubes that rise and shrink — white-hot
+// low in the column, red at its top, with sparks flying higher out of it and a glow over the
+// mouth, flickering.
+//
+// Cheap to draw however many vents burn: a tongue keeps its colour for its whole life (the hot
+// ones short-lived and low, the red ones starting higher), so no tongue ever changes material;
+// the materials are shared by every vent alike, so all the fire of a level goes in three
+// instanced batches; and the tongues are made once and their nodes stay on — only a tongue's
+// model is switched off while it waits to be lit again, which costs nothing, where switching
+// nodes on and off by the dozen a second did.
 @ccclass("FireVent")
 export class FireVent extends Component {
 	@property({ tooltip: "Seconds without fire" })
@@ -76,13 +84,17 @@ export class FireVent extends Component {
 
 	private static _box: Mesh = null;
 	private static _disc: Mesh = null;
+	/** The tongues' materials, one a colour, shared by every vent of those colours. */
+	private static _shared = new Map<string, Material>();
 
 	private _time = 0;
 	private _strength = 0;
-	private _shownStrength = -1;
 	private _debt = 0;
 	private _sparkDebt = 0;
 	private _pool: Tongue[] = [];
+	private _live: Tongue[] = [];
+	private _free: Tongue[] = [];
+	private _freeSparks: Tongue[] = [];
 	private _materials: Material[] = [];
 	private _glow: Node = null;
 	private _glowMaterial: Material = null;
@@ -99,17 +111,20 @@ export class FireVent extends Component {
 			FireVent._box = utils.MeshUtils.createMesh(primitives.box({ width: 1, height: 1, length: 1 }));
 			FireVent._disc = utils.MeshUtils.createMesh(primitives.cylinder(0.5, 0.5, 1, { radialSegments: 12, capped: true }));
 		}
-		for (let band = 0; band < 3; band++) {
-			this._materials.push(this._additive(true));
-		}
+		this._materials = [this.coreColor, this.midColor, this.tailColor].map((color) => FireVent._material(color));
 		for (let i = 0; i < this.tongues + this.sparks; i++) {
-			const node = new Node(i < this.tongues ? "Tongue" : "Spark");
+			const ember = i >= this.tongues;
+			const node = new Node(ember ? "Spark" : "Tongue");
 			root.addChild(node);
-			const renderer = this._renderer(node, FireVent._box, this._materials[0]);
-			node.active = false;
-			this._pool.push({ node, renderer, ember: i >= this.tongues, band: 0, age: 0, life: 0, size: 0, velocity: v3(), spin: v3() });
+			// Sparks are white-hot; a tongue's colour is dealt out here, once, by thirds.
+			const band = ember ? 0 : i % 3;
+			const renderer = this._renderer(node, FireVent._box, this._materials[band]);
+			renderer.model && (renderer.model.enabled = false);
+			const tongue: Tongue = { node, renderer, ember, band, age: 0, life: 0, size: 0, velocity: v3(), spin: v3(), euler: v3() };
+			this._pool.push(tongue);
+			(ember ? this._freeSparks : this._free).push(tongue);
 		}
-		// The glow: a flat disc of light just over the mouth.
+		// The glow: a flat disc of light just over the mouth; its own material, for its own strength.
 		this._glow = new Node("Glow");
 		root.addChild(this._glow);
 		this._glowMaterial = this._additive(false);
@@ -122,7 +137,12 @@ export class FireVent extends Component {
 	protected update(dt: number): void {
 		this._time += dt;
 		this._strength = this._cycle();
-		this._tint();
+		if (this._strength <= 0 && !this._live.length) {
+			// Out, and every tongue burnt away: nothing to do until it lights again.
+			this._debt = this._sparkDebt = 0;
+			this._glow.active && (this._glow.active = false);
+			return;
+		}
 		this._emit(dt);
 		this._burn(dt);
 		this._flicker();
@@ -144,20 +164,6 @@ export class FireVent extends Component {
 		return share * share * (3 - 2 * share); // smoothstep
 	}
 
-	/** The whole flame dims and brightens with its strength. */
-	private _tint(): void {
-		if (Math.abs(this._strength - this._shownStrength) < 0.01) {
-			return;
-		}
-		this._shownStrength = this._strength;
-		const colors = [this.coreColor, this.midColor, this.tailColor];
-		for (let band = 0; band < 3; band++) {
-			const color = colors[band];
-			_color.set(color.r, color.g, color.b, Math.round(color.a * this._strength));
-			this._materials[band].setProperty("mainColor", _color);
-		}
-	}
-
 	/** New tongues out of the mouth, and sparks — as many a second as keep the set burning, fewer while it is weak. */
 	private _emit(dt: number): void {
 		if (this._strength <= 0) {
@@ -168,87 +174,90 @@ export class FireVent extends Component {
 		this._sparkDebt += (this.sparks / Math.max(this.tongueLife * 1.5, 0.05)) * this._strength * this._strength * dt;
 		while (this._debt >= 1) {
 			this._debt -= 1;
-			if (!this._launch(false)) {
+			if (!this._launch(this._free)) {
 				this._debt = 0;
 			}
 		}
 		while (this._sparkDebt >= 1) {
 			this._sparkDebt -= 1;
-			if (!this._launch(true)) {
+			if (!this._launch(this._freeSparks)) {
 				this._sparkDebt = 0;
 			}
 		}
 	}
 
-	private _launch(ember: boolean): boolean {
-		const tongue = this._pool.find((t) => t.ember === ember && !t.node.active);
+	private _launch(free: Tongue[]): boolean {
+		// Of the free ones, any: a hot one lit out of turn only means a little more white in the flame.
+		const tongue = free.length ? free.splice(Math.floor(Math.random() * free.length), 1)[0] : null;
 		if (!tongue) {
 			return false;
 		}
+		const ember = tongue.ember;
 		const angle = Math.random() * Math.PI * 2;
 		const reach = Math.sqrt(Math.random()) * this.mouthRadius * (ember ? 0.6 : 1);
 		const x = Math.cos(angle) * reach;
 		const z = Math.sin(angle) * reach;
-		tongue.node.setPosition(x, this.mouthHeight, z);
 		tongue.age = 0;
 		if (ember) {
 			// A spark: small, white-hot, shot up fast and drifting aside.
+			tongue.node.setPosition(x, this.mouthHeight, z);
 			tongue.life = this.tongueLife * (1.1 + Math.random() * 0.8);
 			tongue.size = this.sparkSize * (0.7 + Math.random() * 0.6);
 			const rise = ((this.flameHeight * this.sparkReach) / tongue.life) * (0.8 + Math.random() * 0.4);
 			const drift = this.mouthRadius * 1.5;
 			tongue.velocity.set((Math.random() - 0.5) * drift, rise, (Math.random() - 0.5) * drift);
 		} else {
-			tongue.life = this.tongueLife * (0.75 + Math.random() * 0.5);
-			tongue.size = this.tongueSize * (0.7 + Math.random() * 0.5) * (0.5 + 0.5 * this._strength);
-			const rise = (this.flameHeight / tongue.life) * (0.8 + Math.random() * 0.4) * (0.4 + 0.6 * this._strength);
+			// The colours by height, as one tongue used to go through them: white-hot and short low
+			// in the column, orange from a little up, red from higher and living longest.
+			const band = tongue.band;
+			const from = [0, 0.15, 0.35][band] * this.flameHeight * (0.4 + 0.6 * this._strength);
+			tongue.node.setPosition(x * (band === 0 ? 0.7 : 1), this.mouthHeight + from, z * (band === 0 ? 0.7 : 1));
+			tongue.life = this.tongueLife * [0.45, 0.75, 0.8][band] * (0.75 + Math.random() * 0.5);
+			tongue.size = this.tongueSize * [0.85, 1, 0.9][band] * (0.7 + Math.random() * 0.5) * (0.5 + 0.5 * this._strength);
+			const rise = (this.flameHeight / this.tongueLife) * (0.8 + Math.random() * 0.4) * (0.4 + 0.6 * this._strength);
 			// Drawn in towards the middle as it rises: the column narrows to a tip.
 			tongue.velocity.set(-x / tongue.life, rise, -z / tongue.life);
 		}
 		tongue.spin.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().multiplyScalar(this.spinSpeed * (ember ? 2 : 1));
-		tongue.node.setRotationFromEuler(Math.random() * 360, Math.random() * 360, Math.random() * 360);
-		this._band(tongue, 0);
+		tongue.euler.set(Math.random() * 360, Math.random() * 360, Math.random() * 360);
+		tongue.node.setRotationFromEuler(tongue.euler.x, tongue.euler.y, tongue.euler.z);
 		tongue.node.setScale(0, 0, 0);
-		tongue.node.active = true;
+		tongue.renderer.model && (tongue.renderer.model.enabled = true);
+		this._live.push(tongue);
 		return true;
 	}
 
-	/** The tongues rise, spin, swell a moment, then shrink away, turning redder; sparks just burn out. */
+	/** The tongues rise, spin, swell a moment, then shrink away; sparks just burn out. */
 	private _burn(dt: number): void {
-		for (const tongue of this._pool) {
-			if (!tongue.node.active) {
-				continue;
-			}
+		const live = this._live;
+		for (let i = live.length - 1; i >= 0; i--) {
+			const tongue = live[i];
 			tongue.age += dt;
 			const share = tongue.age / tongue.life;
+			const node = tongue.node;
 			if (share >= 1) {
-				tongue.node.active = false;
+				tongue.renderer.model && (tongue.renderer.model.enabled = false);
+				live[i] = live[live.length - 1];
+				live.pop();
+				(tongue.ember ? this._freeSparks : this._free).push(tongue);
 				continue;
 			}
-			const node = tongue.node;
 			Vec3.scaleAndAdd(_at, node.position, tongue.velocity, dt);
 			node.setPosition(_at);
-			const euler = node.eulerAngles;
-			node.setRotationFromEuler(euler.x + tongue.spin.x * dt, euler.y + tongue.spin.y * dt, euler.z + tongue.spin.z * dt);
-			if (tongue.ember) {
-				const size = tongue.size * (1 - share);
-				node.setScale(size, size, size);
-				this._band(tongue, share < 0.6 ? 0 : 1);
-				continue;
-			}
-			const size = tongue.size * (share < 0.15 ? share / 0.15 : 1 - (share - 0.15) / 0.85);
+			const euler = tongue.euler;
+			Vec3.scaleAndAdd(euler, euler, tongue.spin, dt);
+			node.setRotationFromEuler(euler.x, euler.y, euler.z);
+			const size = tongue.ember ? tongue.size * (1 - share) : tongue.size * (share < 0.15 ? share / 0.15 : 1 - (share - 0.15) / 0.85);
 			node.setScale(size, size, size);
-			this._band(tongue, share < 0.3 ? 0 : share < 0.65 ? 1 : 2);
 		}
 	}
 
 	/** The glow over the mouth: as strong as the flame, flickering. */
 	private _flicker(): void {
-		if (!this._glow) {
-			return;
-		}
 		const on = this._strength > 0;
-		this._glow.active = on;
+		if (this._glow.active !== on) {
+			this._glow.active = on;
+		}
 		if (!on) {
 			return;
 		}
@@ -260,11 +269,17 @@ export class FireVent extends Component {
 		this._glowMaterial.setProperty("mainColor", _color);
 	}
 
-	private _band(tongue: Tongue, band: number): void {
-		if (tongue.band !== band || tongue.renderer.sharedMaterial !== this._materials[band]) {
-			tongue.band = band;
-			tongue.renderer.setSharedMaterial(this._materials[band], 0);
+	/** An additive instanced material of a colour — the same one for every vent that asks for it. */
+	private static _material(color: Color): Material {
+		const key = `${color.r},${color.g},${color.b},${color.a}`;
+		let material = FireVent._shared.get(key);
+		if (!material || !material.isValid) {
+			material = new Material();
+			material.initialize({ effectName: "builtin-unlit", technique: ADD, defines: { USE_INSTANCING: true } });
+			material.setProperty("mainColor", color);
+			FireVent._shared.set(key, material);
 		}
+		return material;
 	}
 
 	private _additive(instanced: boolean): Material {

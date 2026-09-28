@@ -119,6 +119,10 @@ class PrewarmRunner extends Component {
 				effect.fire && effect.fire(from, at);
 			}
 		}
+		// The heads' fire: their first shot would otherwise build its shaders mid-game.
+		for (const head of scene.getComponentsInChildren("Gargoyle") as (Component & { prewarm?: () => void })[]) {
+			head.prewarm && head.prewarm();
+		}
 		// What only appears in play: a potion in flight or on the floor, a key on the stack.
 		const attack = scene.getComponentsInChildren("PlayerAttack")[0] as Component & { projectile: any; stack: { item: any; keyPrefabs: any[] } };
 		const prefabs = attack ? [attack.projectile, attack.stack && attack.stack.item, ...((attack.stack && attack.stack.keyPrefabs) || [])] : [];
