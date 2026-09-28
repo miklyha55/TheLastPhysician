@@ -599,6 +599,7 @@ PENDULUMS = {
     # Only on open floor, never in a doorway or a one-cell passage: it has to be possible to get past.
     4: {(10, 8): (90, 0), (10, 10): (90, 1.1)},  # in the lower hall, a pair out of step on the way from the far button to its door
     6: {(14, 9): (0, 0.6), (14, 11): (0, 1.7)},  # the room below, a pair out of step on the way to the gate
+    7: {(12, 10): (0, 0), (14, 10): (0, 1.1)},  # either side of the way to the green door, swinging into it together
     10: {(4, 9): (90, 0)},    # the green key's room, on the way to it
 }
 
