@@ -33,6 +33,11 @@ export class ResultsScreen {
 	/** Seconds the screen takes to fade in or out. */
 	static fadeTime = 0.25;
 
+	/** Is the card up — from its showing till it is told to go. */
+	static get shown(): boolean {
+		return !!ResultsScreen._root && ResultsScreen._root.classList.contains("tlp-results--shown");
+	}
+
 	private static get _available(): boolean {
 		return typeof document !== "undefined" && !!document.body;
 	}

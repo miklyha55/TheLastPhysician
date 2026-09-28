@@ -1,14 +1,17 @@
 import { assetManager, Director, director } from "cc";
+import { EDITOR } from "cc/env";
 import GameEvent from "../enums/GameEvent";
 import { gameEventTarget } from "../plugins/GameEventTarget";
 import { LevelStats } from "./LevelStats";
 import { ControlsHint } from "./ControlsHint";
+import { I18n } from "./I18n";
 import { LoadingScreen } from "./LoadingScreen";
 import { Prewarm } from "./Prewarm";
 import { ResultsScreen, ResultsRow } from "./ResultsScreen";
 import { SplashScreen } from "./SplashScreen";
 import { Sfx } from "./audio/Sfx";
 import { Sound } from "./audio/Sound";
+import { Yandex } from "./Yandex";
 
 /** One thing on the stack on the player's back: a potion, or a key of a colour. */
 export interface StackItem {
@@ -68,9 +71,83 @@ export class GameState {
 		return { levels: 0, zombies: 0, killed: 0, byTraps: 0, byBarrels: 0, thrown: 0, collected: 0, barrels: 0, seconds: 0, deaths: 0 };
 	}
 
+	private static _platform: Promise<void> = null;
+	/** Stopped by the platform — an ad, another tab — and whether that stopped the world too. */
+	private static _hostPaused = false;
+	private static _hostHeldWorld = false;
+	private static _volumeBefore = 1;
+
+	/**
+	 * The platform brought up and the game's language set — once, before the first screen:
+	 * part of the texts is read the moment a screen is made. Started as soon as the scripts are,
+	 * so that it is up by the time the first level is; off the platform it answers at once.
+	 */
+	static platform(): Promise<void> {
+		if (!GameState._platform) {
+			// The editor loads the game's scripts too: no platform there, and its page is not ours to listen to.
+			if (EDITOR) {
+				return (GameState._platform = Promise.resolve());
+			}
+			GameState._platform = Yandex.start().then(() => {
+				I18n.apply(Yandex.language() || (typeof navigator !== "undefined" ? navigator.language : ""));
+				GameState._listenPlatform();
+			});
+		}
+		return GameState._platform;
+	}
+
+	/**
+	 * Where everything the platform's pause must stop meets. Its reasons are several — an ad,
+	 * a purchase window, the tab left — and they come as one event: the world stops (unless it
+	 * already stood, under a card), the sound goes quiet (an ad plays in the same, visible tab),
+	 * and the platform's own gameplay mark stops. Its "go on" gives back what its pause took, and
+	 * gameplay only where there is a game to go on with — not under a card or the start screen.
+	 */
+	private static _listenPlatform(): void {
+		Yandex.onPause = () => {
+			if (GameState._hostPaused) {
+				return;
+			}
+			GameState._hostPaused = true;
+			GameState._hostHeldWorld = !director.isPaused();
+			GameState._hostHeldWorld && director.pause();
+			GameState._volumeBefore = Sound.volume;
+			Sound.volume = 0;
+			Yandex.pause();
+		};
+		Yandex.onResume = () => {
+			if (!GameState._hostPaused) {
+				return;
+			}
+			GameState._hostPaused = false;
+			GameState._hostHeldWorld && director.resume();
+			GameState._hostHeldWorld = false;
+			Sound.volume = GameState._volumeBefore;
+			GameState._running() && Yandex.play();
+		};
+		// A level uncovered is a level to play.
+		LoadingScreen.onHidden = () => GameState._running() && Yandex.play();
+		// The tab out of sight: gameplay stops — off the platform no event says so, and the order of
+		// the platform's own and this one is promised by nobody; the repeats Yandex drops.
+		typeof document !== "undefined" &&
+			document.addEventListener("visibilitychange", () => (document.hidden ? Yandex.pause() : GameState._running() && Yandex.play()));
+	}
+
+	/** Is the world going now, with the player in it: no card, no start screen, no loading, no pause. */
+	private static _running(): boolean {
+		return (
+			!GameState._loading &&
+			!GameState._hostPaused &&
+			!SplashScreen.shown &&
+			!ResultsScreen.shown &&
+			!director.isPaused() &&
+			!(typeof document !== "undefined" && document.hidden)
+		);
+	}
+
 	/** What the loading screen calls the level being played. */
 	static get title(): string {
-		return GameState._level >= 0 ? `Уровень ${GameState._level + 1}` : "";
+		return GameState._level >= 0 ? I18n.t("level.title", GameState._level + 1) : "";
 	}
 
 	/** Index of the level being played in `levels`, or -1 in a scene that is not one of them. */
@@ -92,7 +169,8 @@ export class GameState {
 		// The very first level of a run: the start screen over it, with the button to play.
 		if (!GameState._started) {
 			GameState._started = true;
-			GameState._showStart();
+			// The platform first: its language goes on the very first screen. Off it this is at once.
+			GameState.platform().then(() => GameState._showStart());
 		}
 		return carried;
 	}
@@ -111,20 +189,24 @@ export class GameState {
 			if (!held && !Prewarm.active) {
 				held = true;
 				director.pause();
+				// Loaded, and the player can act: the platform measures its loading to this moment.
+				Yandex.loaded();
 			}
 		}, 100);
 		SplashScreen.show({
 			image: "ui/start",
 			title: "The Last Physician",
-			subtitle: "Выберись из подземелья",
+			subtitle: I18n.t("start.subtitle"),
 			buttons: [
 				{
-					text: "Играть",
+					text: I18n.t("start.play"),
 					primary: true,
 					onClick: () => {
 						clearInterval(watch);
 						held && director.resume();
 						SplashScreen.hide();
+						Yandex.loaded();
+						Yandex.play();
 						GameState._startSound();
 						// The first level teaches the controls: once, as the game starts.
 						GameState._level === 0 && ControlsHint.show();
@@ -156,30 +238,39 @@ export class GameState {
 		// The results first, the game held still under them; on with the button.
 		GameState._loading = true;
 		director.pause();
+		Yandex.pause();
 		if (last) {
 			GameState._showFinal();
 			return;
 		}
 		Sfx.ui(Sfx.levelResults);
 		ResultsScreen.show(
-			GameState._level >= 0 ? `Уровень ${GameState._level + 1} пройден!` : "Уровень пройден!",
-			LevelStats.killed >= LevelStats.zombies && LevelStats.zombies > 0 ? "Все зомби повержены" : "Отличная работа",
+			GameState._level >= 0 ? I18n.t("level.passed", GameState._level + 1) : I18n.t("level.passedPlain"),
+			LevelStats.killed >= LevelStats.zombies && LevelStats.zombies > 0 ? I18n.t("level.allKilled") : I18n.t("level.goodJob"),
 			GameState._results(),
 			[
 				{
-					text: last ? "Завершить" : "Продолжить",
+					text: I18n.t(last ? "level.finish" : "level.continue"),
 					primary: true,
 					onClick: () => {
-						director.resume();
 						if (last) {
+							director.resume();
 							ResultsScreen.hide();
 							GameState._loading = false;
 							gameEventTarget.emit(GameEvent.GAME_COMPLETE);
 							return;
 						}
-						GameState._attempt = 1;
-						// Under the loading screen once it covers them.
-						GameState._load(GameState.levels[next], carried, () => ResultsScreen.hide());
+						// Between levels, a full-screen ad: the one right place for it in the game — the
+						// level is behind, the next not begun, the world still, and the player has just
+						// pressed "continue" of their own accord. How often, the platform guards; no ad,
+						// no network, no platform — it answers at once and the level loads as ever. Waited
+						// for to its end: the next level must not show through under it.
+						Yandex.showFullscreen().then(() => {
+							director.resume();
+							GameState._attempt = 1;
+							// Under the loading screen once it covers them.
+							GameState._load(GameState.levels[next], carried, () => ResultsScreen.hide());
+						});
 					},
 				},
 			],
@@ -195,16 +286,37 @@ export class GameState {
 		if (GameState._loading || !director.getScene()) {
 			return;
 		}
+		// The try is over: gameplay has stopped.
+		Yandex.pause();
 		ResultsScreen.show(
-			"Вы погибли",
-			GameState._level >= 0 ? `Уровень ${GameState._level + 1}` : "",
+			I18n.t("death.title"),
+			GameState._level >= 0 ? I18n.t("level.title", GameState._level + 1) : "",
 			GameState._results(),
 			[
-				{ text: "Ещё раз", primary: true, onClick: () => GameState.restart(() => ResultsScreen.hide()) },
-				{ text: "Заново", onClick: () => GameState.restartGame(() => ResultsScreen.hide()) },
+				{ text: I18n.t("death.again"), primary: true, onClick: () => GameState._again() },
+				{ text: I18n.t("death.fromStart"), onClick: () => GameState.restartGame(() => ResultsScreen.hide()) },
 			],
 			true,
 		);
+	}
+
+	/**
+	 * "Once more": the same level from its start, through a rewarded video. It starts after the
+	 * video watched — and with no video at all: off the platform, or when none was given, the
+	 * button simply plays the level again; locking a restart behind an ad would stop the game dead
+	 * at the first network failure. Only one thing keeps the level from starting: the player saw
+	 * the video and closed it before it counted — then the death card stays, and they choose
+	 * again. The moment is the right one: the player has just died and pressed the button, nobody
+	 * is steering — ads where the screen is being played on the platform forbids outright.
+	 */
+	private static _again(): void {
+		Yandex.showRewarded().then((result) => {
+			if (result === "declined") {
+				GameState.died();
+				return;
+			}
+			GameState.restart(() => ResultsScreen.hide());
+		});
 	}
 
 	/** The game from its first level, carrying nothing — as if it had just been started. */
@@ -272,26 +384,27 @@ export class GameState {
 		const t = GameState._totals;
 		const seconds = Math.round(t.seconds);
 		const rows: ResultsRow[] = [
-			{ icon: "🏰", label: "Уровней пройдено", value: `${t.levels}` },
-			{ icon: "🧟", label: "Зомби убито", value: `${t.killed} / ${t.zombies}` },
+			{ icon: "🏰", label: I18n.t("row.levels"), value: `${t.levels}` },
+			{ icon: "🧟", label: I18n.t("row.killed"), value: `${t.killed} / ${t.zombies}` },
 		];
 		const how = GameState._how(t.byTraps, t.byBarrels);
 		how && rows.push(how);
-		rows.push({ icon: "🧪", label: "Склянок брошено", value: `${t.thrown}` });
-		rows.push({ icon: "🎁", label: "Склянок собрано", value: `${t.collected}` });
-		t.barrels > 0 && rows.push({ icon: "🛢️", label: "Бочек взорвано", value: `${t.barrels}` });
-		rows.push({ icon: "⏱️", label: "Время", value: `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` });
-		rows.push({ icon: "💀", label: "Смертей", value: `${t.deaths}` });
+		rows.push({ icon: "🧪", label: I18n.t("row.thrown"), value: `${t.thrown}` });
+		rows.push({ icon: "🎁", label: I18n.t("row.collected"), value: `${t.collected}` });
+		t.barrels > 0 && rows.push({ icon: "🛢️", label: I18n.t("row.barrels"), value: `${t.barrels}` });
+		rows.push({ icon: "⏱️", label: I18n.t("row.time"), value: `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` });
+		rows.push({ icon: "💀", label: I18n.t("row.deaths"), value: `${t.deaths}` });
 		gameEventTarget.emit(GameEvent.GAME_COMPLETE);
+		Yandex.pause();
 		Sfx.playMusic(true);
 		SplashScreen.show({
 			image: "ui/final",
-			title: "Свобода!",
-			subtitle: "Подземелье пройдено",
+			title: I18n.t("final.title"),
+			subtitle: I18n.t("final.subtitle"),
 			rows,
 			buttons: [
 				{
-					text: "Играть снова",
+					text: I18n.t("final.again"),
 					primary: true,
 					onClick: () => {
 						director.resume();
@@ -307,28 +420,28 @@ export class GameState {
 	/** How the zombies died besides the potions, in one small line: by traps, by barrels; null — neither. */
 	private static _how(traps: number, barrels: number): ResultsRow {
 		if (traps > 0 && barrels > 0) {
-			return { icon: "🔥", label: "ловушки · бочки", value: `${traps} · ${barrels}`, minor: true };
+			return { icon: "🔥", label: I18n.t("row.byBoth"), value: `${traps} · ${barrels}`, minor: true };
 		}
 		if (traps > 0) {
-			return { icon: "🔥", label: "ловушками", value: `${traps}`, minor: true };
+			return { icon: "🔥", label: I18n.t("row.byTraps"), value: `${traps}`, minor: true };
 		}
 		if (barrels > 0) {
-			return { icon: "💥", label: "взрывами бочек", value: `${barrels}`, minor: true };
+			return { icon: "💥", label: I18n.t("row.byBarrels"), value: `${barrels}`, minor: true };
 		}
 		return null;
 	}
 
 	/** The lines of the results screen, from what LevelStats counted. */
 	private static _results(): ResultsRow[] {
-		const rows: ResultsRow[] = [{ icon: "🧟", label: "Зомби убито", value: `${LevelStats.killed} / ${LevelStats.zombies}` }];
+		const rows: ResultsRow[] = [{ icon: "🧟", label: I18n.t("row.killed"), value: `${LevelStats.killed} / ${LevelStats.zombies}` }];
 		const how = GameState._how(LevelStats.byTraps, LevelStats.byBarrels);
 		how && rows.push(how);
-		rows.push({ icon: "🧪", label: "Склянок брошено", value: `${LevelStats.thrown}` });
-		rows.push({ icon: "🎁", label: "Склянок собрано", value: `${LevelStats.collected}` });
-		LevelStats.barrels > 0 && rows.push({ icon: "🛢️", label: "Бочек взорвано", value: `${LevelStats.barrels}` });
+		rows.push({ icon: "🧪", label: I18n.t("row.thrown"), value: `${LevelStats.thrown}` });
+		rows.push({ icon: "🎁", label: I18n.t("row.collected"), value: `${LevelStats.collected}` });
+		LevelStats.barrels > 0 && rows.push({ icon: "🛢️", label: I18n.t("row.barrels"), value: `${LevelStats.barrels}` });
 		const seconds = Math.round(LevelStats.seconds);
-		rows.push({ icon: "⏱️", label: "Время", value: `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` });
-		rows.push({ icon: "🔁", label: "Попытка", value: `${GameState._attempt}` });
+		rows.push({ icon: "⏱️", label: I18n.t("row.time"), value: `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` });
+		rows.push({ icon: "🔁", label: I18n.t("row.attempt"), value: `${GameState._attempt}` });
 		return rows;
 	}
 
@@ -366,8 +479,10 @@ export class GameState {
 	private static _load(scene: string, carried: StackItem[], onCovered: () => void = null): void {
 		console.log(`GameState: loading ${scene}`);
 		GameState._loading = true;
+		// The level goes: gameplay stops the moment the world does, under the loading screen.
+		Yandex.pause();
 		const level = GameState.levels.indexOf(scene);
-		const title = level >= 0 ? `Уровень ${level + 1}` : "";
+		const title = level >= 0 ? I18n.t("level.title", level + 1) : "";
 		// Covered first; then the scene is fetched with the bar filling, and started.
 		LoadingScreen.show(title, () => {
 			onCovered && onCovered();
@@ -400,3 +515,6 @@ export class GameState {
 		LoadingScreen.hide();
 	}
 }
+
+// The platform is asked for as soon as the scripts are up, while the first level is still loading.
+GameState.platform();

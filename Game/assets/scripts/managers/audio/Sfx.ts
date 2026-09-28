@@ -1,16 +1,11 @@
 import { Node, Vec3 } from "cc";
 import { Prewarm } from "../Prewarm";
 import { Sound } from "./Sound";
+import { I18n } from "../I18n";
 
 /** One of a set, at random. */
 function any(set: string[]): string {
 	return set[Math.floor(Math.random() * set.length)];
-}
-
-/** The player's language: the intro in Russian for Russian, in English otherwise. */
-function isRussian(): boolean {
-	const lang = (typeof navigator !== "undefined" && (navigator.language || (navigator.languages && navigator.languages[0]))) || "";
-	return /^ru\b|^ru-/i.test(lang);
 }
 
 /**
@@ -101,7 +96,8 @@ export const Sfx = {
 	levelResults: "show_results_by_level",
 
 	get intro(): string {
-		return isRussian() ? "intro/intro_ru" : "intro/intro_eng";
+		// In the game's language: the platform's, as all its texts.
+		return I18n.language === "ru" ? "intro/intro_ru" : "intro/intro_eng";
 	},
 
 	/** A file's own volume in the mix. */

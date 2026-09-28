@@ -62,12 +62,16 @@ export class LoadingScreen {
 		}
 	}
 
+	/** Called whenever it goes and uncovers the game: a level is there to play. */
+	static onHidden: () => void = null;
+
 	/** Fades away and uncovers the game. */
 	static hide(): void {
 		const root = LoadingScreen._root;
 		if (!root) {
 			return;
 		}
+		LoadingScreen.onHidden && LoadingScreen.onHidden();
 		LoadingScreen.progress(1);
 		root.classList.remove("tlp-loading--shown");
 		clearTimeout(LoadingScreen._hideTimer);

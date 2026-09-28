@@ -1,3 +1,5 @@
+import { I18n } from "./I18n";
+
 // A hint on the controls, in the page itself over the game's canvas, the way ThroughTheDeadCity
 // gives it: a card at the bottom of the screen, once, as the first level starts. It shows what
 // moves the hero on this machine — the keys W A S D where there are a keyboard and a mouse, a
@@ -20,14 +22,11 @@ export class ControlsHint {
 	/** Seconds it takes to fade away; the styles' transition lasts as long. */
 	static fadeFor = 0.6;
 
-	static title = "Веди героя";
-	static note = "Остановись — и он сам метнёт склянку в зомби";
-	static tailKeys = "нажми любую клавишу";
-	static tailTouch = "коснись экрана";
-
 	private static _root: HTMLDivElement = null;
 	private static _keys: HTMLDivElement = null;
 	private static _stick: HTMLDivElement = null;
+	private static _title: HTMLParagraphElement = null;
+	private static _note: HTMLParagraphElement = null;
 	private static _tail: HTMLParagraphElement = null;
 	private static _shown = false;
 	private static _done = false;
@@ -53,7 +52,10 @@ export class ControlsHint {
 		const byKeys = ControlsHint.keyboard;
 		ControlsHint._keys.hidden = !byKeys;
 		ControlsHint._stick.hidden = byKeys;
-		ControlsHint._tail.textContent = byKeys ? ControlsHint.tailKeys : ControlsHint.tailTouch;
+		// In the game's language, asked now: it is known by the time the game starts.
+		ControlsHint._title.textContent = I18n.t("hint.title");
+		ControlsHint._note.textContent = I18n.t("hint.note");
+		ControlsHint._tail.textContent = I18n.t(byKeys ? "hint.tailKeys" : "hint.tailTouch");
 
 		ControlsHint._shown = true;
 		const root = ControlsHint._root;
@@ -130,10 +132,8 @@ export class ControlsHint {
 
 		const title = document.createElement("p");
 		title.className = "tlp-hint__title";
-		title.textContent = ControlsHint.title;
 		const note = document.createElement("p");
 		note.className = "tlp-hint__note";
-		note.textContent = ControlsHint.note;
 		const tail = document.createElement("p");
 		tail.className = "tlp-hint__tail";
 
@@ -143,6 +143,8 @@ export class ControlsHint {
 		ControlsHint._root = root;
 		ControlsHint._keys = keys;
 		ControlsHint._stick = stick;
+		ControlsHint._title = title;
+		ControlsHint._note = note;
 		ControlsHint._tail = tail;
 	}
 
