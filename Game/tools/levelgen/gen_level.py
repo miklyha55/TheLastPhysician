@@ -132,7 +132,8 @@ def generate(spec):
                 assert all(a in PASS and a != 'M' for a in way), ('pendulum blocked where it swings', spec['name'], c, r, way)
                 assert any(a in PASS and a != 'M' for a in side), ('pendulum walled in on both sides', spec['name'], c, r, side)
                 floor.append([c, r, sid('Pendulum'), turn])
-            elif ch == 'L': floor.append([c, r, sid('FA'), 0]); levers.append([c, r, sid('Lever'), 0])
+            # The lever's tile has its own floor: nothing under it.
+            elif ch == 'L': levers.append([c, r, sid('Lever'), 0])
             elif ch == '~':
                 arms = {d for d, (dc, dr) in DIRS.items() if at(c + dc, r + dr) == '~'}
                 # A stream end at a wall flows out from under it.
@@ -184,6 +185,10 @@ def generate(spec):
     assert len(levers) == 1, 'one lever opens the gate'
 
     oc, orr = W // 2, H // 2
+    # One tile to a cell: a tile with a floor of its own takes the place of the floor, never lies on it.
+    tiles = Counter((cell[0], cell[1]) for cell in floor + walls + levers)
+    doubled = [cell for cell, count in tiles.items() if count > 1]
+    assert not doubled, (spec['name'], 'more than one tile in a cell', doubled)
     layers = [('Floor', floor), ('Walls', walls), ('Zombies', zombies), ('Keys', keys), ('Chests', chests), ('Furniture', furniture), ('Levers', levers)]
     doc = {'version': 1, 'name': spec['name'], 'width': W, 'height': H, 'parent': None, 'palette': palette,
            'layers': [{'name': n, 'y': 0, 'visible': True, 'cells': cl} for n, cl in layers if cl], 'built': []}

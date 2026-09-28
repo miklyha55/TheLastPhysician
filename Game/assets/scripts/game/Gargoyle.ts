@@ -1,6 +1,8 @@
 import { _decorator, Color, Component, Material, Mesh, MeshRenderer, Node, primitives, utils, v3, Vec3 } from "cc";
 import { Explosives } from "./Explosives";
+import { HazardVictims } from "./HazardVictims";
 import { PlayerAttack } from "./PlayerAttack";
+import { Zombie } from "./Zombie";
 
 const { ccclass, property } = _decorator;
 
@@ -203,6 +205,11 @@ export class Gargoyle extends Component {
 				this._blast(ball);
 				return;
 			}
+			const zombie = this._hitsZombie(_at);
+			if (zombie) {
+				this._burst(ball, zombie);
+				return;
+			}
 			if (ball.travelled >= this.maxRange || (ball.travelled > this.clearance && this._hitsWall(_at))) {
 				this._fizzle(ball);
 				return;
@@ -232,6 +239,30 @@ export class Gargoyle extends Component {
 			at.y - this.radius <= them.y + this.playerHeight &&
 			at.y + this.radius >= them.y
 		);
+	}
+
+	/** A zombie the camera sees, in the ball's way; off screen they are flown through. */
+	private _hitsZombie(at: Vec3): Zombie {
+		for (const zombie of HazardVictims.zombies()) {
+			const them = zombie.node.worldPosition;
+			if (
+				Math.hypot(them.x - at.x, them.z - at.z) <= this.radius + zombie.radius &&
+				at.y - this.radius <= them.y + zombie.height &&
+				at.y + this.radius >= them.y
+			) {
+				return zombie;
+			}
+		}
+		return null;
+	}
+
+	/** On a zombie: the same blast, and it dies. */
+	private _burst(ball: Ball, zombie: Zombie): void {
+		const at = ball.node.worldPosition.clone();
+		this._land(ball);
+		const explosives = Explosives.instance;
+		explosives && explosives.fireBlast(at);
+		HazardVictims.kill(zombie, Vec3.subtract(v3(), at, ball.direction));
 	}
 
 	/** A wall, a shut door, anything standing as high as the ball flies. */

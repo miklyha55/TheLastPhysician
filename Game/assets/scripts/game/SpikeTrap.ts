@@ -1,4 +1,5 @@
 import { _decorator, Component, Mat4, Node, v3, Vec3 } from "cc";
+import { HazardVictims } from "./HazardVictims";
 import { PlayerAttack } from "./PlayerAttack";
 
 const { ccclass, property } = _decorator;
@@ -63,11 +64,10 @@ export class SpikeTrap extends Component {
 	protected update(dt: number): void {
 		this._time += dt;
 		const raised = this._place();
-		// Up far enough to stab — the player on the tile dies, once per rise.
+		// Up far enough to stab — the player on the tile is hit, once per rise; a zombie the
+		// camera sees on it dies.
 		if (raised > 0.5) {
-			if (!this._hurt) {
-				this._stab();
-			}
+			this._stab();
 		} else {
 			this._hurt = false;
 		}
@@ -106,29 +106,33 @@ export class SpikeTrap extends Component {
 	}
 
 	private _stab(): void {
-		const player = PlayerAttack.instance;
-		if (!player || player.isDead) {
-			return;
-		}
 		const at = this.node.worldPosition;
-		const them = player.node.worldPosition;
+		const player = PlayerAttack.instance;
+		if (!this._hurt && player && !player.isDead && this._catches(player.node.worldPosition)) {
+			this._hurt = true;
+			player.takeHit(this._from(at, player.node.worldPosition));
+		}
+		for (const zombie of HazardVictims.zombies()) {
+			const them = zombie.node.worldPosition;
+			this._catches(them) && HazardVictims.kill(zombie, this._from(at, them));
+		}
+	}
+
+	/** Is a point on the floor in what the spikes hurt? */
+	private _catches(them: Vec3): boolean {
+		const at = this.node.worldPosition;
 		if (this.useBox) {
 			Mat4.invert(this._inverse, this.node.worldMatrix);
 			const p = Vec3.transformMat4(this._local, them, this._inverse);
 			const min = this.boxMin;
 			const max = this.boxMax;
-			if (p.x < min.x || p.x > max.x || p.y < min.y || p.y > max.y || p.z < min.z || p.z > max.z) {
-				return;
-			}
-			this._hurt = true;
-			// From the wall: the splash flies away from it.
-			player.takeHit(new Vec3(at.x, them.y, at.z));
-			return;
+			return !(p.x < min.x || p.x > max.x || p.y < min.y || p.y > max.y || p.z < min.z || p.z > max.z);
 		}
-		if (Math.abs(them.x - at.x) <= this.halfSize && Math.abs(them.z - at.z) <= this.halfSize) {
-			this._hurt = true;
-			// From below: the splash flies up out of the floor.
-			player.takeHit(new Vec3(them.x, them.y - 1, them.z));
-		}
+		return Math.abs(them.x - at.x) <= this.halfSize && Math.abs(them.z - at.z) <= this.halfSize;
+	}
+
+	/** Where the splash flies from: away from the wall, or up out of the floor. */
+	private _from(at: Vec3, them: Vec3): Vec3 {
+		return this.useBox ? new Vec3(at.x, them.y, at.z) : new Vec3(them.x, them.y - 1, them.z);
 	}
 }

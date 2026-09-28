@@ -1016,7 +1016,10 @@ def close_pendulum_lanes(spec):
     if added:
         print(spec['name'], 'pendulum lanes: spikes at', added, 'walls at', walled)
 
-for n in sorted(L):
+# The game is the first ten levels; the specs past them are kept, not built.
+LEVEL_COUNT = 10
+
+for n in sorted(k for k in L if k <= LEVEL_COUNT):
     if n in PENDULUMS: place_pendulums(L[n], PENDULUMS[n])
     if n <= 10: double(L[n], n)
     if n in WALL_SPIKES: place_wall_spikes(L[n], WALL_SPIKES[n])

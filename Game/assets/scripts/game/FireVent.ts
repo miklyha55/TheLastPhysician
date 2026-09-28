@@ -1,4 +1,5 @@
 import { _decorator, Color, Component, Material, Mesh, MeshRenderer, Node, primitives, utils, v3, Vec3 } from "cc";
+import { HazardVictims } from "./HazardVictims";
 import { PlayerAttack } from "./PlayerAttack";
 
 const { ccclass, property } = _decorator;
@@ -281,17 +282,19 @@ export class FireVent extends Component {
 		return renderer;
 	}
 
-	/** The player near the pipe burns. */
+	/** The player near the pipe burns — and so do the zombies there the camera sees. */
 	private _scorch(): void {
-		const player = PlayerAttack.instance;
-		if (!player || player.isDead) {
-			return;
-		}
 		const at = this.node.worldPosition;
-		const them = player.node.worldPosition;
-		if (Math.hypot(them.x - at.x, them.z - at.z) <= this.killRadius && them.y - at.y <= this.flameHeight) {
+		const near = (them: Vec3) => Math.hypot(them.x - at.x, them.z - at.z) <= this.killRadius && them.y - at.y <= this.flameHeight;
+		const player = PlayerAttack.instance;
+		if (player && !player.isDead) {
+			const them = player.node.worldPosition;
 			// From below: the splash flies up out of the pipe.
-			player.kill(new Vec3(them.x, them.y - 1, them.z));
+			near(them) && player.kill(new Vec3(them.x, them.y - 1, them.z));
+		}
+		for (const zombie of HazardVictims.zombies()) {
+			const them = zombie.node.worldPosition;
+			near(them) && HazardVictims.kill(zombie, new Vec3(them.x, them.y - 1, them.z));
 		}
 	}
 }

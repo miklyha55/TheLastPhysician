@@ -1,4 +1,5 @@
 import { _decorator, Component, Mat4, MeshRenderer, Node, v3, Vec3 } from "cc";
+import { HazardVictims } from "./HazardVictims";
 import { PlayerAttack } from "./PlayerAttack";
 
 const { ccclass, property } = _decorator;
@@ -51,19 +52,30 @@ export class Pendulum extends Component {
 		this.arm.setRotationFromEuler(0, 0, angle);
 	}
 
-	/** The player touching the blade dies. */
+	/** The player touching the blade dies — and so does a zombie the camera sees. */
 	private _strike(): void {
-		const player = PlayerAttack.instance;
-		if (!player || player.isDead || !this.arm || !this._measure()) {
+		if (!this.arm || !this._measure()) {
 			return;
 		}
-		const feet = player.node.worldPosition;
 		Mat4.invert(_inverse, this.arm.worldMatrix);
+		const player = PlayerAttack.instance;
+		if (player && !player.isDead && this._touches(player.node.worldPosition, this.playerRadius)) {
+			player.kill(this.arm.worldPosition);
+		}
+		for (const zombie of HazardVictims.zombies()) {
+			if (this._touches(zombie.node.worldPosition, zombie.radius)) {
+				HazardVictims.kill(zombie, this.arm.worldPosition);
+			}
+		}
+	}
+
+	/** Does a body standing at `feet`, of `radius`, touch the blade? `_inverse` holds the arm's inverse. */
+	private _touches(feet: Vec3, radius: number): boolean {
 		const scale = this.arm.worldScale;
 		// The radius in the arm's own units, per axis.
-		const rx = this.playerRadius / Math.max(Math.abs(scale.x), 1e-4);
-		const ry = this.playerRadius / Math.max(Math.abs(scale.y), 1e-4);
-		const rz = this.playerRadius / Math.max(Math.abs(scale.z), 1e-4);
+		const rx = radius / Math.max(Math.abs(scale.x), 1e-4);
+		const ry = radius / Math.max(Math.abs(scale.y), 1e-4);
+		const rz = radius / Math.max(Math.abs(scale.z), 1e-4);
 		for (const height of this.bodyHeights) {
 			_point.set(feet.x, feet.y + height, feet.z);
 			const p = Vec3.transformMat4(_local, _point, _inverse);
@@ -72,10 +84,10 @@ export class Pendulum extends Component {
 				p.y >= this._min.y - ry && p.y <= this._max.y + ry &&
 				p.z >= this._min.z - rz && p.z <= this._max.z + rz
 			) {
-				player.kill(this.arm.worldPosition);
-				return;
+				return true;
 			}
 		}
+		return false;
 	}
 
 	/** The arm's box in its own axes, from its mesh. */
