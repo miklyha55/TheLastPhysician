@@ -15,7 +15,7 @@ interface Flight {
 // within `giveRadius` they start flying out one after another in an arc to the player — each
 // one that arrives is a potion more to shoot with — for as long as the player stays there;
 // walking off stops the stream, coming back resumes it. Once the last has arrived the lid
-// shuts, the chest shrinks away and is gone.
+// shuts, and the chest stays where it stood, empty.
 @ccclass("Chest")
 export class Chest extends Component {
 	@property({ type: Node, tooltip: "The lid, turning on its hinge around X" })
@@ -30,8 +30,6 @@ export class Chest extends Component {
 	openAngle: number = -105;
 	@property({ tooltip: "Seconds the lid takes to shut" })
 	closeTime: number = 0.3;
-	@property({ tooltip: "Seconds the chest takes to fade away once shut; then it is gone" })
-	vanishTime: number = 0.5;
 	@property({ tooltip: "Potions fly to the player while they are within this distance; outside it the flying stops until they come back" })
 	giveRadius: number = 0.75;
 	@property({ tooltip: "Seconds between potions" })
@@ -151,16 +149,10 @@ export class Chest extends Component {
 			return;
 		}
 		this._closing = true;
-		// Every potion taken: the lid slams shut, then it shrinks away and the node goes, with everything in it.
+		// Every potion taken: the lid slams shut, and the chest stays standing, empty.
 		Sfx.at(Sfx.chestClose, this.node);
 		tween(this.lid)
 			.to(this.closeTime, { eulerAngles: v3(0, 0, 0) }, { easing: "backIn" })
-			.call(() => {
-				tween(this.node)
-					.to(this.vanishTime, { scale: v3(0, 0, 0) }, { easing: "quadIn" })
-					.call(() => this.node.destroy())
-					.start();
-			})
 			.start();
 	}
 }

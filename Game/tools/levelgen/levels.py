@@ -155,7 +155,7 @@ L[9] = {"name": "Level_9", "ammo": 3, "map": rows9 + [
  "#.........~...Z...#",
  "######E############"],
  "buttons": [[[17,1],[[15,5]]]],
- "spikes": {f"{c},{r}": round(((c - 8) * 0.375) % 3, 3) for c, r in field9},
+ "spikes": {f"{c},{r}": round(((15 - c) * 0.375) % 3, 3) for c, r in field9},  # the wave runs from the door in (left) to the far side
  "fire": {"3,7": 0, "5,7": 1, "7,7": 2, "3,10": 2.5, "5,10": 3.5, "7,10": 4.5},
  "furniture": [["Crate",17,3,0],["Chair",16,4,0],["Crate",13,9,0],["Chair",17,11,0],["Bed",1,11,0],["Candelabra",1,1,0]]}
 
@@ -969,6 +969,7 @@ BARRELS = {
     2: [(7, 3)],  # just inside the door of the first zombie room
     4: [(12, 4)],
     5: [(11, 5)],
+    9: [(14, 6)],
 }
 
 
@@ -1119,6 +1120,83 @@ def close_pendulum_lanes(spec):
     if added:
         print(spec['name'], 'pendulum lanes: spikes at', added, 'walls at', walled)
 
+# Floor spikes taken out by hand, after the level is laid out — so the rest of it keeps its tiles:
+# {level: {cell as placed (x, z): the turn of the plain floor that takes its place}}.
+SPIKES_TAKEN_OUT = {
+    7: {(-1, 3): 90, (1, 3): 180},  # the pair on the way to the green door
+}
+PLAIN_FLOOR = '2d8b57fb-8ca7-4c17-b5e7-a06bce3d053f'
+# Floor traps added by hand the same way, over the plain floor laid there:
+# {level: {(x, z): (kind, phase[, turn])}}; a kind is its prefab and the list in the extras its timing
+# goes to; a pendulum's turn says which way it swings.
+TRAPS_ADDED = {
+    7: {
+        # down the middle of the hall below the red door: spikes and fire by turns
+        (-3, 0): ('fire', 0), (-3, 1): ('spikes', 0), (-3, 2): ('fire', 2.5), (-3, 3): ('spikes', 1.5),
+    },
+    10: {
+        # down the column by the stream, with the one at (-6, 2): every other one swinging the other way
+        (-6, 0): ('pendulums', 1.1, 90), (-6, 4): ('pendulums', 1.1, 90), (-6, 6): ('pendulums', 0, 90),
+    },
+}
+TRAP_KINDS = {
+    'spikes': 'bed8095f-e751-4d9c-ae36-3c7a73a07e8e',  # Tile_Floor_Spikes
+    'fire': '0c8d5b03-946a-4418-82ed-20b874efff3f',  # Tile_Floor_Firevent
+    'pendulums': '8c1f9334-8659-4357-b2b8-3775c44aa719',  # Tile_Floor_Pendulum
+}
+PLAIN_FLOORS = (PLAIN_FLOOR, '6edfec28-b1b0-4b24-8307-991be428b044', 'd51eb5bf-5142-43ca-a96e-1ac543761e68')  # Tile_Floor_A, B, C
+
+
+def traps_added(doc, extras, n):
+    add = TRAPS_ADDED.get(n)
+    if not add:
+        return
+    ids = {p['prefab']: p['id'] for p in doc['palette']}
+    prefab = {p['id']: p['prefab'] for p in doc['palette']}
+    for kind in {k for k, *_ in add.values()}:
+        if TRAP_KINDS[kind] not in ids:
+            ids[TRAP_KINDS[kind]] = max(p['id'] for p in doc['palette']) + 1
+            doc['palette'].append({'id': ids[TRAP_KINDS[kind]], 'prefab': TRAP_KINDS[kind]})
+    oc, orr = doc['width'] // 2, doc['height'] // 2
+    done = []
+    for layer in doc['layers']:
+        if layer['name'] != 'Floor':
+            continue
+        for cell in layer['cells']:
+            at = (cell[0] - oc, cell[1] - orr)
+            if at in add:
+                assert prefab[cell[2]] in PLAIN_FLOORS, (n, 'no plain floor for a trap at', at)
+                kind, phase, *turn = add[at]
+                cell[2], cell[3] = ids[TRAP_KINDS[kind]], (turn or [0])[0]
+                extras.setdefault(kind, []).append({'at': list(at), 'phase': phase})
+                done.append(at)
+    assert sorted(done) == sorted(add), (n, 'cells for traps not found', add, done)
+    print('Level_%d' % n, 'traps added by hand', sorted(done))
+
+
+def spikes_taken_out(doc, extras, n):
+    out = SPIKES_TAKEN_OUT.get(n)
+    if not out:
+        return
+    ids = {p['prefab']: p['id'] for p in doc['palette']}
+    if PLAIN_FLOOR not in ids:
+        ids[PLAIN_FLOOR] = max(p['id'] for p in doc['palette']) + 1
+        doc['palette'].append({'id': ids[PLAIN_FLOOR], 'prefab': PLAIN_FLOOR})
+    oc, orr = doc['width'] // 2, doc['height'] // 2
+    done = []
+    for layer in doc['layers']:
+        if layer['name'] != 'Floor':
+            continue
+        for cell in layer['cells']:
+            at = (cell[0] - oc, cell[1] - orr)
+            if at in out:
+                cell[2], cell[3] = ids[PLAIN_FLOOR], out[at]
+                done.append(at)
+    assert sorted(done) == sorted(out), (n, 'spikes to take out not found', out, done)
+    extras['spikes'] = [s for s in extras['spikes'] if tuple(s['at']) not in out]
+    print('Level_%d' % n, 'spikes taken out by hand', done)
+
+
 # The game is the first ten levels; the specs past them are kept, not built.
 LEVEL_COUNT = 10
 
@@ -1146,6 +1224,8 @@ for n in sorted(k for k in L if k <= LEVEL_COUNT):
     spec['spikes'] = {tuple(map(int, k.split(','))) if isinstance(k, str) else k: v for k, v in spec.get('spikes', {}).items()}
     try:
         doc, extras = generate(spec)
+        spikes_taken_out(doc, extras, n)
+        traps_added(doc, extras, n)
         json.dump({'doc': doc, 'extras': extras}, open(f'level{n}.out.json', 'w'), indent=1)
     except AssertionError as e:
         print('!!', spec['name'], e)
