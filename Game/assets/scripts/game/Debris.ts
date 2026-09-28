@@ -3,6 +3,7 @@ import { Furniture } from "./Furniture";
 import { PlayerAttack } from "./PlayerAttack";
 import { WallCollision } from "./WallCollision";
 import { Zombie } from "./Zombie";
+import { Sfx } from "../managers/audio/Sfx";
 
 const { ccclass, property } = _decorator;
 
@@ -378,6 +379,7 @@ export class Debris extends Component {
 		const player = PlayerAttack.instance;
 		const blood = player && player.zombieBlood;
 		blood && blood.splash(v3(at.x, at.y + 0.4, at.z), position, player.killSplash);
+		Sfx.at(Sfx.propHit, mover.node);
 		mover.zombie.kill();
 	}
 
@@ -403,6 +405,7 @@ export class Debris extends Component {
 		}
 		body.lethalFor = 0;
 		const player = PlayerAttack.instance;
+		player && !player.isDead && Sfx.at(Sfx.propHit, mover.node);
 		player && !player.isDead && player.kill(body.node.worldPosition);
 		return true;
 	}

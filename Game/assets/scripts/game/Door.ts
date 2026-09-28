@@ -116,8 +116,9 @@ export class Door extends Component {
 			return;
 		}
 		this._open = open;
-		// Opening, with a key or a button — the ones open from the start never swing.
-		open && Sfx.at(Sfx.doorOpen, this.node);
+		// Opening, with a key or a button; shutting, once the player is off its button a while.
+		// The ones open from the start never swing.
+		Sfx.at(open ? Sfx.doorOpen : Sfx.doorClose, this.node);
 		const target = open ? this._openRotation : this._closedRotation;
 		Tween.stopAllByTarget(this.leaf);
 		if (this.duration <= 0) {

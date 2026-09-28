@@ -2,6 +2,7 @@ import { _decorator, AnimationClip, Node, v3, Vec3 } from "cc";
 import { Body, Debris } from "./Debris";
 import { PlayerAttack } from "./PlayerAttack";
 import { Mode, Zombie } from "./Zombie";
+import { Sfx } from "../managers/audio/Sfx";
 
 const { ccclass, property } = _decorator;
 
@@ -432,6 +433,7 @@ export class ZombieGirl extends Zombie {
 	 */
 	private _launch(carry: Carry, player: PlayerAttack): void {
 		carry.released = true;
+		Sfx.at(Sfx.girlThrow, this.node);
 		const debris = Debris.instance;
 		const body = carry.body;
 		if (!debris || !player || player.isDead) {

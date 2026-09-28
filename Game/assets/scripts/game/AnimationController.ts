@@ -107,6 +107,7 @@ export class AnimationController extends Component {
 			return;
 		}
 		this.unschedule(this._backToIdle);
+		this.unschedule(this._afterShot);
 		state.wrapMode = AnimationClip.WrapMode.Normal;
 		this._override = SHOOTING;
 		this._current = SHOOTING;
@@ -127,7 +128,18 @@ export class AnimationController extends Component {
 		}
 		const speed = this.shootingSpeed * rate;
 		state.speed = speed;
+		// Once the clip has played out, out of the pose: the gun goes back on the back as it
+		// ends, and a shooting pose held after it would stand there with empty hands.
+		this.unschedule(this._afterShot);
+		this.scheduleOnce(this._afterShot, Math.max(0, (state.duration - state.time) / (speed || 1) - this.crossFade));
 		return Math.max(0, state.duration * moment - state.time) / (speed || 1);
+	}
+
+	/** The shot fired from a held aim has played out: back to running or idling. */
+	private _afterShot(): void {
+		if (this._override === SHOOTING) {
+			this.release();
+		}
 	}
 
 	/** Seconds the shooting clip takes at its own speed, `rate` times faster. */
@@ -138,6 +150,7 @@ export class AnimationController extends Component {
 
 	/** Back to running or idling, whichever the stick says. */
 	release(): void {
+		this.unschedule(this._afterShot);
 		const shooting = this.animation && this.animation.getState(SHOOTING);
 		shooting && (shooting.speed = this.shootingSpeed);
 		this._override = null;

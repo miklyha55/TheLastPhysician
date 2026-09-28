@@ -235,9 +235,14 @@ export class GameState {
 	 * The game starts — the "play" button, the first touch the browser lets sound out on: the
 	 * music round and round, and the intro in the player's language over it while the game goes
 	 * on — the music down under the voice till it is over (and no longer than `introLimit`,
-	 * should it never end).
+	 * should it never end). The intro only on the first level: a game started on another (a
+	 * preview of it) gets the music alone.
 	 */
 	private static _startSound(): void {
+		if (GameState._level !== 0) {
+			Sfx.playMusic();
+			return;
+		}
 		// The music down under the voice while it speaks; the game goes on meanwhile.
 		Sfx.duckMusic(true);
 		Sfx.playMusic();
