@@ -25,17 +25,17 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 30
-      },
-      {
         "__id__": 32
       },
       {
         "__id__": 34
+      },
+      {
+        "__id__": 36
       }
     ],
     "_prefab": {
-      "__id__": 36
+      "__id__": 38
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -151,6 +151,9 @@
       },
       {
         "__id__": 28
+      },
+      {
+        "__id__": 30
       }
     ],
     "removedComponents": []
@@ -402,9 +405,9 @@
     ],
     "value": {
       "__type__": "cc.Vec3",
-      "x": 2.4000000953674316,
+      "x": 0,
       "y": 1.0315955877304077,
-      "z": 0.0007952291052788496
+      "z": 0
     }
   },
   {
@@ -423,7 +426,7 @@
     ],
     "value": {
       "__type__": "cc.Vec3",
-      "x": 2.4000000953674316,
+      "x": 0,
       "y": 0,
       "z": 0
     }
@@ -432,6 +435,22 @@
     "__type__": "cc.TargetInfo",
     "localID": [
       "73gUzZId1a/7M7N4+r6fIE"
+    ]
+  },
+  {
+    "__type__": "CCPropertyOverrideInfo",
+    "targetInfo": {
+      "__id__": 31
+    },
+    "propertyPath": [
+      "_useBakedAnimation"
+    ],
+    "value": false
+  },
+  {
+    "__type__": "cc.TargetInfo",
+    "localID": [
+      "cbpeRlnFhS0rOIFjCITBPm"
     ]
   },
   {
@@ -444,9 +463,10 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 31
+      "__id__": 33
     },
     "animation": null,
+    "bakeInPlay": true,
     "idleClip": {
       "__uuid__": "e4577c96-f838-4cdf-864d-b2fef53ae47b@18d6f",
       "__expectedType__": "cc.AnimationClip"
@@ -516,7 +536,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 33
+      "__id__": 35
     },
     "potion": null,
     "chance": 0.25,
@@ -556,7 +576,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 35
+      "__id__": 37
     },
     "bar": {
       "__uuid__": "e4857879-570a-47bb-9d69-76685f0f02db",

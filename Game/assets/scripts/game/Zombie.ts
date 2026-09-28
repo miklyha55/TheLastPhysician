@@ -39,6 +39,11 @@ export class Zombie extends Component {
 	static readonly deathListeners: ((zombie: Zombie) => void)[] = [];
 
 	@property(SkeletalAnimation) animation: SkeletalAnimation = null;
+	@property({
+		tooltip:
+			"Baked animation while the level runs — cheap, many zombies at once. The prefab keeps it off, so the editor shows the model by its bones, standing where its nodes are: the model's own bind pose is off to one side.",
+	})
+	bakeInPlay: boolean = true;
 	@property(AnimationClip) idleClip: AnimationClip = null;
 	@property(AnimationClip) runClip: AnimationClip = null;
 	@property({ type: AnimationClip, tooltip: "The strike at the player" })
@@ -116,6 +121,10 @@ export class Zombie extends Component {
 
 	protected onLoad(): void {
 		this.animation = this.animation || this.getComponentInChildren(SkeletalAnimation);
+		// Baked in play — before any clip is set up on it.
+		if (this.animation && this.bakeInPlay && !this.animation.useBakedAnimation) {
+			this.animation.useBakedAnimation = true;
+		}
 		this._createState(this.idleClip, IDLE, true);
 		this._createState(this.runClip, RUN, true);
 		this._createState(this.attackClip, ATTACK, false);
