@@ -400,6 +400,8 @@ export class Zombie extends Component {
 		this._timer = 0;
 		this._struck = false;
 		this._play(ATTACK, true);
+		// The swing's sound with the swing, ahead of the blow.
+		Sfx.at(Sfx.zombieAttack, this.node, this.speakVolume);
 	}
 
 	private _updateAttack(player: PlayerAttack, dt: number): void {

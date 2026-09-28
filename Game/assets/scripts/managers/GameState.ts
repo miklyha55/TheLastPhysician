@@ -157,6 +157,7 @@ export class GameState {
 			GameState._showFinal();
 			return;
 		}
+		Sfx.ui(Sfx.levelResults);
 		ResultsScreen.show(
 			GameState._level >= 0 ? `Уровень ${GameState._level + 1} пройден!` : "Уровень пройден!",
 			LevelStats.killed >= LevelStats.zombies && LevelStats.zombies > 0 ? "Все зомби повержены" : "Отличная работа",

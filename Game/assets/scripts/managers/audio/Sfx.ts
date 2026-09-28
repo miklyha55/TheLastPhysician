@@ -21,7 +21,8 @@ function isRussian(): boolean {
  *
  *   explosion −14 · player's death −16 · intro −18 · girl's throw −18 · gate −20 · prop hit −20
  *   chest −22 · shot, throw −22
- *   jump −23 · door −24 · fire −24 · key −24 · potion −26 · zombies −28 · music −30 · steps −33
+ *   jump −23 · door −24 · zombie's strike −24 · fire −24 · key −24 · potion −26 · zombies −28 · music −30
+ *   steps −33 · level's results −20 (a card over the game, not from a place)
  *
  * gain = 10^((level − file's loudness) / 20), never above 1 — the zombies' voices and the
  * quietest step are recorded quieter than their level and play as they are, and so the rest of
@@ -59,6 +60,8 @@ const GAIN: { [path: string]: number } = {
 	"gate_open": 0.8, // −23.9, a touch down by ear
 	"kick_from_fly_prop": 0.32, // −12.4: −22 by ear, a thing flying into someone
 	"throw_zombie_wooman": 0.45, // −11.1, to −18: the girl's throw, a warning to hear
+	"zombie_man_attack": 0.36, // −15.2, to −24: a zombie's swing, a little over their voices
+	"show_results_by_level": 1.0, // −28.4, recorded quiet: as it is
 };
 
 /** How much quieter the music goes under the intro's voice. */
@@ -92,6 +95,10 @@ export const Sfx = {
 	propHit: "kick_from_fly_prop",
 	/** The zombie girl throwing. */
 	girlThrow: "throw_zombie_wooman",
+	/** A zombie swinging at the player. */
+	zombieAttack: "zombie_man_attack",
+	/** The card of a level passed coming up. */
+	levelResults: "show_results_by_level",
 
 	get intro(): string {
 		return isRussian() ? "intro/intro_ru" : "intro/intro_eng";
@@ -125,9 +132,14 @@ export const Sfx = {
 		Sound.playOneShotAt(chosen, where, volume * Sfx.gain(chosen));
 	},
 
+	/** A sound of the screen, not of a place: at its own volume in the mix, wherever the camera is. */
+	ui(path: string): void {
+		Sound.playOneShot(path, Sfx.gain(path));
+	},
+
 	/** Loads what plays often, so its first time is not late. */
 	preload(): void {
-		Sound.preload([...Sfx.walk, ...Sfx.zombie, Sfx.explosion, Sfx.jump, Sfx.playerDie, Sfx.shoot, Sfx.throw, Sfx.getPotion, Sfx.getKey, Sfx.doorOpen, Sfx.doorClose, Sfx.chestClose, Sfx.gateOpen, Sfx.propHit, Sfx.girlThrow]);
+		Sound.preload([...Sfx.walk, ...Sfx.zombie, Sfx.explosion, Sfx.jump, Sfx.playerDie, Sfx.shoot, Sfx.throw, Sfx.getPotion, Sfx.getKey, Sfx.doorOpen, Sfx.doorClose, Sfx.chestClose, Sfx.gateOpen, Sfx.propHit, Sfx.girlThrow, Sfx.zombieAttack, Sfx.levelResults]);
 	},
 
 	_musicPath: "music/music_game",

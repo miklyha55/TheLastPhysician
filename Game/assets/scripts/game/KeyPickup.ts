@@ -42,6 +42,11 @@ export class KeyPickup extends Component {
 	private _to = v3();
 	private _at = v3();
 
+	/** Picked up already — flying to the stack or on it. */
+	get taken(): boolean {
+		return this._taken;
+	}
+
 	protected update(dt: number): void {
 		if (this._flying) {
 			this._fly(dt);
