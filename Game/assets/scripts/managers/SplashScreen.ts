@@ -1,5 +1,6 @@
 import { assetManager, ImageAsset, resources } from "cc";
 import { focusGame } from "./FocusGame";
+import { iconButton, iconStyle } from "./ButtonIcons";
 import { onRelease } from "./OnRelease";
 import { ResultsButton, ResultsRow } from "./ResultsScreen";
 
@@ -195,7 +196,7 @@ export class SplashScreen {
 		for (const spec of buttons) {
 			const button = document.createElement("button");
 			button.className = "tlp-splash__button" + (spec.primary ? "" : " tlp-splash__button--quiet");
-			button.textContent = spec.text;
+			spec.icon ? iconButton(button, spec.icon, spec.text) : (button.textContent = spec.text);
 			onRelease(button, () => {
 				if (SplashScreen._pressed) {
 					return;
@@ -325,6 +326,7 @@ export class SplashScreen {
 @keyframes tlp-splash-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 `;
 		document.head.appendChild(style);
+		iconStyle();
 		const root = document.createElement("div");
 		root.className = "tlp-splash";
 		const image = document.createElement("div");

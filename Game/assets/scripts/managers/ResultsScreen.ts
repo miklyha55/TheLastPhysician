@@ -1,4 +1,5 @@
 import { focusGame } from "./FocusGame";
+import { ButtonIcon, iconButton, iconStyle } from "./ButtonIcons";
 import { onRelease } from "./OnRelease";
 // The results of a level, in the page itself over the game's canvas: a card that bounces in
 // with what the player did on the level — zombies killed of how many, and how, potions thrown and
@@ -18,6 +19,8 @@ export interface ResultsButton {
 	text: string;
 	/** The big green one, or a quieter one beside it. */
 	primary?: boolean;
+	/** A picture in place of the words; the words stay as its label. */
+	icon?: ButtonIcon;
 	onClick: () => void;
 }
 
@@ -30,6 +33,16 @@ export class ResultsScreen {
 	private static _stars: HTMLDivElement = null;
 	private static _buttons: HTMLDivElement = null;
 	private static _pressed = false;
+	/** When the buttons now up were put there, ms. */
+	private static _shownAt = 0;
+
+	/**
+	 * Seconds the buttons of a card just put up do not answer. A card that follows a press comes
+	 * up in the same place — "from scratch" and the question after it have their buttons where the
+	 * last ones were — and the same press, or a quick second tap, landed on the new one too: the
+	 * game was wiped with no question seen.
+	 */
+	static armDelay = 0.35;
 	private static _hideTimer = 0;
 	private static _settleTimer = 0;
 
@@ -48,11 +61,13 @@ export class ResultsScreen {
 	/**
 	 * Shows `rows` under `title`, with `buttons` below; the first button pressed is the only one
 	 * that counts. `stars` — how many of three are earned, shown in a row of their own; below 0 —
-	 * no stars. Without a page the first button is taken at once.
+	 * no stars. Without a page the main button is taken at once.
 	 */
 	static show(title: string, subtitle: string, rows: ResultsRow[], buttons: ResultsButton[], lost = false, stars = -1): void {
 		if (!ResultsScreen._available) {
-			buttons[0] && buttons[0].onClick();
+			// No page: on with the main button, wherever it stands in the row.
+			const main = buttons.find((button) => button.primary) || buttons[0];
+			main && main.onClick();
 			return;
 		}
 		ResultsScreen._build();
@@ -61,14 +76,15 @@ export class ResultsScreen {
 		ResultsScreen._title.classList.toggle("tlp-results__title--lost", !!lost);
 		ResultsScreen._subtitle.textContent = subtitle;
 		ResultsScreen._pressed = false;
+		ResultsScreen._shownAt = performance.now();
 		const bar = ResultsScreen._buttons;
 		bar.textContent = "";
 		for (const spec of buttons) {
 			const button = document.createElement("button");
 			button.className = "tlp-results__button" + (spec.primary ? "" : " tlp-results__button--quiet");
-			button.textContent = spec.text;
+			spec.icon ? iconButton(button, spec.icon, spec.text) : (button.textContent = spec.text);
 			onRelease(button, () => {
-				if (ResultsScreen._pressed) {
+				if (ResultsScreen._pressed || performance.now() - ResultsScreen._shownAt < ResultsScreen.armDelay * 1000) {
 					return;
 				}
 				ResultsScreen._pressed = true;
@@ -247,6 +263,7 @@ export class ResultsScreen {
 @keyframes tlp-results-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
 `;
 		document.head.appendChild(style);
+		iconStyle();
 		const root = document.createElement("div");
 		root.className = "tlp-results";
 		const card = document.createElement("div");

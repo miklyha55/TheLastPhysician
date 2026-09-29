@@ -290,8 +290,23 @@ export class GameState {
 			[],
 			[
 				{
+					// The same level again from its start, with what the player came into it with.
+					text: I18n.t("level.replay"),
+					icon: "replay",
+					onClick: () => {
+						Yandex.showFullscreen().then(() => {
+							director.resume();
+							GameState._totals = before;
+							GameState._attempt = 1;
+							const scene = GameState._level >= 0 ? GameState.levels[GameState._level] : director.getScene().name;
+							GameState._load(scene, GameState._entry ? GameState._entry.slice() : null, () => ResultsScreen.hide());
+						});
+					},
+				},
+				{
 					text: I18n.t(last ? "level.finish" : "level.continue"),
 					primary: true,
+					icon: "next",
 					onClick: () => {
 						if (last) {
 							director.resume();
@@ -310,19 +325,6 @@ export class GameState {
 							GameState._attempt = 1;
 							// Under the loading screen once it covers them.
 							GameState._load(GameState.levels[next], carried, () => ResultsScreen.hide());
-						});
-					},
-				},
-				{
-					// The same level again from its start, with what the player came into it with.
-					text: I18n.t("level.replay"),
-					onClick: () => {
-						Yandex.showFullscreen().then(() => {
-							director.resume();
-							GameState._totals = before;
-							GameState._attempt = 1;
-							const scene = GameState._level >= 0 ? GameState.levels[GameState._level] : director.getScene().name;
-							GameState._load(scene, GameState._entry ? GameState._entry.slice() : null, () => ResultsScreen.hide());
 						});
 					},
 				},
@@ -348,8 +350,8 @@ export class GameState {
 			GameState._level >= 0 ? I18n.t("level.title", GameState._level + 1) : "",
 			[],
 			[
-				{ text: I18n.t("death.again"), primary: true, onClick: () => GameState._again() },
 				{ text: I18n.t("death.fromStart"), onClick: () => GameState._confirmFromStart() },
+				{ text: I18n.t("death.again"), primary: true, icon: "replay", onClick: () => GameState._again() },
 			],
 			true,
 		);
@@ -357,8 +359,8 @@ export class GameState {
 
 	/**
 	 * "From scratch" asks first, the way ThroughTheDeadCity does: the levels passed are lost, and one
-	 * tap should not throw them away. "Cancel" comes first and is the big one — the hand should go to
-	 * the safe answer, not to the one that cannot be undone — and brings the death card back.
+	 * tap should not throw them away. "Cancel" is the green one, on the right as on every card — the
+	 * safe answer — and brings the death card back.
 	 */
 	private static _confirmFromStart(): void {
 		ResultsScreen.show(
@@ -366,7 +368,6 @@ export class GameState {
 			I18n.t("death.confirmNote"),
 			[],
 			[
-				{ text: I18n.t("death.keep"), primary: true, onClick: () => GameState.died() },
 				{
 					text: I18n.t("death.wipe"),
 					onClick: () => {
@@ -375,6 +376,7 @@ export class GameState {
 						GameState.restartGame(() => ResultsScreen.hide());
 					},
 				},
+				{ text: I18n.t("death.keep"), primary: true, onClick: () => GameState.died() },
 			],
 			true,
 		);
