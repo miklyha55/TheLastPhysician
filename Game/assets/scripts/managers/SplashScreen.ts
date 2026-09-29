@@ -1,4 +1,4 @@
-import { ImageAsset, resources } from "cc";
+import { assetManager, ImageAsset, resources } from "cc";
 import { focusGame } from "./FocusGame";
 import { ResultsButton, ResultsRow } from "./ResultsScreen";
 
@@ -28,6 +28,7 @@ export class SplashScreen {
 	private static _buttons: HTMLDivElement = null;
 	private static _pressed = false;
 	private static _hideTimer = 0;
+	private static _settleTimer = 0;
 	private static _urls: { [path: string]: string } = {};
 
 	/** Seconds the screen takes to fade in or out. */
@@ -60,8 +61,12 @@ export class SplashScreen {
 		root.style.display = "flex";
 		// At once, not in the next animation frame: on a phone that frame can come late, and the
 		// screen stood there invisible. The layout forced, so the fade still starts from nothing.
+		root.classList.remove("tlp-splash--settled");
 		void root.offsetWidth;
 		root.classList.add("tlp-splash--shown");
+		// Should the browser not run the entrance at all: its end state a moment after.
+		clearTimeout(SplashScreen._settleTimer);
+		SplashScreen._settleTimer = setTimeout(() => root.classList.add("tlp-splash--settled"), 1500) as unknown as number;
 	}
 
 	static hide(): void {
@@ -102,33 +107,59 @@ export class SplashScreen {
 		return Promise.all(paths.map((path) => SplashScreen._load(path))).then(() => undefined);
 	}
 
+	/**
+	 * One picture, by the browser itself, not through the engine's loader: while the start screen
+	 * waits for "play" the game is held still (director paused), and the engine's loading does not
+	 * finish then — the picture came only after "play". Its file's address comes from the bundle;
+	 * the engine's loader is the fallback where there is none.
+	 */
 	private static _load(path: string): Promise<void> {
 		if (SplashScreen._urls[path]) {
 			return Promise.resolve();
 		}
 		if (!SplashScreen._loading[path]) {
-			SplashScreen._loading[path] = new Promise<void>((done) => {
-				resources.load(path, ImageAsset, (error, asset) => {
-					if (error || !asset) {
-						console.warn(`SplashScreen: no picture "${path}"`, error || "");
-						delete SplashScreen._loading[path];
-						done();
-						return;
-					}
-					const data = asset.data as unknown as HTMLImageElement;
-					const url = (data && data.src) || asset.nativeUrl;
-					// Decoded too, so the background paints at once, not a frame or two later.
-					const decoded = data && typeof data.decode === "function" ? data.decode() : Promise.resolve();
-					decoded
-						.catch(() => undefined)
-						.then(() => {
-							SplashScreen._urls[path] = url;
-							done();
-						});
-				});
+			SplashScreen._loading[path] = SplashScreen._fetch(path).then((url) => {
+				url ? (SplashScreen._urls[path] = url) : delete SplashScreen._loading[path];
 			});
 		}
 		return SplashScreen._loading[path];
+	}
+
+	private static async _fetch(path: string): Promise<string> {
+		const info = resources.getInfoWithPath(path, ImageAsset);
+		if (info) {
+			for (const ext of [".jpg", ".png", ".webp"]) {
+				const url = assetManager.utils.getUrlWithUuid(info.uuid, { isNative: true, nativeExt: ext });
+				if (await SplashScreen._decoded(url)) {
+					return url;
+				}
+			}
+		}
+		// No address to be had: through the engine, as before.
+		return new Promise<string>((done) => {
+			resources.load(path, ImageAsset, (error, asset) => {
+				if (error || !asset) {
+					console.warn(`SplashScreen: no picture "${path}"`, error || "");
+					done(null);
+					return;
+				}
+				const data = asset.data as unknown as HTMLImageElement;
+				done((data && data.src) || asset.nativeUrl);
+			});
+		});
+	}
+
+	/** Loaded and decoded by the browser — so the background paints at once; false when it is not there. */
+	private static _decoded(url: string): Promise<boolean> {
+		return new Promise<boolean>((done) => {
+			const image = new Image();
+			image.onload = () => {
+				const decoding = typeof image.decode === "function" ? image.decode() : Promise.resolve();
+				decoding.then(() => done(true), () => done(true));
+			};
+			image.onerror = () => done(false);
+			image.src = url;
+		});
 	}
 
 	private static _fillRows(rows: ResultsRow[]): void {
@@ -228,6 +259,7 @@ export class SplashScreen {
 	background: rgba(255, 255, 255, 0.08); color: #fff; font-size: clamp(13px, 4vmin, 16px); font-weight: 700;
 	animation: tlp-splash-row 0.3s ease-out both;
 }
+.tlp-splash--settled .tlp-splash__title, .tlp-splash--settled .tlp-splash__row { animation: none; opacity: 1; transform: none; }
 .tlp-splash__row--minor { padding: 4px 12px 4px 40px; background: none; color: #bfb2e8; font-size: 13px; font-weight: 600; }
 .tlp-splash__icon { width: 22px; text-align: center; font-size: 17px; }
 .tlp-splash__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

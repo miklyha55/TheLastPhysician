@@ -29,6 +29,7 @@ export class ResultsScreen {
 	private static _buttons: HTMLDivElement = null;
 	private static _pressed = false;
 	private static _hideTimer = 0;
+	private static _settleTimer = 0;
 
 	/** Seconds the screen takes to fade in or out. */
 	static fadeTime = 0.25;
@@ -100,9 +101,14 @@ export class ResultsScreen {
 		// stood there invisible — its buttons working, nothing to see. The layout is forced so that
 		// the fade still starts from nothing.
 		ResultsScreen._card.classList.remove("tlp-results__card--in");
+		root.classList.remove("tlp-results--settled");
 		void root.offsetWidth;
 		root.classList.add("tlp-results--shown");
 		ResultsScreen._card.classList.add("tlp-results__card--in");
+		// And should the browser not run the entrance at all, it is set in its end state a moment
+		// after, when it would have played out anyway: the card and every line in plain sight.
+		clearTimeout(ResultsScreen._settleTimer);
+		ResultsScreen._settleTimer = setTimeout(() => root.classList.add("tlp-results--settled"), 1500) as unknown as number;
 	}
 
 	/** Fades away. */
@@ -200,6 +206,7 @@ export class ResultsScreen {
 	/* The small line of how belongs under "killed": the whole width, so it does not stray. */
 	.tlp-results__row--minor { grid-column: 1 / -1; padding: 1px 10px 1px 40px; font-size: 12px; }
 }
+.tlp-results--settled .tlp-results__card, .tlp-results--settled .tlp-results__row { animation: none; opacity: 1; transform: none; }
 @keyframes tlp-results-pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes tlp-results-row { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes tlp-results-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }

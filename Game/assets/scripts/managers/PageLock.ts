@@ -25,8 +25,9 @@ html, body {
 img { -webkit-user-drag: none; }
 *:focus, *:focus-visible { outline: none; }
 canvas { touch-action: none; outline: none; }
-/* The one thing on the page a finger may move: the results' list, on a screen too small for it. */
-.tlp-results__rows { touch-action: pan-y; }
+/* What a finger may move on the page: the lists of the results and of the final screen, on a
+   screen too small for them. */
+.tlp-results__rows, .tlp-splash__rows { touch-action: pan-y; }
 `;
 
 function prevent(event: Event): void {
