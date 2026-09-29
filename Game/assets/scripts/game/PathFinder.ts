@@ -1,4 +1,5 @@
 import { v3, Vec3 } from "cc";
+import { HazardMap } from "./HazardMap";
 import { WallCollision } from "./WallCollision";
 
 // Neighbours on the grid: straight ones cost 1, diagonal ones √2.
@@ -8,11 +9,18 @@ const STEPS = [
 ];
 // A search that has looked at this many cells gives up rather than stall a frame.
 const MAX_VISITS = 12000;
+// What a step within a trap's reach costs, against one outside it.
+const HAZARD_COST = 7;
 
 // The shortest way round the walls between two points on the floor: A* over a coarse grid
 // laid on the walls' own blocked map, then straightened, so a zombie runs in straight lines
 // from corner to corner instead of zigzagging from cell to cell. Cells are asked about lazily
 // and the answer lives for one search only, so a door that opened is seen at once.
+//
+// One that avoids (the zombies') also keeps out of the traps' reach (HazardMap) where it can: a
+// step there costs `HAZARD_COST` times its length, so the way goes round a trap unless round is
+// that much longer — and straight through when there is no way round. Straightening then never
+// cuts across a trap the way found went round.
 export class PathFinder {
 	private _walls: WallCollision;
 	private _cell: number;
@@ -21,8 +29,12 @@ export class PathFinder {
 	private _x = 0;
 	private _z = 0;
 	private _walkable: Int8Array = null;
+	/** Per cell: -1 not asked yet, 0 clear, 1 within a trap's reach. */
+	private _hazard: Int8Array = null;
+	private _avoid = false;
 	// What the walkable cells were worked out for; while it holds they are reused, not asked again.
 	private _known = "";
+	private _hazardKnown = "";
 	private _cost: Float32Array = null;
 	private _from: Int32Array = null;
 	private _closed: Uint8Array = null;
@@ -30,9 +42,11 @@ export class PathFinder {
 	private _heapScores: number[] = [];
 	private _point = v3();
 
-	constructor(walls: WallCollision, cell: number) {
+	/** `avoid` — keep out of the traps' reach where the walls leave a way round. */
+	constructor(walls: WallCollision, cell: number, avoid = false) {
 		this._walls = walls;
 		this._cell = cell;
+		this._avoid = avoid;
 	}
 
 	/**
@@ -45,7 +59,7 @@ export class PathFinder {
 			out.push(to.clone());
 			return true;
 		}
-		if (this._walls.isPathClear(from, to)) {
+		if (this._walls.isPathClear(from, to) && this._safe(from, to)) {
 			out.push(to.clone());
 			return true;
 		}
@@ -64,13 +78,13 @@ export class PathFinder {
 		while (i < cells.length) {
 			let far = i;
 			for (let k = cells.length - 1; k > i; k--) {
-				if (this._walls.isPathClear(at, this._centre(cells[k], this._point))) {
+				if (this._walls.isPathClear(at, this._centre(cells[k], this._point)) && this._straight(at, this._point, cells, i, k)) {
 					far = k;
 					break;
 				}
 			}
 			const corner = this._centre(cells[far], v3());
-			if (this._walls.isPathClear(corner, to)) {
+			if (this._walls.isPathClear(corner, to) && this._straight(corner, to, cells, far, cells.length - 1)) {
 				out.push(corner);
 				break;
 			}
@@ -116,6 +130,16 @@ export class PathFinder {
 			this._known = known;
 			this._walkable.fill(-1);
 		}
+		// The traps' map: made anew with the grid, or when the level's traps changed.
+		const hazards = `${cols},${rows},${x0.toFixed(3)},${z0.toFixed(3)},${this._avoid ? HazardMap.version : 0}`;
+		if (!this._hazard || this._hazard.length < cols * rows) {
+			this._hazard = new Int8Array(Math.max(cols * rows, this._walkable.length));
+			this._hazardKnown = "";
+		}
+		if (hazards !== this._hazardKnown) {
+			this._hazardKnown = hazards;
+			this._hazard.fill(-1);
+		}
 		return true;
 	}
 
@@ -156,7 +180,7 @@ export class PathFinder {
 					continue;
 				}
 				const next = nr * cols + nc;
-				const cost = this._cost[current] + step;
+				const cost = this._cost[current] + (this._avoid && this._isHazard(next) ? step * HAZARD_COST : step);
 				if (cost < this._cost[next]) {
 					this._cost[next] = cost;
 					this._from[next] = current;
@@ -185,6 +209,37 @@ export class PathFinder {
 			this._walkable[at] = this._walls.isBlocked(this._point.x, this._point.z) ? 0 : 1;
 		}
 		return this._walkable[at] === 1;
+	}
+
+	/** Is a cell within a trap's reach; asked once a grid, like its walls. */
+	private _isHazard(at: number): boolean {
+		if (this._hazard[at] < 0) {
+			this._centre(at, this._point);
+			this._hazard[at] = HazardMap.at(this._point.x, this._point.z) ? 1 : 0;
+		}
+		return this._hazard[at] === 1;
+	}
+
+	/** For the one that avoids: does the straight way from `a` to `b` keep out of the traps. */
+	private _safe(a: Vec3, b: Vec3): boolean {
+		return !this._avoid || HazardMap.lineClear(a, b);
+	}
+
+	/**
+	 * May the way be straightened from `a` to `b` over the cells `from`..`to` of the path found:
+	 * yes when the straight line keeps out of the traps — or when the path itself went through
+	 * one there, so the line takes nothing the path did not.
+	 */
+	private _straight(a: Vec3, b: Vec3, cells: number[], from: number, to: number): boolean {
+		if (!this._avoid || HazardMap.lineClear(a, b)) {
+			return true;
+		}
+		for (let k = from; k <= to; k++) {
+			if (this._isHazard(cells[k])) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** The walkable cell nearest to a point, looking a few rings out; -1 when there is none. */

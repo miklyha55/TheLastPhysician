@@ -466,7 +466,10 @@
       "__id__": 33
     },
     "animation": null,
-    "bakeInPlay": true,
+    "bakeInPlay": false,
+    "wanderSpeakChance": 0.35,
+    "speakGap": 1.5,
+    "speakVolume": 1,
     "idleClip": {
       "__uuid__": "e4577c96-f838-4cdf-864d-b2fef53ae47b@18d6f",
       "__expectedType__": "cc.AnimationClip"

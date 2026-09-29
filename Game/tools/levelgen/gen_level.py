@@ -33,6 +33,8 @@ U = {
     'Pendulum': '8c1f9334-8659-4357-b2b8-3775c44aa719',
     'Gargoyle': '557fcf36-a6e7-4d62-ba5f-19e2c94d11b2',
 }
+# A chest's front (its local +Z) turned to where the camera looks from: the same in every level.
+CHEST_YAW = 34
 FURNITURE = {'Barrel', 'Bed', 'Bench', 'Candelabra', 'Chair', 'Crate', 'Shelf', 'Table'}
 SMALL = {'Barrel', 'Candelabra', 'Chair', 'Crate'}
 
@@ -152,8 +154,8 @@ def generate(spec):
             if ch == 'V': zombies.append([c, r, sid('Girl'), rnd.choice([0, 90, 180, 270])])
             if ch in 'RBG': keys.append([c, r, sid('Key' + ch), 0])
             if ch == 'C':
-                best = min(((abs(c - 1), 270), (abs(W - 2 - c), 90), (abs(r - 1), 0), (abs(H - 2 - r), 180)))
-                chests.append([c, r, sid('Chest'), {270: 90, 90: 270, 0: 0, 180: 180}[best[1]]])
+                # Face to the camera, whatever wall is near: the open lid and the potions in it in sight.
+                chests.append([c, r, sid('Chest'), CHEST_YAW])
             if ch == 'P': player = (c, r)
     for name, c, r, rot in spec.get('furniture', []):
         assert name in FURNITURE, name

@@ -53,6 +53,8 @@ class PrewarmRunner extends Component {
 	private _spawned: Node[] = [];
 	private _vents: { vent: Component & { phase: number; offTime: number; onTime: number }; time: number }[] = [];
 	private _centre = v3();
+	/** Zombies wearing their red for the warm-up, to take it off at its end. */
+	private _flashed: (Component & { prewarmFlash?: (on: boolean) => void })[] = [];
 
 	protected start(): void {
 		this._overview();
@@ -119,6 +121,11 @@ class PrewarmRunner extends Component {
 				effect.fire && effect.fire(from, at);
 			}
 		}
+		// The zombies' red of a blow: a skinned model copies a material's passes on the first blow.
+		for (const zombie of scene.getComponentsInChildren("Zombie") as (Component & { prewarmFlash?: (on: boolean) => void })[]) {
+			zombie.prewarmFlash && zombie.prewarmFlash(true);
+			this._flashed.push(zombie);
+		}
 		// The heads' fire: their first shot would otherwise build its shaders mid-game.
 		for (const head of scene.getComponentsInChildren("Gargoyle") as (Component & { prewarm?: () => void })[]) {
 			head.prewarm && head.prewarm();
@@ -175,6 +182,10 @@ class PrewarmRunner extends Component {
 
 	private _finish(): void {
 		this._flames(false);
+		for (const zombie of this._flashed) {
+			zombie.isValid && zombie.prewarmFlash && zombie.prewarmFlash(false);
+		}
+		this._flashed.length = 0;
 		for (const node of this._spawned) {
 			node.isValid && node.destroy();
 		}

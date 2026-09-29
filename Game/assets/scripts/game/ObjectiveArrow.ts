@@ -52,6 +52,10 @@ export class ObjectiveArrow extends Component {
 	routeEvery: number = 0.15;
 	@property({ tooltip: "Cell of the grid the way is found on" })
 	pathCell: number = 0.25;
+	@property({ tooltip: "A point of the way this close to the player is passed by: the arrow points further on" })
+	lead: number = 0.55;
+	@property({ tooltip: "How far along the way the arrow points: at a point this far ahead, not the next corner" })
+	ahead: number = 1.2;
 	@property({ tooltip: "How much it swells and shrinks, a beat a second" })
 	pulse: number = 0.08;
 	@property({ tooltip: "Width of the glow on the floor under the goal" })
@@ -69,6 +73,8 @@ export class ObjectiveArrow extends Component {
 	private _finder: PathFinder = null;
 	private _goal: Vec3 = null;
 	private _next = v3();
+	/** The way to the goal as last found; the arrow walks it on its own between searches. */
+	private _way: Vec3[] = [];
 	private _hasWay = false;
 	private _yaw = 0;
 	private _shown = 0;
@@ -143,7 +149,7 @@ export class ObjectiveArrow extends Component {
 		const want = alive && far && this._hasWay ? 1 : 0;
 		// Comes and goes quickly, not at once.
 		this._shown += Math.sign(want - this._shown) * Math.min(Math.abs(want - this._shown), dt * 6);
-		if (this._hasWay) {
+		if (this._hasWay && this._aim(at)) {
 			const yaw = (Math.atan2(this._next.x - at.x, this._next.z - at.z) * 180) / Math.PI;
 			let turn = ((yaw - this._yaw + 540) % 360) - 180;
 			const step = this.turnSpeed * dt;
@@ -188,7 +194,8 @@ export class ObjectiveArrow extends Component {
 		this._goalMark = null;
 		this._markWant = null;
 		this._doors = scene.getComponentsInChildren(Door);
-		if (gate && gate.isOpen) {
+		// The open gate, when it can be walked to; shut off from it, what opens the way comes first.
+		if (gate && gate.isOpen && this._reach((gate.exit || gate.node).worldPosition) >= 0) {
 			// The way leads out behind it; the glow lies in the gateway.
 			this._set((gate.exit || gate.node).worldPosition, gate.node.worldPosition, this.gateLift);
 			return;
@@ -286,7 +293,7 @@ export class ObjectiveArrow extends Component {
 			this._chooseIn = 0;
 			return;
 		}
-		this._next.set(this._path[0]);
+		this._way = this._path.map((point) => point.clone());
 		this._hasWay = true;
 		this._markOnWay();
 	}
@@ -294,6 +301,54 @@ export class ObjectiveArrow extends Component {
 	/** A door that stood in the way: locked, or shut until a button opens it — not one open from the start. */
 	private _wasGoal(door: Door): boolean {
 		return !!door.getComponent(LockedDoor) || !door.startOpen;
+	}
+
+	/**
+	 * Where the arrow points this frame: the first point of the way still ahead. Between two
+	 * searches the player walks on, and the way found a moment ago starts behind them — at the
+	 * middle of the cell they stood in, or at a corner they have just turned. Pointing there the
+	 * arrow swung round for a split second. So points closer than `lead` are passed by, and so is a
+	 * corner once the player is past it along the next leg. False when there is nowhere to point.
+	 */
+	private _aim(at: Vec3): boolean {
+		const way = this._way;
+		while (way.length > 1) {
+			const first = way[0];
+			const second = way[1];
+			const close = Math.hypot(first.x - at.x, first.z - at.z) < this.lead;
+			// Past the corner: it lies behind, looking along the leg that leaves it.
+			const passed = (first.x - at.x) * (second.x - first.x) + (first.z - at.z) * (second.z - first.z) < 0;
+			if (!close && !passed) {
+				break;
+			}
+			way.shift();
+		}
+		if (!way.length) {
+			return false;
+		}
+		// Not the next corner itself, but the point `ahead` along the way: at a doorway the corners lie
+		// right by the player and each search puts them a little elsewhere — pointing at them the
+		// arrow jerked by tens of degrees; a point further along barely moves.
+		let left = this.ahead;
+		let x = at.x;
+		let z = at.z;
+		for (const point of way) {
+			const length = Math.hypot(point.x - x, point.z - z);
+			if (length >= left) {
+				const t = left / length;
+				this._next.set(x + (point.x - x) * t, 0, z + (point.z - z) * t);
+				return true;
+			}
+			left -= length;
+			x = point.x;
+			z = point.z;
+		}
+		const end = way[way.length - 1];
+		if (Math.hypot(end.x - at.x, end.z - at.z) < 1e-3) {
+			return false;
+		}
+		this._next.set(end);
+		return true;
 	}
 
 	/** The glow on the first such open door the way goes through, if any lies ahead; else on the goal. */

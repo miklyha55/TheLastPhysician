@@ -1,5 +1,7 @@
 import { _decorator, AnimationClip, Component, math, SkeletalAnimation, tween, v3, Vec3 } from "cc";
 import { PathFinder } from "./PathFinder";
+import { HazardMap } from "./HazardMap";
+import { HitFlash } from "./HitFlash";
 import { PlayerAttack } from "./PlayerAttack";
 import { WallCollision } from "./WallCollision";
 import { LevelStats } from "../managers/LevelStats";
@@ -10,6 +12,9 @@ const { ccclass, property } = _decorator;
 const IDLE = "idle";
 const RUN = "run";
 const ATTACK = "attack";
+// A second state of the same strike: blow after blow they take turns, so the next one blends in
+// out of the end of the last instead of the one state jumping back to its first frame.
+const ATTACK_AGAIN = "attack2";
 const HURT = "hurt";
 const DEATH = "death";
 
@@ -124,6 +129,14 @@ export class Zombie extends Component {
 	protected _step: Vec3 = v3();
 	protected _next: Vec3 = v3();
 	protected _euler: Vec3 = v3();
+	/** Which of the two strike states is swinging now. */
+	private _strike = ATTACK;
+	private _flashOf: HitFlash = null;
+
+	/** The red blink of a blow, on its own meshes. */
+	private get _flash(): HitFlash {
+		return this._flashOf || (this._flashOf = new HitFlash(this.node));
+	}
 
 	get isDead(): boolean {
 		return this._mode === Mode.Dead;
@@ -138,11 +151,14 @@ export class Zombie extends Component {
 		this._createState(this.idleClip, IDLE, true);
 		this._createState(this.runClip, RUN, true);
 		this._createState(this.attackClip, ATTACK, false);
+		this._createState(this.attackClip, ATTACK_AGAIN, false);
 		this._createState(this.hurtClip, HURT, false);
 		const hurt = this.animation && this.animation.getState(HURT);
 		hurt && (hurt.speed = this.hurtSpeed);
-		const attack = this.animation && this.animation.getState(ATTACK);
-		attack && (attack.speed = this.attackSpeed);
+		for (const name of [ATTACK, ATTACK_AGAIN]) {
+			const attack = this.animation && this.animation.getState(name);
+			attack && (attack.speed = this.attackSpeed);
+		}
 		this._createState(this.deathClip, DEATH, false);
 	}
 
@@ -159,6 +175,11 @@ export class Zombie extends Component {
 	protected start(): void {
 		this._home.set(this.node.worldPosition);
 		this._stand();
+	}
+
+	/** The red of a blow on, or off: the warm-up behind the loading screen (Prewarm) builds it early. */
+	prewarmFlash(on: boolean): void {
+		!this.isDead && this._flash.wear(on);
 	}
 
 	/** Killed outright, whatever lives are left — a heavy thing flying into it. */
@@ -180,6 +201,8 @@ export class Zombie extends Component {
 			this._die();
 			return;
 		}
+		// A life lost but not the last: it blinks red. Not on the killing blow — then it falls.
+		this._flash.trigger();
 		// A blow already on its way lands anyway: the hit costs a life, not the strike.
 		if (this._mode === Mode.Attack) {
 			return;
@@ -191,6 +214,7 @@ export class Zombie extends Component {
 	}
 
 	protected update(dt: number): void {
+		this._flash.update(dt);
 		const player = PlayerAttack.instance;
 		switch (this._mode) {
 			case Mode.Idle:
@@ -265,7 +289,8 @@ export class Zombie extends Component {
 				}
 			}
 			const walls = this._walls();
-			if (!walls || walls.isPathClear(at, this._goal)) {
+			// Nowhere near a trap: not into one, not across one.
+			if ((!walls || walls.isPathClear(at, this._goal)) && HazardMap.lineClear(at, this._goal)) {
 				this._path.length = 0;
 				this._path.push(this._goal.clone());
 				this._mode = Mode.Wander;
@@ -399,13 +424,16 @@ export class Zombie extends Component {
 		this._mode = Mode.Attack;
 		this._timer = 0;
 		this._struck = false;
-		this._play(ATTACK, true);
+		// The other of the two strike states from the last one swung — even with a moment of running
+		// between them, that one may still be fading out: a blend, not a jump to its start.
+		this._strike = this._strike === ATTACK ? ATTACK_AGAIN : ATTACK;
+		this._play(this._strike);
 		// The swing's sound with the swing, ahead of the blow.
 		Sfx.at(Sfx.zombieAttack, this.node, this.speakVolume);
 	}
 
 	private _updateAttack(player: PlayerAttack, dt: number): void {
-		const duration = this._duration(ATTACK);
+		const duration = this._duration(this._strike);
 		this._timer += dt;
 		if (player && !player.isDead) {
 			this._turnTo(player.node.worldPosition, dt);
@@ -417,7 +445,10 @@ export class Zombie extends Component {
 				}
 			}
 		}
-		if (this._timer >= duration) {
+		// On a blend's length before the strike ends: its last frames still play under the blend into
+		// what comes next. Left to its very end, the finished clip had nothing to blend from, and the
+		// pose jerked.
+		if (this._timer >= Math.max(duration * this.hitMoment, duration - this.crossFade)) {
 			this._lookAround(player);
 		}
 	}
@@ -425,6 +456,8 @@ export class Zombie extends Component {
 	// --- dying
 
 	protected _die(): void {
+		// Dying, it does not blink: a flash still going is put out.
+		this._flash.stop();
 		this._interrupt();
 		this._mode = Mode.Dead;
 		// Nothing thinks any more: no update, no chasing, no hits. Only the fall and the
@@ -563,7 +596,8 @@ export class Zombie extends Component {
 		}
 		if (Zombie._pathWalls !== walls) {
 			Zombie._pathWalls = walls;
-			Zombie._pathFinder = new PathFinder(walls, this.pathCell);
+			// Zombies keep out of the traps' reach where there is a way round.
+			Zombie._pathFinder = new PathFinder(walls, this.pathCell, true);
 		}
 		return Zombie._pathFinder;
 	}
