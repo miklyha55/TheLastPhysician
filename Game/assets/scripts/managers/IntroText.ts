@@ -31,6 +31,8 @@ export class IntroText {
 	private _rest: HTMLSpanElement = null;
 	private _skip: HTMLDivElement = null;
 	private _skipLabel: HTMLButtonElement = null;
+	/** On a phone: a round red cross on the plate's top right corner, in place of the line over the text. */
+	private _skipCross: HTMLButtonElement = null;
 	private _script: IntroScript = null;
 	private _clock: () => { time: number; duration: number } | null = null;
 	private _plan: { text: string; from: number; to: number }[] = null;
@@ -84,6 +86,8 @@ export class IntroText {
 			clearTimeout(this._skipFade);
 			this._skip.classList.remove("tlp-skip--on");
 			this._skip.hidden = true;
+			this._skipCross.classList.remove("tlp-skipx--on");
+			this._skipCross.hidden = true;
 		}
 		this._root.classList.remove("tlp-radiotext--on");
 		this._typed.textContent = "";
@@ -107,22 +111,33 @@ export class IntroText {
 		}
 		clearTimeout(this._skipTimer);
 		this._skipTimer = setTimeout(() => {
-			// Asked again: a keyboard may have come since.
-			this._skipLabel.textContent = IntroText._keyboard ? keys : touch;
 			clearTimeout(this._skipFade);
-			this._skip.hidden = false;
-			requestAnimationFrame(() => this._skip.classList.add("tlp-skip--on"));
+			// Asked again: a keyboard may have come since. With one — a hint of the key over the text;
+			// under a finger — a cross in the corner, where a thumb looks for "close".
+			if (IntroText._keyboard) {
+				this._skipLabel.textContent = keys;
+				this._skip.hidden = false;
+				requestAnimationFrame(() => this._skip.classList.add("tlp-skip--on"));
+				return;
+			}
+			this._skipCross.setAttribute("aria-label", touch);
+			this._skipCross.hidden = false;
+			requestAnimationFrame(() => this._skipCross.classList.add("tlp-skipx--on"));
 		}, after * 1000) as unknown as number;
 	}
 
 	hideSkip(): void {
 		clearTimeout(this._skipTimer);
-		if (!this._skip || this._skip.hidden) {
+		if (!this._skip || (this._skip.hidden && this._skipCross.hidden)) {
 			return;
 		}
 		this._skip.classList.remove("tlp-skip--on");
+		this._skipCross.classList.remove("tlp-skipx--on");
 		clearTimeout(this._skipFade);
-		this._skipFade = setTimeout(() => (this._skip.hidden = true), 400) as unknown as number;
+		this._skipFade = setTimeout(() => {
+			this._skip.hidden = true;
+			this._skipCross.hidden = true;
+		}, 400) as unknown as number;
 	}
 
 	/**
@@ -224,8 +239,21 @@ export class IntroText {
 		rest.className = "tlp-radiotext__rest";
 		line.append(typed, rest);
 
-		root.append(skip, line);
+		// The plate: the line, and on a phone the cross on its corner — a thing to close, where one is.
+		const plate = document.createElement("div");
+		plate.className = "tlp-radiotext__plate";
+		plate.appendChild(line);
+		root.append(skip, plate);
 		document.body.appendChild(root);
+
+		const cross = document.createElement("button");
+		cross.type = "button";
+		cross.className = "tlp-skipx";
+		cross.hidden = true;
+		cross.innerHTML =
+			'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round"/></svg>';
+		onRelease(cross, () => this.onSkip && this.onSkip());
+		plate.appendChild(cross);
 		addEventListener("resize", () => this._reserve());
 
 		this._root = root;
@@ -234,6 +262,7 @@ export class IntroText {
 		this._rest = rest;
 		this._skip = skip;
 		this._skipLabel = label;
+		this._skipCross = cross;
 	}
 }
 
@@ -274,6 +303,20 @@ const STYLE = `
 	cursor: pointer; -webkit-tap-highlight-color: transparent;
 	transition: transform 80ms ease-out;
 }
+.tlp-radiotext__plate { position: relative; }
+.tlp-skipx {
+	position: absolute; z-index: 1; top: -18px; right: -14px; pointer-events: auto;
+	width: 40px; height: 40px; padding: 0; border: 3px solid #fff; border-radius: 50%; cursor: pointer;
+	display: flex; align-items: center; justify-content: center;
+	background: linear-gradient(180deg, #ff6b5e 0%, #d8231b 100%);
+	box-shadow: 0 4px 0 #7a1414, 0 8px 16px rgba(0, 0, 0, 0.45);
+	opacity: 0; transition: opacity 400ms ease, scale 80ms ease-out;
+	-webkit-tap-highlight-color: transparent;
+}
+.tlp-skipx[hidden] { display: none; }
+.tlp-skipx--on { opacity: 1; }
+.tlp-skipx:active { scale: 0.9; }
+.tlp-skipx svg { width: 20px; height: 20px; filter: drop-shadow(0 2px 0 #7a1414); }
 .tlp-skip__label:hover { background: rgba(59, 42, 110, 0.92); border-color: #ffcf4a; }
 .tlp-skip__label:active { transform: scale(0.94); }
 @media (max-width: 560px) {

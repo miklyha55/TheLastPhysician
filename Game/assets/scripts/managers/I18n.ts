@@ -40,8 +40,8 @@ const RU: { [key: string]: Text } = {
 	"hint.tailKeys": "нажми любую клавишу",
 	"hint.tailTouch": "коснись экрана",
 
-	"skip.keys": "Esc — пропустить",
-	"skip.touch": "пропустить",
+	"skip.keys": "Esc — пропуск",
+	"skip.touch": "Пропустить",
 };
 
 const EN: { [key: string]: Text } = {
@@ -78,7 +78,7 @@ const EN: { [key: string]: Text } = {
 	"hint.tailTouch": "touch the screen",
 
 	"skip.keys": "Esc — skip",
-	"skip.touch": "skip",
+	"skip.touch": "Skip",
 };
 
 const WORDS: { [language: string]: { [key: string]: Text } } = { ru: RU, en: EN };
