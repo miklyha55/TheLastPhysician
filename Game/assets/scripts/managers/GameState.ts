@@ -6,6 +6,7 @@ import { LevelStats } from "./LevelStats";
 import { I18n } from "./I18n";
 import { Intro } from "./Intro";
 import { LoadingScreen } from "./LoadingScreen";
+import { lockPage } from "./PageLock";
 import { Prewarm } from "./Prewarm";
 import { ResultsScreen, ResultsRow } from "./ResultsScreen";
 import { SplashScreen } from "./SplashScreen";
@@ -511,5 +512,7 @@ export class GameState {
 	}
 }
 
-// The platform is asked for as soon as the scripts are up, while the first level is still loading.
+// The page locked to the game's controls, and the platform asked for, as soon as the scripts are
+// up, while the first level is still loading.
+lockPage();
 GameState.platform();
