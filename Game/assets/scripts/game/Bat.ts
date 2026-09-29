@@ -27,6 +27,11 @@ export class Bat extends Zombie {
 	hangHeight: number = 1.05;
 	@property({ tooltip: "Height of the model over the floor in flight" })
 	flyHeight: number = 0.5;
+	@property({
+		tooltip:
+			"Degrees the model leans about its side axis while it hangs: the hanging clip lies on its back, this stands it upright, head down and feet up as if clinging to the ceiling. It straightens out as the bat drops into flight",
+	})
+	hangTilt: number = -51.3;
 	@property({ tooltip: "Playback speed of the flight clip: how fast the wings beat" })
 	flapSpeed: number = 2;
 	@property({ tooltip: "Units per second it drops to its flight or rises back to its perch" })
@@ -213,10 +218,15 @@ export class Bat extends Zombie {
 	}
 
 	private _lift(height: number): void {
-		if (this.model) {
-			const p = this.model.position;
-			this.model.setPosition(p.x, height, p.z);
+		if (!this.model) {
+			return;
 		}
+		const p = this.model.position;
+		this.model.setPosition(p.x, height, p.z);
+		// Upright, head down, at its perch; level in flight; between the two on the way.
+		const span = this.hangHeight - this.flyHeight;
+		const hang = span > 1e-4 ? math.clamp01((height - this.flyHeight) / span) : 1;
+		this.model.setRotationFromEuler(this.hangTilt * hang, 0, 0);
 	}
 
 	/** Towards `height` at the climb speed; true once there. */
