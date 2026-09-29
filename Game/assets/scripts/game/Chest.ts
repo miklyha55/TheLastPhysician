@@ -1,6 +1,6 @@
 import { _decorator, Component, instantiate, math, Node, Prefab, Quat, tween, v3, Vec3 } from "cc";
 import { PlayerAttack } from "./PlayerAttack";
-import { paintPotion, PotionKind, rollPotionKind } from "./PotionKind";
+import { paintPotion, PotionKind } from "./PotionKind";
 import { Sfx } from "../managers/audio/Sfx";
 
 const { ccclass, property } = _decorator;
@@ -27,8 +27,12 @@ export class Chest extends Component {
 	potions: Node[] = [];
 	@property({ type: Prefab, tooltip: "What flies when no potions are laid in the chest" })
 	potion: Prefab = null;
-	@property({ tooltip: "Potions it gives when none are laid in it" })
+	@property({ tooltip: "Potions it gives, reckoned for the level: those laid in it first, the rest flying out of its mouth" })
 	count: number = 5;
+	@property({ tooltip: "Of them, red ones — bombs" })
+	bombs: number = 0;
+	@property({ tooltip: "Of them, green ones — drones" })
+	drones: number = 0;
 	@property({ tooltip: "Lid angle when open, degrees around X; negative tips it back" })
 	openAngle: number = -105;
 	@property({ tooltip: "Seconds the lid takes to shut" })
@@ -55,7 +59,7 @@ export class Chest extends Component {
 	private _left = 0;
 	private _timer = 0;
 	private _flights: Flight[] = [];
-	/** The kinds of the potions laid in it, rolled at the start: a special one is seen in the chest. */
+	/** The kinds of the potions it gives, in the order they fly: the special ones first, so they are seen lying in it. */
 	private _kinds: PotionKind[] = [];
 	private _to = v3();
 	private _rotation = new Quat();
@@ -63,12 +67,23 @@ export class Chest extends Component {
 	protected onLoad(): void {
 		// Open from the start.
 		this.lid && this.lid.setRotationFromEuler(this.openAngle, 0, 0);
-		// What lies in it is what comes out: now and then a red or a green one among the pink.
-		this._kinds = this.potions.map((node) => {
-			const kind = rollPotionKind();
-			paintPotion(node, kind);
-			return kind;
-		});
+		// What it gives is set for the level, not left to the dice: the special ones first — they lie
+		// in sight, on top of the pile — then the plain ones.
+		const kinds: PotionKind[] = [];
+		const count = Math.max(0, Math.floor(this.count));
+		let drones = Math.min(this.drones, count);
+		let bombs = Math.min(this.bombs, count - drones);
+		while (drones > 0 || bombs > 0) {
+			drones-- > 0 && kinds.push(PotionKind.Drone);
+			bombs-- > 0 && kinds.push(PotionKind.Bomb);
+		}
+		while (kinds.length < count) {
+			kinds.push(PotionKind.Plain);
+		}
+		this._kinds = kinds;
+		// The laid ones show what comes first; any over the count are not there.
+		this.potions.forEach((node, i) => (i < count ? paintPotion(node, kinds[i]) : node && node.isValid && (node.active = false)));
+		this.potions = this.potions.slice(0, count);
 	}
 
 	protected update(dt: number): void {
@@ -76,7 +91,7 @@ export class Chest extends Component {
 		if (!this._given) {
 			if (this._near(player, this.giveRadius)) {
 				this._given = true;
-				this._left = this.potions.length || this.count;
+				this._left = this._kinds.length;
 				this._timer = 0;
 			}
 			return;
@@ -101,15 +116,14 @@ export class Chest extends Component {
 
 	private _throw(): void {
 		const laid = this.potions.shift();
-		const laidKind = this._kinds.shift();
+		const kind = this._kinds.shift() || PotionKind.Plain;
 		if (laid && laid.isValid) {
 			// Out of the chest, into the level, from where it lay.
 			const start = laid.worldPosition.clone();
 			laid.setParent(this.node.parent, true);
-			this._flights.push({ node: laid, kind: laidKind || PotionKind.Plain, start, time: 0, duration: 0.1 });
+			this._flights.push({ node: laid, kind, start, time: 0, duration: 0.1 });
 			return;
 		}
-		const kind = rollPotionKind();
 		if (!this.potion) {
 			// Nothing to show flying: the potion is simply handed over.
 			const player = PlayerAttack.instance;

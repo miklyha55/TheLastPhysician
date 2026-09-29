@@ -377,10 +377,11 @@ export class PlayerAttack extends Component {
 	private _throw(target: Zombie, kind: PotionKind = PotionKind.Plain): void {
 		// A drone takes note, as it leaves, of every zombie on the screen: those, and no others.
 		const prey = kind === PotionKind.Drone ? HazardVictims.zombies().filter((zombie) => zombie !== target) : null;
-		// Marked at once, while it is still in the air: the next shots go to the others.
+		// Those it will finish — a life left — marked at once, while it is still in the air: the next
+		// shots go to the others. One with more lives the drone only wounds; the player shoots it still.
 		if (prey) {
-			target.doomed = true;
-			prey.forEach((zombie) => (zombie.doomed = true));
+			target.doomed = target.lives <= 1;
+			prey.forEach((zombie) => (zombie.doomed = zombie.lives <= 1));
 		}
 		if (!this.projectile) {
 			// Nothing to throw: the hit lands at once.
@@ -511,8 +512,8 @@ export class PlayerAttack extends Component {
 			// Red: a barrel's blast, smaller.
 			explosives.bomb(at, from);
 		} else if (kind === PotionKind.Drone) {
-			// Green: the one it was thrown at dies, whatever lives it had.
-			alive && this._killBy(target, from);
+			// Green: one life off the one it was thrown at, as the rest along its chain.
+			alive && this._woundBy(target, from);
 		} else if (explosives) {
 			explosives.potionBurst(at, from, target);
 		} else if (alive) {
@@ -532,19 +533,21 @@ export class PlayerAttack extends Component {
 		Sfx.at(Sfx.yes, this.node);
 	}
 
-	/** A zombie killed outright by a potion: its blood, and down it goes. */
-	private _killBy(zombie: Zombie, from: Vec3): void {
+	/** One life off a zombie, by a green potion or its drone: blood, a reel or the fall. */
+	private _woundBy(zombie: Zombie, from: Vec3): void {
 		if (!zombie.isValid || zombie.isDead) {
 			return;
 		}
+		zombie.takeHit();
 		if (this.zombieBlood) {
 			const at = zombie.node.worldPosition;
-			this.zombieBlood.splash(v3(at.x, at.y + this.aimHeight, at.z), from, this.killSplash);
+			this.zombieBlood.splash(v3(at.x, at.y + this.aimHeight, at.z), from, zombie.isDead ? this.killSplash : 1);
 		}
-		zombie.kill();
+		// Still standing: a target like any other again.
+		!zombie.isDead && (zombie.doomed = false);
 	}
 
-	/** A green potion's first kill done: on it flies to the rest of what it saw. */
+	/** A green potion's first hit done: on it flies to the rest of what it saw. */
 	private _launchDrone(node: Node, prey: Zombie[]): void {
 		if (!this._droneFinder && this._walls) {
 			this._droneFinder = new PathFinder(this._walls, 0.25);
@@ -555,7 +558,7 @@ export class PlayerAttack extends Component {
 				prey.slice(),
 				this._droneFinder,
 				{ speed: this.droneSpeed, height: this.droneHeight, reach: this.droneReach, repath: 0.3, giveUp: 5, spin: this.spinSpeed },
-				(zombie, from) => this._killBy(zombie, from),
+				(zombie, from) => this._woundBy(zombie, from),
 				(done) => done.isValid && done.destroy(),
 			),
 		);

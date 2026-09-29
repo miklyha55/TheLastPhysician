@@ -2,12 +2,13 @@ import { Material, MeshRenderer, Node, Texture2D } from "cc";
 
 // The kinds of potion the player shoots. Pink — the plain one: one life off whoever it lands on.
 // Red — a bomb: it bursts like a barrel, half as wide, killing every zombie in the circle and
-// setting off the barrels in it; the player it spares. Green — a drone: it kills the one it is
-// thrown at, then flies on round the walls to every other zombie that was on the screen the
-// moment it was thrown, one after another, and kills each; whoever comes into sight later it leaves.
+// setting off the barrels in it; the player it spares. Green — a drone: a life off the one it is
+// thrown at, then it flies on round the walls to every other zombie that was on the screen the
+// moment it was thrown, one after another, and takes a life off each; whoever comes into sight
+// later it leaves.
 //
-// They come out of chests and fall from zombies, the special ones seldom; on the back they are
-// shot in turn, the lowest first — the one right over the keys.
+// They come out of chests, as many of each as the level is reckoned to need, and fall from zombies
+// by the dice; on the back they are shot in turn, the lowest first — the one right over the keys.
 // A kind is only the colour of its liquid on the model: the potion's material with its palette's
 // liquid cell painted over — glass, cork and rope stay as they are.
 
@@ -17,13 +18,11 @@ export enum PotionKind {
 	Drone = 2,
 }
 
-/** Chance of each special kind, for every potion a chest gives. */
-export const POTION_CHANCE = { bomb: 0.15, drone: 0.18 };
-/** And for every potion a zombie drops: much rarer — there are many zombies. */
-export const DROP_CHANCE = { bomb: 0.05, drone: 0.02 };
+/** Chance of each special kind, for every potion a zombie drops. A chest's are set for its level (Chest). */
+export const DROP_CHANCE = { bomb: 0.15, drone: 0.15 };
 
-/** A potion's kind by the dice: seldom a special one. */
-export function rollPotionKind(chance: { bomb: number; drone: number } = POTION_CHANCE): PotionKind {
+/** A potion's kind by the dice. */
+export function rollPotionKind(chance: { bomb: number; drone: number } = DROP_CHANCE): PotionKind {
 	const roll = Math.random();
 	if (roll < chance.drone) {
 		return PotionKind.Drone;
