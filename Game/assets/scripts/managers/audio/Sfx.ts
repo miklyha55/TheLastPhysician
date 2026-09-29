@@ -14,9 +14,9 @@ function any(set: string[]): string {
  * never tiring. Worked out from how loud each file is while it sounds (its loud part, in dB)
  * against a level for what it is for:
  *
- *   explosion −14 · player's death −16 · intro −18 · girl's throw −18 · gate −20 · prop hit −20
+ *   explosion −14 · player's death −16 · intro −18 · gate −20 · prop hit −20 · girl's throw −21
  *   chest −22 · shot, throw −22
- *   jump −23 · door −24 · fire −24 · key −24 · potion −26 · zombie's strike −26.5 · music −30 · zombies −30.5
+ *   jump −23 · door −24 · fire −24 · key −24 · potion −26 · zombie's strike −26.5 · zombies −30.5 · music −32
  *   steps −35.5 · level's results −20 (a card over the game, not from a place)
  *
  * gain = 10^((level − file's loudness) / 20), never above 1 — the zombies' voices and the
@@ -29,8 +29,8 @@ const GAIN: { [path: string]: number } = {
 	"intro/intro_eng": 0.98, // −17.8
 	"intro/intro_ru": 0.98, // −17.8
 	"jump": 0.32, // −13.2
-	"music/music_final": 0.14, // −13.7; a quarter down by ear
-	"music/music_game": 0.13, // −12.6; a quarter down by ear
+	"music/music_final": 0.12, // −13.7; down by ear, twice
+	"music/music_game": 0.11, // −12.6; down by ear, twice
 	"player_die": 0.35, // −10.7; down from its −16 level by ear
 	"shoot": 1.0, // −20.4 (the quieter new file): as loud as it goes — the −16 asked for by ear would need 1.7
 	"throw": 0.27, // −10.7
@@ -54,7 +54,7 @@ const GAIN: { [path: string]: number } = {
 	"chest_appear": 1.0, // −22.2
 	"gate_open": 0.8, // −23.9, a touch down by ear
 	"kick_from_fly_prop": 0.32, // −12.4: −22 by ear, a thing flying into someone
-	"throw_zombie_wooman": 0.45, // −11.1, to −18: the girl's throw, a warning to hear
+	"throw_zombie_wooman": 0.32, // −11.1, to −21: the girl's throw, a warning to hear — a step down by ear
 	"zombie_man_attack": 0.27, // −15.2, to −26.5: a zombie's swing, a little over their voices
 	"show_results_by_level": 1.0, // −28.4, recorded quiet: as it is
 };

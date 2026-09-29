@@ -22,6 +22,10 @@ const RU: { [key: string]: Text } = {
 	"death.title": "Вы погибли",
 	"death.again": "Ещё раз",
 	"death.fromStart": "Заново",
+	"death.confirmTitle": "Начать заново?",
+	"death.confirmNote": "Пройденные уровни будут потеряны",
+	"death.keep": "Отмена",
+	"death.wipe": "Заново",
 
 	"final.title": "Свобода!",
 	"final.subtitle": "Подземелье пройдено",
@@ -63,6 +67,10 @@ const EN: { [key: string]: Text } = {
 	"death.title": "You died",
 	"death.again": "Once more",
 	"death.fromStart": "From scratch",
+	"death.confirmTitle": "Start over?",
+	"death.confirmNote": "Levels you have passed will be lost",
+	"death.keep": "Cancel",
+	"death.wipe": "Start over",
 
 	"final.title": "Freedom!",
 	"final.subtitle": "The dungeon is behind you",

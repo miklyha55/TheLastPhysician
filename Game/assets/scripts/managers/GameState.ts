@@ -306,7 +306,25 @@ export class GameState {
 			GameState._results(),
 			[
 				{ text: I18n.t("death.again"), primary: true, onClick: () => GameState._again() },
-				{ text: I18n.t("death.fromStart"), onClick: () => GameState.restartGame(() => ResultsScreen.hide()) },
+				{ text: I18n.t("death.fromStart"), onClick: () => GameState._confirmFromStart() },
+			],
+			true,
+		);
+	}
+
+	/**
+	 * "From scratch" asks first, the way ThroughTheDeadCity does: the levels passed are lost, and one
+	 * tap should not throw them away. "Cancel" comes first and is the big one — the hand should go to
+	 * the safe answer, not to the one that cannot be undone — and brings the death card back.
+	 */
+	private static _confirmFromStart(): void {
+		ResultsScreen.show(
+			I18n.t("death.confirmTitle"),
+			I18n.t("death.confirmNote"),
+			[],
+			[
+				{ text: I18n.t("death.keep"), primary: true, onClick: () => GameState.died() },
+				{ text: I18n.t("death.wipe"), onClick: () => GameState.restartGame(() => ResultsScreen.hide()) },
 			],
 			true,
 		);
