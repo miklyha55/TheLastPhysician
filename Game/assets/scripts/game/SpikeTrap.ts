@@ -114,7 +114,8 @@ export class SpikeTrap extends Component {
 		}
 		for (const zombie of HazardVictims.zombies()) {
 			const them = zombie.node.worldPosition;
-			this._catches(them) && HazardVictims.kill(zombie, this._from(at, them));
+			// A bat flies over the spikes.
+			!zombie.flies && this._catches(them) && HazardVictims.kill(zombie, this._from(at, them));
 		}
 	}
 

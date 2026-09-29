@@ -142,12 +142,27 @@ export class Zombie extends Component {
 		return this._mode === Mode.Dead;
 	}
 
+	/** Is it in the air (Bat): over the floor's traps and furniture, out of the walkers' way. */
+	get flies(): boolean {
+		return false;
+	}
+
+	/** How high over its feet a potion is aimed at it; below 0 — the thrower's own aim. */
+	get aimLift(): number {
+		return -1;
+	}
+
 	protected onLoad(): void {
 		this.animation = this.animation || this.getComponentInChildren(SkeletalAnimation);
 		// Baked in play — before any clip is set up on it.
 		if (this.animation && this.bakeInPlay && !this.animation.useBakedAnimation) {
 			this.animation.useBakedAnimation = true;
 		}
+		this._createStates();
+	}
+
+	/** Its clips as states of its own names on the animation, at their speeds. */
+	private _createStates(): void {
 		this._createState(this.idleClip, IDLE, true);
 		this._createState(this.runClip, RUN, true);
 		this._createState(this.attackClip, ATTACK, false);
@@ -173,6 +188,12 @@ export class Zombie extends Component {
 	}
 
 	protected start(): void {
+		// The animation's own start-up, coming after this one's (it sits lower in the tree), lays its
+		// states out afresh from its list of clips — and drops those made of a clip on that list: a
+		// bat's clips come in its model's file. Made again now, with everything loaded.
+		if (this.animation && !this.animation.getState(IDLE)) {
+			this._createStates();
+		}
 		this._home.set(this.node.worldPosition);
 		this._stand();
 	}
@@ -363,7 +384,12 @@ export class Zombie extends Component {
 			return;
 		}
 		this._spokeAt = now;
-		Sfx.at(Sfx.zombie, this.node, this.speakVolume);
+		Sfx.at(this._voice(), this.node, this.speakVolume);
+	}
+
+	/** What it says: a zombie's groans; other kinds their own. */
+	protected _voice(): string | string[] {
+		return Sfx.zombie;
 	}
 
 	/** The player noticed: after them. A plain zombie runs at them; other kinds do their own thing. */
@@ -473,6 +499,11 @@ export class Zombie extends Component {
 		for (const listener of Zombie.deathListeners.slice()) {
 			listener(this);
 		}
+		this._vanish();
+	}
+
+	/** After the fall: lies there, then sinks through the floor and is gone. */
+	protected _vanish(): void {
 		const node = this.node;
 		const down = node.position.clone();
 		down.y -= this.sinkDepth;
@@ -528,7 +559,8 @@ export class Zombie extends Component {
 	/** Pushes the point out of other zombies. */
 	protected _keepApart(point: Vec3): void {
 		for (const other of Zombie.all) {
-			if (other === this) {
+			// The ones in the air and the ones on the floor pass over and under each other.
+			if (other === this || other.flies !== this.flies) {
 				continue;
 			}
 			const them = other.node.worldPosition;

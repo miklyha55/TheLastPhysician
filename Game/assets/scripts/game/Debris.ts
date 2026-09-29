@@ -328,7 +328,8 @@ export class Debris extends Component {
 			this._movers.push(this._mover(player.node, null, dt));
 		}
 		for (const zombie of Zombie.all) {
-			this._movers.push(this._mover(zombie.node, zombie, dt));
+			// A bat flies over the barrels and crates; it kicks nothing.
+			!zombie.flies && this._movers.push(this._mover(zombie.node, zombie, dt));
 		}
 	}
 

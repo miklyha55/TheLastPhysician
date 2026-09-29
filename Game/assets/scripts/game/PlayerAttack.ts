@@ -397,7 +397,9 @@ export class PlayerAttack extends Component {
 
 	private _aim(target: Zombie, out: Vec3): Vec3 {
 		const at = target.node.worldPosition;
-		return out.set(at.x, at.y + this.aimHeight, at.z);
+		// A bat is aimed at where it hangs or flies, not at the floor under it.
+		const lift = target.aimLift;
+		return out.set(at.x, at.y + (lift >= 0 ? lift : this.aimHeight), at.z);
 	}
 
 	/**

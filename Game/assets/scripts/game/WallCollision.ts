@@ -156,6 +156,36 @@ export class WallCollision extends Component {
 	}
 
 	/**
+	 * Would something of `radius`, in the air `over` above the floor, touch a wall or a shut door
+	 * here? What is no higher — a table, a barrel, a chest — it passes over (a bat).
+	 */
+	isBlockedAbove(x: number, z: number, radius: number, over: number): boolean {
+		if (!this._cells || !this._tops) {
+			return false;
+		}
+		const size = this.cellSize;
+		const reach = radius + size * 0.5;
+		const c0 = Math.max(0, Math.floor((x - reach - this._originX) / size));
+		const c1 = Math.min(this._cols - 1, Math.floor((x + reach - this._originX) / size));
+		const r0 = Math.max(0, Math.floor((z - reach - this._originZ) / size));
+		const r1 = Math.min(this._rows - 1, Math.floor((z + reach - this._originZ) / size));
+		for (let r = r0; r <= r1; r++) {
+			for (let c = c0; c <= c1; c++) {
+				const at = r * this._cols + c;
+				if ((!this._cells[at] && !this._closedDoorAt(at)) || this._tops[at] <= over) {
+					continue;
+				}
+				const dx = this._originX + (c + 0.5) * size - x;
+				const dz = this._originZ + (r + 0.5) * size - z;
+				if (dx * dx + dz * dz <= reach * reach) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Pushes a point of the player's radius out of the walls it overlaps — for things other
 	 * than the player bouncing off them. Returns false when it overlapped nothing.
 	 */
