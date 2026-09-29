@@ -2546,6 +2546,9 @@
       "__id__": 7
     },
     "bakeInPlay": false,
+    "wanderSpeakChance": 0.35,
+    "speakGap": 1.5,
+    "speakVolume": 1,
     "idleClip": {
       "__uuid__": "e4577c96-f838-4cdf-864d-b2fef53ae47b@18d6f",
       "__expectedType__": "cc.AnimationClip"
@@ -2643,7 +2646,7 @@
       "__id__": 104
     },
     "potion": null,
-    "chance": 0.25,
+    "chance": 0.35,
     "minCount": 1,
     "maxCount": 2,
     "dropHeight": 0.5,

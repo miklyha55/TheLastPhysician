@@ -5,9 +5,11 @@ import { gameEventTarget } from "../plugins/GameEventTarget";
 import { LevelStats } from "./LevelStats";
 import { I18n } from "./I18n";
 import { Intro } from "./Intro";
+import { LevelMap, LevelMapEntry } from "./LevelMap";
 import { LoadingScreen } from "./LoadingScreen";
 import { lockPage } from "./PageLock";
 import { Prewarm } from "./Prewarm";
+import { Progress } from "./Progress";
 import { ResultsScreen, ResultsRow } from "./ResultsScreen";
 import { SplashScreen } from "./SplashScreen";
 import { Sfx } from "./audio/Sfx";
@@ -75,6 +77,8 @@ export class GameState {
 	}
 
 	private static _platform: Promise<void> = null;
+	/** The level map stopped the world, and gives it back on closing. */
+	private static _mapHeld = false;
 	/** Stopped by the platform — an ad, another tab — and whether that stopped the world too. */
 	private static _hostPaused = false;
 	private static _hostHeldWorld = false;
@@ -91,10 +95,18 @@ export class GameState {
 			if (EDITOR) {
 				return (GameState._platform = Promise.resolve());
 			}
-			GameState._platform = Yandex.start().then(() => {
-				I18n.apply(Yandex.language() || (typeof navigator !== "undefined" ? navigator.language : ""));
-				GameState._listenPlatform();
-			});
+			GameState._platform = Yandex.start()
+				.then(() => {
+					I18n.apply(Yandex.language() || (typeof navigator !== "undefined" ? navigator.language : ""));
+					GameState._listenPlatform();
+					// What the player had got to, from the platform's cloud: before the start screen,
+					// whose "play" goes on from there.
+					return Progress.load();
+				})
+				.then(() => {
+					Progress.totals && (GameState._totals = { ...GameState._freshTotals(), ...Progress.totals });
+					GameState._setUpMap();
+				});
 		}
 		return GameState._platform;
 	}
@@ -175,6 +187,9 @@ export class GameState {
 		const carried = GameState._carried;
 		GameState._carried = null;
 		GameState._entry = carried ? carried.slice() : null;
+		// Where the player is, with what they came in with, into the cloud — every level but the one the
+		// game opens on, which is only its door: the start screen's "play" goes on from the saved one.
+		GameState._started && Progress.enter(GameState._level, carried);
 		// The very first level of a run: the start screen over it, with the button to play.
 		if (!GameState._started) {
 			GameState._started = true;
@@ -217,6 +232,16 @@ export class GameState {
 					onClick: () => {
 						clearInterval(watch);
 						held && director.resume();
+						// Saved further on: the game goes on there, with what the player took into it —
+						// the start screen gone under the loading one.
+						const saved = Progress.level;
+						if (saved > 0 && saved < GameState.levels.length && saved !== GameState._level) {
+							Yandex.loaded();
+							GameState._begun = true;
+							Sfx.playMusic();
+							GameState._load(GameState.levels[saved], Progress.entry(saved), () => SplashScreen.hide());
+							return;
+						}
 						SplashScreen.hide();
 						Yandex.loaded();
 						Yandex.play();
@@ -247,6 +272,10 @@ export class GameState {
 		const last = GameState._level < 0 || next >= GameState.levels.length;
 		const carried = stack.slice();
 		GameState._addToTotals();
+		// Passed, into the cloud — and the next level with what the player takes into it: closed on
+		// the results, the game opens there.
+		GameState._level >= 0 && Progress.pass(GameState._level, GameState._totals);
+		!last && Progress.enter(next, carried);
 		// The results first, the game held still under them; on with the button.
 		GameState._loading = true;
 		director.pause();
@@ -324,7 +353,14 @@ export class GameState {
 			[],
 			[
 				{ text: I18n.t("death.keep"), primary: true, onClick: () => GameState.died() },
-				{ text: I18n.t("death.wipe"), onClick: () => GameState.restartGame(() => ResultsScreen.hide()) },
+				{
+					text: I18n.t("death.wipe"),
+					onClick: () => {
+						// As it warns: the levels passed are gone, from the cloud too.
+						Progress.wipe();
+						GameState.restartGame(() => ResultsScreen.hide());
+					},
+				},
 			],
 			true,
 		);
@@ -421,6 +457,8 @@ export class GameState {
 						director.resume();
 						// The final screen held the loading flag: a new run starts clean.
 						GameState._loading = false;
+						// A new run; the map stays open — the levels are passed.
+						Progress.newRun();
 						GameState.restartGame(() => SplashScreen.hide());
 					},
 				},
@@ -521,6 +559,62 @@ export class GameState {
 			);
 		});
 	}
+
+	/**
+	 * The level map (LevelMap): its levels from the saved progress, open while a level is being
+	 * played with the player on their feet; while it is up the world stands, and a level picked on
+	 * it is loaded with the stack the player last came into it with.
+	 */
+	private static _setUpMap(): void {
+		LevelMap.entries = () => {
+			const reached = Math.min(Progress.reached, GameState.levels.length);
+			return GameState.levels.map(
+				(name, index): LevelMapEntry => ({
+					index,
+					here: index === GameState._level,
+					passed: index < reached - 1,
+					locked: index >= reached,
+				}),
+			);
+		};
+		LevelMap.canOpen = () => GameState._begun && GameState._running() && !Intro.locked && GameState._playerUp();
+		LevelMap.onToggle = (open) => {
+			if (open) {
+				GameState._mapHeld = !director.isPaused();
+				GameState._mapHeld && director.pause();
+				Yandex.pause();
+				return;
+			}
+			GameState._mapHeld && director.resume();
+			GameState._mapHeld = false;
+			GameState._running() && Yandex.play();
+		};
+		LevelMap.onPick = (index) => {
+			if (GameState._loading || index < 0 || index >= GameState.levels.length) {
+				return;
+			}
+			GameState._attempt = 1;
+			GameState._load(GameState.levels[index], Progress.entry(index));
+		};
+		LevelMap.start();
+	}
+
+	/** Is the player of this level alive — found by name: the player's scripts reach back here. */
+	private static _playerUp(): boolean {
+		const scene = director.getScene();
+		if (!scene) {
+			return false;
+		}
+		if (GameState._playerScene !== scene) {
+			GameState._playerScene = scene;
+			GameState._player = scene.getComponentInChildren("PlayerAttack") as unknown as { isDead: boolean; isValid: boolean };
+		}
+		const player = GameState._player;
+		return !!player && player.isValid && !player.isDead;
+	}
+
+	private static _playerScene: unknown = null;
+	private static _player: { isDead: boolean; isValid: boolean } = null;
 
 	private static _fail(scene: string, error: Error): void {
 		console.error(`GameState: the scene "${scene}" could not be loaded — is it in the build?`, error || "");

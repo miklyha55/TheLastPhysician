@@ -182,6 +182,45 @@ export class Yandex {
 		});
 	}
 
+	/**
+	 * What was saved for this player — in the platform's cloud, tied to the player whether signed
+	 * in or not. Off the platform (a preview, a server of our own) it lies in the browser instead,
+	 * so the game plays the same there. Nothing saved, or no answer — an empty object: the game
+	 * starts clean rather than fails.
+	 */
+	static async loadData(): Promise<{ [key: string]: unknown }> {
+		const sdk = Yandex._sdk;
+		if (!sdk) {
+			return readLocal();
+		}
+		try {
+			Yandex._player = Yandex._player || (sdk.getPlayer ? await sdk.getPlayer({ scopes: false }) : null);
+			const data = Yandex._player && Yandex._player.getData ? await Yandex._player.getData() : null;
+			return data && typeof data === "object" ? data : {};
+		} catch {
+			return {};
+		}
+	}
+
+	/**
+	 * Saves `state` whole — the platform is not promised to merge keys with what it has. `now` —
+	 * sent at once, not gathered with the next ones: the page is going, or the player wiped it all.
+	 */
+	static async saveData(state: object, now = false): Promise<void> {
+		if (!Yandex._sdk) {
+			writeLocal(state);
+			return;
+		}
+		try {
+			Yandex._player && Yandex._player.setData && (await Yandex._player.setData(state, now));
+		} catch {
+			// no network, or the platform's limit on writes — the game goes on
+		}
+	}
+
+	/** The player, for their saved data; asked for once. */
+	private static _player: any = null;
+
 	/** A full-screen ad; true when it was shown. How often, the platform guards itself. */
 	static showFullscreen(): Promise<boolean> {
 		const adv = Yandex._sdk && Yandex._sdk.adv;
@@ -222,6 +261,27 @@ export function regainFocus(): void {
 		// the browser would not — the focus is where it was
 	}
 	focusGame();
+}
+
+/** Where the saved game lies off the platform. */
+const LOCAL_KEY = "tlp-progress";
+
+function readLocal(): { [key: string]: unknown } {
+	try {
+		const text = typeof localStorage !== "undefined" ? localStorage.getItem(LOCAL_KEY) : null;
+		const data = text ? JSON.parse(text) : null;
+		return data && typeof data === "object" ? data : {};
+	} catch {
+		return {};
+	}
+}
+
+function writeLocal(state: object): void {
+	try {
+		typeof localStorage !== "undefined" && localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
+	} catch {
+		// a private window, the storage full or shut — the game goes on unsaved
+	}
 }
 
 /** Is there a file at `src`: asked without loading it, with a limit. */

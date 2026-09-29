@@ -31,6 +31,13 @@ const RU: { [key: string]: Text } = {
 	"final.subtitle": "Подземелье пройдено",
 	"final.again": "Играть снова",
 
+	"map.title": "Уровни",
+	"map.open": "Карта уровней",
+	"map.here": "Здесь",
+	"map.passed": "Пройден",
+	"map.next": "Дальше",
+	"map.locked": "Закрыт",
+
 	"row.levels": "Уровней пройдено",
 	"row.killed": "Зомби убито",
 	"row.thrown": "Склянок брошено",
@@ -75,6 +82,13 @@ const EN: { [key: string]: Text } = {
 	"final.title": "Freedom!",
 	"final.subtitle": "The dungeon is behind you",
 	"final.again": "Play again",
+
+	"map.title": "Levels",
+	"map.open": "Level map",
+	"map.here": "Here",
+	"map.passed": "Passed",
+	"map.next": "Next",
+	"map.locked": "Locked",
 
 	"row.levels": "Levels cleared",
 	"row.killed": "Zombies killed",
