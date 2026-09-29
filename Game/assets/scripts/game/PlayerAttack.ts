@@ -92,6 +92,10 @@ export class PlayerAttack extends Component {
 	spinSpeed: number = 720;
 	@property({ tooltip: "Height above a zombie's feet the potion flies at" })
 	aimHeight: number = 0.4;
+	@property({ tooltip: "A zombie shot down this near, units, and the player cries \"yes!\"" })
+	closeKillDistance: number = 0.9;
+	@property({ tooltip: "Seconds at the least between two of the player's \"yes!\" — a chain of barrels says it once" })
+	cheerGap: number = 1;
 	@property({ tooltip: "Degrees per second the camera circles the fallen player" })
 	orbitSpeed: number = 20;
 	@property({ tooltip: "Height above the fallen player's feet the camera looks at" })
@@ -110,6 +114,8 @@ export class PlayerAttack extends Component {
 	private _shots: Shot[] = [];
 	/** When the last potion-in sound went out, ms. */
 	private _potionSoundAt = 0;
+	/** When the player last cried "yes!", ms. */
+	private _cheeredAt = -Infinity;
 	private _spare: Node[] = [];
 	private _to = v3();
 
@@ -463,16 +469,27 @@ export class PlayerAttack extends Component {
 	 * a life and a barrel near it goes off; without it, just the zombie hit loses one.
 	 */
 	private _hit(target: Zombie, from: Vec3, at: Vec3): void {
+		// Shot down at arm's length: the player's "yes!".
+		const alive = target.isValid && !target.isDead;
+		const near = alive && Vec3.distance(target.node.worldPosition, this.node.worldPosition) <= this.closeKillDistance;
 		const explosives = Explosives.instance;
 		if (explosives) {
 			explosives.potionBurst(at, from, target);
+		} else if (alive) {
+			target.takeHit();
+			this.zombieBlood && this.zombieBlood.splash(at, from, target.isDead ? this.killSplash : 1);
+		}
+		near && target.isDead && this.cheer();
+	}
+
+	/** The player's "yes!" — a close kill, a barrel gone off; not twice within `cheerGap`. */
+	cheer(): void {
+		const now = Date.now();
+		if (this._dead || now - this._cheeredAt < this.cheerGap * 1000) {
 			return;
 		}
-		if (target.isDead) {
-			return;
-		}
-		target.takeHit();
-		this.zombieBlood && this.zombieBlood.splash(at, from, target.isDead ? this.killSplash : 1);
+		this._cheeredAt = now;
+		Sfx.at(Sfx.yes, this.node);
 	}
 
 	/** A potion that landed waits for the next throw instead of being made again. */

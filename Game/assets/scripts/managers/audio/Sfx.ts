@@ -14,7 +14,7 @@ function any(set: string[]): string {
  * never tiring. Worked out from how loud each file is while it sounds (its loud part, in dB)
  * against a level for what it is for:
  *
- *   explosion −14 · player's death −16 · intro −18 · gate −20 · prop hit −20 · girl's throw −21
+ *   explosion −14 · "yes!" −14.4 · player's death −16 · intro −18 · gate −20 · prop hit −20 · girl's throw −21
  *   chest −22 · shot, throw −22
  *   jump −23 · door −24 · fire −24 · key −24 · bat −25 · potion −26 · zombie's strike −26.5 · zombies −30.5 · music −32
  *   steps −35.5 · level's results −20 (a card over the game, not from a place)
@@ -57,6 +57,7 @@ const GAIN: { [path: string]: number } = {
 	"throw_zombie_wooman": 0.32, // −11.1, to −21: the girl's throw, a warning to hear — a step down by ear
 	"zombie_man_attack": 0.27, // −15.2, to −26.5: a zombie's swing, a little over their voices
 	"show_results_by_level": 1.0, // −28.4, recorded quiet: as it is
+	"yes": 0.6, // −10.0, to −14.4: the player's "yes!", up by ear to the blast's level — heard over it
 	"bat": 0.35, // −15.8, to −25: a bat's cry, a warning to hear, a touch over a zombie's swing
 };
 
@@ -97,6 +98,8 @@ export const Sfx = {
 	levelResults: "show_results_by_level",
 	/** A bat's cry: as it drops at the player, and as it is shot down. */
 	bat: "bat",
+	/** The player's "yes!": a zombie shot down at arm's length, a barrel gone off. */
+	yes: "yes",
 
 	get intro(): string {
 		// In the game's language: the platform's, as all its texts.
@@ -138,7 +141,7 @@ export const Sfx = {
 
 	/** Loads what plays often, so its first time is not late. */
 	preload(): void {
-		Sound.preload([...Sfx.walk, ...Sfx.zombie, Sfx.explosion, Sfx.jump, Sfx.playerDie, Sfx.shoot, Sfx.throw, Sfx.getPotion, Sfx.getKey, Sfx.doorOpen, Sfx.doorClose, Sfx.chestClose, Sfx.gateOpen, Sfx.propHit, Sfx.girlThrow, Sfx.zombieAttack, Sfx.levelResults, Sfx.bat]);
+		Sound.preload([...Sfx.walk, ...Sfx.zombie, Sfx.explosion, Sfx.jump, Sfx.playerDie, Sfx.shoot, Sfx.throw, Sfx.getPotion, Sfx.getKey, Sfx.doorOpen, Sfx.doorClose, Sfx.chestClose, Sfx.gateOpen, Sfx.propHit, Sfx.girlThrow, Sfx.zombieAttack, Sfx.levelResults, Sfx.bat, Sfx.yes]);
 	},
 
 	_musicPath: "music/music_game",

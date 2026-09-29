@@ -5,7 +5,6 @@ import { gameEventTarget } from "../plugins/GameEventTarget";
 import { LevelStats } from "./LevelStats";
 import { I18n } from "./I18n";
 import { Intro } from "./Intro";
-import { LevelMap, LevelMapEntry } from "./LevelMap";
 import { LoadingScreen } from "./LoadingScreen";
 import { lockPage } from "./PageLock";
 import { Prewarm } from "./Prewarm";
@@ -77,8 +76,6 @@ export class GameState {
 	}
 
 	private static _platform: Promise<void> = null;
-	/** The level map stopped the world, and gives it back on closing. */
-	private static _mapHeld = false;
 	/** Stopped by the platform — an ad, another tab — and whether that stopped the world too. */
 	private static _hostPaused = false;
 	private static _hostHeldWorld = false;
@@ -105,7 +102,6 @@ export class GameState {
 				})
 				.then(() => {
 					Progress.totals && (GameState._totals = { ...GameState._freshTotals(), ...Progress.totals });
-					GameState._setUpMap();
 				});
 		}
 		return GameState._platform;
@@ -457,7 +453,7 @@ export class GameState {
 						director.resume();
 						// The final screen held the loading flag: a new run starts clean.
 						GameState._loading = false;
-						// A new run; the map stays open — the levels are passed.
+						// A new run: from the first level, the levels passed kept.
 						Progress.newRun();
 						GameState.restartGame(() => SplashScreen.hide());
 					},
@@ -559,62 +555,6 @@ export class GameState {
 			);
 		});
 	}
-
-	/**
-	 * The level map (LevelMap): its levels from the saved progress, open while a level is being
-	 * played with the player on their feet; while it is up the world stands, and a level picked on
-	 * it is loaded with the stack the player last came into it with.
-	 */
-	private static _setUpMap(): void {
-		LevelMap.entries = () => {
-			const reached = Math.min(Progress.reached, GameState.levels.length);
-			return GameState.levels.map(
-				(name, index): LevelMapEntry => ({
-					index,
-					here: index === GameState._level,
-					passed: index < reached - 1,
-					locked: index >= reached,
-				}),
-			);
-		};
-		LevelMap.canOpen = () => GameState._begun && GameState._running() && !Intro.locked && GameState._playerUp();
-		LevelMap.onToggle = (open) => {
-			if (open) {
-				GameState._mapHeld = !director.isPaused();
-				GameState._mapHeld && director.pause();
-				Yandex.pause();
-				return;
-			}
-			GameState._mapHeld && director.resume();
-			GameState._mapHeld = false;
-			GameState._running() && Yandex.play();
-		};
-		LevelMap.onPick = (index) => {
-			if (GameState._loading || index < 0 || index >= GameState.levels.length) {
-				return;
-			}
-			GameState._attempt = 1;
-			GameState._load(GameState.levels[index], Progress.entry(index));
-		};
-		LevelMap.start();
-	}
-
-	/** Is the player of this level alive — found by name: the player's scripts reach back here. */
-	private static _playerUp(): boolean {
-		const scene = director.getScene();
-		if (!scene) {
-			return false;
-		}
-		if (GameState._playerScene !== scene) {
-			GameState._playerScene = scene;
-			GameState._player = scene.getComponentInChildren("PlayerAttack") as unknown as { isDead: boolean; isValid: boolean };
-		}
-		const player = GameState._player;
-		return !!player && player.isValid && !player.isDead;
-	}
-
-	private static _playerScene: unknown = null;
-	private static _player: { isDead: boolean; isValid: boolean } = null;
 
 	private static _fail(scene: string, error: Error): void {
 		console.error(`GameState: the scene "${scene}" could not be loaded — is it in the build?`, error || "");

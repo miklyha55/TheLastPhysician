@@ -96,6 +96,8 @@ export class Explosives extends Component {
 		}
 		this._pending.delete(body);
 		LevelStats.barrels++;
+		// A barrel gone off: the player's "yes!" (once for a chain of them).
+		PlayerAttack.instance && PlayerAttack.instance.cheer();
 		const ground = body.node.worldPosition.clone();
 		const at = v3(ground.x, ground.y + this.fireHeight, ground.z);
 		this.barrelFire && this.barrelFire.burst(at);
