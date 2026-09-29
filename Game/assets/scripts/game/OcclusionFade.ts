@@ -8,6 +8,11 @@ const GRAIN = "ditherGrain";
 // nothing, and a dissolved one would open a black hole — SeeThrough fades only things taller
 // than a person for the same reason.
 const FLOOR_TOP = 0.1;
+// And a mesh that reaches down into the floor's slab is floor too, whatever stands on it: a few
+// tiles carry their floor in one mesh with what rises from it — a pendulum's frame, a lever's
+// base — and faded whole they opened that same black hole under the pendulum as the player died.
+// Nothing that stands on the floor reaches so deep: spikes hide to −0.04, a button to −0.02.
+const FLOOR_SLAB = -0.05;
 
 interface Item {
 	root: Node;
@@ -174,7 +179,7 @@ export class OcclusionFade extends Component {
 
 	private _isFloor(renderer: MeshRenderer): boolean {
 		const bounds = this._tightBounds(renderer, this._bounds);
-		return !!bounds && bounds.center.y + bounds.halfExtents.y < FLOOR_TOP;
+		return !!bounds && (bounds.center.y + bounds.halfExtents.y < FLOOR_TOP || bounds.center.y - bounds.halfExtents.y < FLOOR_SLAB);
 	}
 
 	/**
