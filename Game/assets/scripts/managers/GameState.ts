@@ -150,6 +150,9 @@ export class GameState {
 		);
 	}
 
+	/** Seconds the start screen waits for its picture at the most: a slow network does not hold the game. */
+	static pictureWait = 4;
+
 	/** What the loading screen calls the level being played. */
 	static get title(): string {
 		return GameState._level >= 0 ? I18n.t("level.title", GameState._level + 1) : "";
@@ -174,8 +177,12 @@ export class GameState {
 		// The very first level of a run: the start screen over it, with the button to play.
 		if (!GameState._started) {
 			GameState._started = true;
-			// The platform first: its language goes on the very first screen. Off it this is at once.
-			GameState.platform().then(() => GameState._showStart());
+			// The platform first: its language goes on the very first screen (off it this is at once).
+			// And the start picture ready, so it comes up with its screen, not after it — not waited
+			// for longer than `pictureWait`. The final one loads meanwhile, for the end of the game.
+			const picture = Promise.race([SplashScreen.preload(["ui/start"]), new Promise<void>((done) => setTimeout(done, GameState.pictureWait * 1000))]);
+			SplashScreen.preload(["ui/final"]);
+			Promise.all([GameState.platform(), picture]).then(() => GameState._showStart());
 		}
 		return carried;
 	}

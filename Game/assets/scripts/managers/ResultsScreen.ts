@@ -95,13 +95,14 @@ export class ResultsScreen {
 		});
 		const root = ResultsScreen._root;
 		root.style.display = "flex";
-		// Restart the card's entrance.
+		// Restart the card's entrance. Shown at once, not in the next animation frame: on a phone
+		// that frame can come late or not at all (the page throttled, back from an ad), and the card
+		// stood there invisible — its buttons working, nothing to see. The layout is forced so that
+		// the fade still starts from nothing.
 		ResultsScreen._card.classList.remove("tlp-results__card--in");
-		void ResultsScreen._card.offsetWidth;
-		requestAnimationFrame(() => {
-			root.classList.add("tlp-results--shown");
-			ResultsScreen._card.classList.add("tlp-results__card--in");
-		});
+		void root.offsetWidth;
+		root.classList.add("tlp-results--shown");
+		ResultsScreen._card.classList.add("tlp-results__card--in");
 	}
 
 	/** Fades away. */
@@ -138,9 +139,10 @@ export class ResultsScreen {
 	background: linear-gradient(180deg, #3b2a6e 0%, #241a47 100%);
 	border: 3px solid #ffcf4a;
 	box-shadow: 0 10px 0 #16102d, 0 18px 40px rgba(0, 0, 0, 0.55), inset 0 2px 0 rgba(255, 255, 255, 0.15);
-	transform: scale(0.6); opacity: 0;
 }
-.tlp-results__card--in { animation: tlp-results-pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) forwards; }
+/* Seen in its own style, not only at the end of an animation: should the animation not run, the
+   card is there all the same. The entrance plays from nothing to it. */
+.tlp-results__card--in { animation: tlp-results-pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
 .tlp-results__title {
 	text-align: center; color: #ffe066; font-size: clamp(20px, 7vmin, 28px); line-height: 1.1; font-weight: 900; letter-spacing: 0.02em; text-transform: uppercase;
 	text-shadow: 0 3px 0 #b8560f, 0 6px 12px rgba(0, 0, 0, 0.5); flex-shrink: 0;
@@ -157,7 +159,7 @@ export class ResultsScreen {
 .tlp-results__row {
 	display: flex; align-items: center; gap: 10px; padding: clamp(6px, 2vmin, 10px) 14px; border-radius: 14px;
 	background: rgba(255, 255, 255, 0.08); color: #fff; font-size: clamp(14px, 4.2vmin, 17px); font-weight: 700; flex-shrink: 0;
-	opacity: 0; transform: translateY(8px); animation: tlp-results-row 0.3s ease-out forwards;
+	animation: tlp-results-row 0.3s ease-out both;
 }
 .tlp-results__row--minor { padding: 6px 14px 6px 42px; background: none; color: #bfb2e8; font-size: 14px; font-weight: 600; }
 .tlp-results__icon { width: 22px; text-align: center; font-size: 18px; }
@@ -198,8 +200,8 @@ export class ResultsScreen {
 	/* The small line of how belongs under "killed": the whole width, so it does not stray. */
 	.tlp-results__row--minor { grid-column: 1 / -1; padding: 1px 10px 1px 40px; font-size: 12px; }
 }
-@keyframes tlp-results-pop { to { transform: scale(1); opacity: 1; } }
-@keyframes tlp-results-row { to { opacity: 1; transform: none; } }
+@keyframes tlp-results-pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes tlp-results-row { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes tlp-results-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
 `;
 		document.head.appendChild(style);

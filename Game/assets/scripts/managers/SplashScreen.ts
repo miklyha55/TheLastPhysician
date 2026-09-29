@@ -54,10 +54,14 @@ export class SplashScreen {
 		SplashScreen._subtitle.style.display = content.subtitle ? "" : "none";
 		SplashScreen._fillRows(content.rows || []);
 		SplashScreen._fillButtons(content.buttons);
+		SplashScreen._wanted = content.image;
 		SplashScreen._picture(content.image);
 		const root = SplashScreen._root;
 		root.style.display = "flex";
-		requestAnimationFrame(() => root.classList.add("tlp-splash--shown"));
+		// At once, not in the next animation frame: on a phone that frame can come late, and the
+		// screen stood there invisible. The layout forced, so the fade still starts from nothing.
+		void root.offsetWidth;
+		root.classList.add("tlp-splash--shown");
 	}
 
 	static hide(): void {
@@ -73,22 +77,58 @@ export class SplashScreen {
 	/** The picture from the resources bundle, once; on the page as a background. */
 	private static _picture(path: string): void {
 		const image = SplashScreen._image;
-		image.style.backgroundImage = "";
 		const known = SplashScreen._urls[path];
+		image.style.backgroundImage = known ? `url("${known}")` : "";
 		if (known) {
-			image.style.backgroundImage = `url("${known}")`;
 			return;
 		}
-		resources.load(path, ImageAsset, (error, asset) => {
-			if (error || !asset) {
-				console.warn(`SplashScreen: no picture "${path}"`, error || "");
-				return;
-			}
-			const data = asset.data as unknown as HTMLImageElement;
-			const url = (data && data.src) || asset.nativeUrl;
-			SplashScreen._urls[path] = url;
-			image.style.backgroundImage = `url("${url}")`;
+		// Not warmed up: in as soon as it comes, if this screen still wants it.
+		SplashScreen.preload([path]).then(() => {
+			const url = SplashScreen._urls[path];
+			url && SplashScreen._wanted === path && (image.style.backgroundImage = `url("${url}")`);
 		});
+	}
+
+	private static _loading: { [path: string]: Promise<void> } = {};
+	/** The picture the screen up now shows. */
+	private static _wanted = "";
+
+	/**
+	 * The pictures loaded and decoded ahead of their screens: loaded when a screen came up, the
+	 * start picture showed on a phone a moment after the screen. Resolves when all are ready —
+	 * or could not be: a missing picture never holds a screen back.
+	 */
+	static preload(paths: string[]): Promise<void> {
+		return Promise.all(paths.map((path) => SplashScreen._load(path))).then(() => undefined);
+	}
+
+	private static _load(path: string): Promise<void> {
+		if (SplashScreen._urls[path]) {
+			return Promise.resolve();
+		}
+		if (!SplashScreen._loading[path]) {
+			SplashScreen._loading[path] = new Promise<void>((done) => {
+				resources.load(path, ImageAsset, (error, asset) => {
+					if (error || !asset) {
+						console.warn(`SplashScreen: no picture "${path}"`, error || "");
+						delete SplashScreen._loading[path];
+						done();
+						return;
+					}
+					const data = asset.data as unknown as HTMLImageElement;
+					const url = (data && data.src) || asset.nativeUrl;
+					// Decoded too, so the background paints at once, not a frame or two later.
+					const decoded = data && typeof data.decode === "function" ? data.decode() : Promise.resolve();
+					decoded
+						.catch(() => undefined)
+						.then(() => {
+							SplashScreen._urls[path] = url;
+							done();
+						});
+				});
+			});
+		}
+		return SplashScreen._loading[path];
 	}
 
 	private static _fillRows(rows: ResultsRow[]): void {
@@ -186,7 +226,7 @@ export class SplashScreen {
 .tlp-splash__row {
 	display: flex; align-items: center; gap: 10px; padding: clamp(5px, 1.8vmin, 8px) 12px; border-radius: 12px; flex-shrink: 0;
 	background: rgba(255, 255, 255, 0.08); color: #fff; font-size: clamp(13px, 4vmin, 16px); font-weight: 700;
-	opacity: 0; transform: translateY(8px); animation: tlp-splash-row 0.3s ease-out forwards;
+	animation: tlp-splash-row 0.3s ease-out both;
 }
 .tlp-splash__row--minor { padding: 4px 12px 4px 40px; background: none; color: #bfb2e8; font-size: 13px; font-weight: 600; }
 .tlp-splash__icon { width: 22px; text-align: center; font-size: 17px; }
@@ -234,7 +274,7 @@ export class SplashScreen {
 }
 @keyframes tlp-splash-zoom { from { transform: scale(1.08); } to { transform: scale(1); } }
 @keyframes tlp-splash-pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-@keyframes tlp-splash-row { to { opacity: 1; transform: none; } }
+@keyframes tlp-splash-row { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes tlp-splash-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 `;
 		document.head.appendChild(style);
