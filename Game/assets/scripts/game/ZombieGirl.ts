@@ -122,6 +122,11 @@ export class ZombieGirl extends Zombie {
 
 	// --- the hunt
 
+	/** She throws from where she stands: no way on foot to the player needed to take them on. */
+	protected _canReach(player: PlayerAttack): boolean {
+		return !!player;
+	}
+
 	protected _engage(): void {
 		this._mode = Mode.Hunt;
 		this._unseen = 0;

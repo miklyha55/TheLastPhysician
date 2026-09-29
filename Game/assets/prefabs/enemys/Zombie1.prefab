@@ -523,6 +523,9 @@
     "sinkDepth": 0.6,
     "sinkDuration": 2,
     "crossFade": 0.2,
+    "chaseStuckTime": 1,
+    "calmTime": 3,
+    "recheckTime": 1,
     "_id": ""
   },
   {
@@ -542,7 +545,7 @@
       "__id__": 35
     },
     "potion": null,
-    "chance": 0.35,
+    "chance": 0.2,
     "minCount": 2,
     "maxCount": 3,
     "dropHeight": 0.5,
@@ -586,6 +589,7 @@
       "__expectedType__": "cc.Prefab"
     },
     "height": 0.9,
+    "anchor": null,
     "shrinkTime": 0.2,
     "_id": ""
   },

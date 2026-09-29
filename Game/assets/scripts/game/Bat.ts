@@ -93,6 +93,11 @@ export class Bat extends Zombie {
 	// --- the flight
 
 	/** The player noticed: off the perch and at them. */
+	/** It flies: over whatever stands between, no way on foot needed. */
+	protected _canReach(player: PlayerAttack): boolean {
+		return !!player;
+	}
+
 	protected _engage(): void {
 		this._homing = false;
 		this._unseen = 0;

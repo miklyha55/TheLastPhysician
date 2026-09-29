@@ -110,6 +110,12 @@ export class Zombie extends Component {
 	sinkDuration: number = 2;
 	@property({ tooltip: "Blend between clips, seconds" })
 	crossFade: number = 0.2;
+	@property({ tooltip: "Seconds a chasing zombie may make no headway — up against a table, a crate — before it gives up" })
+	chaseStuckTime: number = 1;
+	@property({ tooltip: "Seconds a zombie that gave up takes no notice of the player, wandering instead" })
+	calmTime: number = 3;
+	@property({ tooltip: "Seconds before a zombie that saw the player but had no way to them looks again" })
+	recheckTime: number = 1;
 
 	private static _pathFinder: PathFinder = null;
 	private static _pathWalls: WallCollision = null;
@@ -132,6 +138,14 @@ export class Zombie extends Component {
 	/** Which of the two strike states is swinging now. */
 	private _strike = ATTACK;
 	private _flashOf: HitFlash = null;
+	/** Seconds left of taking no notice of the player: it gave up, or had no way to them. */
+	private _calm = 0;
+	/** It has given the player up at least once: on again after them, it groans only now and then. */
+	private _gaveUp = false;
+	/** Seconds of the chase without headway. */
+	private _stalled = 0;
+	private _lastAt = v3();
+	private _probe: Vec3[] = [];
 
 	/** The red blink of a blow, on its own meshes. */
 	private get _flash(): HitFlash {
@@ -242,6 +256,7 @@ export class Zombie extends Component {
 
 	protected update(dt: number): void {
 		this._flash.update(dt);
+		this._calm > 0 && (this._calm -= dt);
 		const player = PlayerAttack.instance;
 		switch (this._mode) {
 			case Mode.Idle:
@@ -336,7 +351,7 @@ export class Zombie extends Component {
 
 	/** Is the player alive, close and in plain sight? */
 	protected _notices(player: PlayerAttack): boolean {
-		if (!player || player.isDead) {
+		if (!player || player.isDead || this._calm > 0) {
 			return false;
 		}
 		const at = player.node.worldPosition;
@@ -374,10 +389,42 @@ export class Zombie extends Component {
 		this._play(RUN);
 	}
 
-	/** The player noticed: a growl, and after them. */
+	/**
+	 * The player noticed: a growl, and after them — if there is a way to them. Seen over a table
+	 * with no way round it, it does not set off at all: it wanders on and looks again in a moment.
+	 */
 	protected _aggro(): void {
-		this._speak(1);
+		if (!this._canReach(PlayerAttack.instance)) {
+			this._calm = this.recheckTime;
+			return;
+		}
+		// The first time it sees the player, always; after them again from its wandering, as seldom as it groans there.
+		this._speak(this._gaveUp ? this.wanderSpeakChance : 1);
 		this._engage();
+	}
+
+	/** Is there a way on foot to the player, round the walls and whatever stands still? */
+	protected _canReach(player: PlayerAttack): boolean {
+		if (!player) {
+			return false;
+		}
+		const finder = this._finder();
+		if (!finder) {
+			return true;
+		}
+		const target = player.node.worldPosition;
+		if (!finder.find(this.node.worldPosition, target, this._probe) || !this._probe.length) {
+			return false;
+		}
+		const end = this._probe[this._probe.length - 1];
+		return Math.hypot(end.x - target.x, end.z - target.z) <= 0.6;
+	}
+
+	/** It cannot get to the player: back to wandering, and it takes no notice of them for a while. */
+	protected _giveUp(): void {
+		this._calm = this.calmTime;
+		this._gaveUp = true;
+		this._goHome();
 	}
 
 	/**
@@ -413,6 +460,8 @@ export class Zombie extends Component {
 		this._mode = Mode.Chase;
 		this._repath = 0;
 		this._unseen = 0;
+		this._stalled = 0;
+		this._lastAt.set(this.node.worldPosition);
 		this._path.length = 0;
 		this._play(RUN);
 	}
@@ -441,7 +490,15 @@ export class Zombie extends Component {
 		if ((this._repath -= dt) <= 0) {
 			this._repath = this.repathInterval;
 			const finder = this._finder();
-			if (!finder || !finder.find(this.node.worldPosition, target, this._path)) {
+			if (finder) {
+				// No way to them any more — behind a table, in a corner walled in by furniture: it gives up
+				// rather than run into what stands between.
+				const found = finder.find(this.node.worldPosition, target, this._path) && this._path.length;
+				const end = found && this._path[this._path.length - 1];
+				if (!found || Math.hypot(end.x - target.x, end.z - target.z) > 0.6) {
+					return this._giveUp();
+				}
+			} else {
 				this._path.length = 0;
 				this._path.push(target.clone());
 			}
@@ -450,6 +507,14 @@ export class Zombie extends Component {
 			this._path[this._path.length - 1].set(target);
 		}
 		this._follow(this.chaseSpeed, dt);
+		// Running and getting nowhere — up against something the way does not know of: it gives up.
+		const at = this.node.worldPosition;
+		const moved = Math.hypot(at.x - this._lastAt.x, at.z - this._lastAt.z);
+		this._lastAt.set(at);
+		this._stalled = moved >= this.chaseSpeed * dt * 0.3 ? 0 : this._stalled + dt;
+		if (this._stalled >= this.chaseStuckTime) {
+			return this._giveUp();
+		}
 	}
 
 	private _attack(): void {

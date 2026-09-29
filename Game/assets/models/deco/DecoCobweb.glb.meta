@@ -1,0 +1,93 @@
+{
+  "ver": "2.3.14",
+  "importer": "gltf",
+  "imported": true,
+  "uuid": "b06df7ca-05ea-47ef-9810-e631d4e7987c",
+  "files": [],
+  "subMetas": {
+    "a560f": {
+      "importer": "gltf-mesh",
+      "uuid": "b06df7ca-05ea-47ef-9810-e631d4e7987c@a560f",
+      "displayName": "",
+      "id": "a560f",
+      "name": "Deco_Cobweb.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 480
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "8d1dd": {
+      "importer": "gltf-material",
+      "uuid": "b06df7ca-05ea-47ef-9810-e631d4e7987c@8d1dd",
+      "displayName": "",
+      "id": "8d1dd",
+      "name": "DecoPalette.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "d7ad4": {
+      "importer": "gltf-scene",
+      "uuid": "b06df7ca-05ea-47ef-9810-e631d4e7987c@d7ad4",
+      "displayName": "",
+      "id": "d7ad4",
+      "name": "DecoCobweb.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "b06df7ca-05ea-47ef-9810-e631d4e7987c@a560f"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "b06df7ca-05ea-47ef-9810-e631d4e7987c@8d1dd"
+      ],
+      "scenes": [
+        "b06df7ca-05ea-47ef-9810-e631d4e7987c@d7ad4"
+      ]
+    }
+  }
+}

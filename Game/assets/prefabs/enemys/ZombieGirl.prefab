@@ -2602,6 +2602,9 @@
     "sinkDepth": 0.6,
     "sinkDuration": 2,
     "crossFade": 0.2,
+    "chaseStuckTime": 1,
+    "calmTime": 3,
+    "recheckTime": 1,
     "throwClip": {
       "__uuid__": "c96bb1b1-bbcf-4071-8cc3-965e33fbc5ee@18d6f",
       "__expectedType__": "cc.AnimationClip"
@@ -2646,7 +2649,7 @@
       "__id__": 104
     },
     "potion": null,
-    "chance": 0.35,
+    "chance": 0.2,
     "minCount": 2,
     "maxCount": 3,
     "dropHeight": 0.5,
@@ -2690,6 +2693,7 @@
       "__expectedType__": "cc.Prefab"
     },
     "height": 0.9,
+    "anchor": null,
     "shrinkTime": 0.2,
     "_id": ""
   },

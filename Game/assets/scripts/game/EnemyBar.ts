@@ -17,8 +17,10 @@ const HOLDER = "EnemyBars";
 export class EnemyBar extends Component {
 	@property({ type: Prefab, tooltip: "The bar: EnemyProgressBar" })
 	bar: Prefab = null;
-	@property({ tooltip: "Height above the zombie's feet the bar hangs at" })
+	@property({ tooltip: "Height above the zombie's feet the bar hangs at — or above `anchor`, when there is one" })
 	height: number = 0.9;
+	@property({ type: Node, tooltip: "What the bar hangs over; empty — the enemy's own node. A bat's is its model, up in the air" })
+	anchor: Node = null;
 	@property({ tooltip: "Seconds the bar takes to shrink after a hit" })
 	shrinkTime: number = 0.2;
 
@@ -61,7 +63,7 @@ export class EnemyBar extends Component {
 		const node = instantiate(this.bar);
 		const pin = node.getComponent(PinUiToWorld);
 		if (pin) {
-			pin.worldNode = this.node;
+			pin.worldNode = this.anchor || this.node;
 			pin.cameraWorld = cameras.cameras[0];
 			pin.cameraUi = cameras.uiCamera;
 			pin.offset = v3(0, this.height, 0);

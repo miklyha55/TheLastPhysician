@@ -33,6 +33,8 @@ export class Chest extends Component {
 	bombs: number = 0;
 	@property({ tooltip: "Of them, green ones — drones" })
 	drones: number = 0;
+	@property({ tooltip: "Potions over those laid in it are heaped on top of them: the height each layer of the heap adds" })
+	heapStep: number = 0.05;
 	@property({ tooltip: "Lid angle when open, degrees around X; negative tips it back" })
 	openAngle: number = -105;
 	@property({ tooltip: "Seconds the lid takes to shut" })
@@ -81,9 +83,14 @@ export class Chest extends Component {
 			kinds.push(PotionKind.Plain);
 		}
 		this._kinds = kinds;
-		// The laid ones show what comes first; any over the count are not there.
-		this.potions.forEach((node, i) => (i < count ? paintPotion(node, kinds[i]) : node && node.isValid && (node.active = false)));
-		this.potions = this.potions.slice(0, count);
+		// More than it holds: the rest heaped on top, in sight — a chest is never seen empty with
+		// potions coming out of it. They leave from the top down, the heap first.
+		const laid = this.potions.filter((node) => node && node.isValid);
+		const heap = this._heap(laid, count - laid.length);
+		const order = heap.reverse().concat(laid);
+		// The first to go shows what comes first; any over the count are not there.
+		order.forEach((node, i) => (i < count ? paintPotion(node, kinds[i]) : (node.active = false)));
+		this.potions = order.slice(0, count);
 	}
 
 	protected update(dt: number): void {
@@ -103,6 +110,48 @@ export class Chest extends Component {
 			this._throw();
 		}
 		this._fly(player, dt);
+	}
+
+	/**
+	 * `extra` potions heaped over the laid ones, bottom layer first: each layer narrower and higher —
+	 * four, three, two, then one on one — lying on their sides like the laid ones, a little askew.
+	 */
+	private _heap(laid: Node[], extra: number): Node[] {
+		const made: Node[] = [];
+		if (extra <= 0 || !this.potion) {
+			return made;
+		}
+		// The laid ones' bed: its middle, its height, and how far it spreads across.
+		let x = 0, y = 0, z = 0, spread = 0.13;
+		if (laid.length) {
+			laid.forEach((node) => {
+				x += node.position.x;
+				y = Math.max(y, node.position.y);
+				z += node.position.z;
+			});
+			x /= laid.length;
+			z /= laid.length;
+			spread = Math.max(...laid.map((node) => Math.abs(node.position.x - x)), 0.05);
+		} else {
+			y = this.mouthHeight * 0.5;
+		}
+		const widths = [4, 3, 2, 1];
+		let layer = 0;
+		while (made.length < extra) {
+			const width = Math.min(widths[Math.min(layer, widths.length - 1)], extra - made.length);
+			const height = y + this.heapStep * (layer + 1);
+			const half = spread * (1 - layer * 0.25);
+			for (let i = 0; i < width; i++) {
+				const node = instantiate(this.potion);
+				this.node.addChild(node);
+				const across = width > 1 ? -half + (2 * half * i) / (width - 1) : 0;
+				node.setPosition(x + across, height, z + math.randomRange(-0.03, 0.03));
+				node.setRotationFromEuler(math.randomRange(-8, 8), math.randomRange(0, 360), 90);
+				made.push(node);
+			}
+			layer++;
+		}
+		return made;
 	}
 
 	private _near(player: PlayerAttack, radius: number): boolean {

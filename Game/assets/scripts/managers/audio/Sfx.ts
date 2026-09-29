@@ -15,8 +15,8 @@ function any(set: string[]): string {
  * against a level for what it is for:
  *
  *   explosion −14 · player's death −16 · "yes!" −16.9 · intro −18 · gate −20 · prop hit −20 · girl's throw −21
- *   chest −22 · shot, throw −22
- *   jump −23 · door −24 · fire −24 · key −24 · bat −25 · potion −26 · zombie's strike −26.5 · zombies −30.5 · music −32
+ *   chest −22 · shot, throw −22 · potion on someone −27.5
+ *   jump −23 · door −24 · fire −24 · key −24 · bat −25 · potion −26 · zombie's strike −26.5 · zombies −32.2 · music −32
  *   steps −35.5 · level's results −20 (a card over the game, not from a place)
  *
  * gain = 10^((level − file's loudness) / 20), never above 1 — the zombies' voices and the
@@ -40,12 +40,12 @@ const GAIN: { [path: string]: number } = {
 	"walk/walk2": 0.06, // −24.7
 	"walk/walk3": 0.105, // −29.0
 	"walk/walk4": 0.075, // −26.2
-	// Zombies 0.41 of the file by ear: under the music.
-	"zombie/zombie-speak-1": 0.41, // −30.7
-	"zombie/zombie-speak-2": 0.41, // −29.4
-	"zombie/zombie-speak-3": 0.41, // −29.2
-	"zombie/zombie-speak-4": 0.41, // −28.0
-	"zombie/zombie-speak-5": 0.41, // −32.3
+	// Zombies 0.34 of the file by ear: just under the music — down from 0.41, then half a step back up.
+	"zombie/zombie-speak-1": 0.34, // −32.4
+	"zombie/zombie-speak-2": 0.34, // −31.1
+	"zombie/zombie-speak-3": 0.34, // −30.9
+	"zombie/zombie-speak-4": 0.34, // −29.7
+	"zombie/zombie-speak-5": 0.34, // −34.0
 	// Recorded quiet, all of them: as they are.
 	"get_potion": 1.0, // −30.6
 	"get_key": 1.0, // −32.6
@@ -58,6 +58,7 @@ const GAIN: { [path: string]: number } = {
 	"zombie_man_attack": 0.27, // −15.2, to −26.5: a zombie's swing, a little over their voices
 	"show_results_by_level": 1.0, // −28.4, recorded quiet: as it is
 	"yes": 0.45, // −10.0, to −16.9: the player's "yes!", heard over the blast — up by ear, then a step back down
+	"bullet_to_enemy": 0.5, // −21.5, to −27.5: a short knock, half the shot by ear
 	"bat": 0.35, // −15.8, to −25: a bat's cry, a warning to hear, a touch over a zombie's swing
 };
 
@@ -90,6 +91,8 @@ export const Sfx = {
 	gateOpen: "gate_open",
 	/** A thrown thing hitting someone — a zombie it fells, the player the girl hits. */
 	propHit: "kick_from_fly_prop",
+	/** A potion landing on a zombie, the girl or a bat — every kind, the drone's hits too. */
+	bulletHit: "bullet_to_enemy",
 	/** The zombie girl throwing. */
 	girlThrow: "throw_zombie_wooman",
 	/** A zombie swinging at the player. */
@@ -141,7 +144,7 @@ export const Sfx = {
 
 	/** Loads what plays often, so its first time is not late. */
 	preload(): void {
-		Sound.preload([...Sfx.walk, ...Sfx.zombie, Sfx.explosion, Sfx.jump, Sfx.playerDie, Sfx.shoot, Sfx.throw, Sfx.getPotion, Sfx.getKey, Sfx.doorOpen, Sfx.doorClose, Sfx.chestClose, Sfx.gateOpen, Sfx.propHit, Sfx.girlThrow, Sfx.zombieAttack, Sfx.levelResults, Sfx.bat, Sfx.yes]);
+		Sound.preload([...Sfx.walk, ...Sfx.zombie, Sfx.explosion, Sfx.jump, Sfx.playerDie, Sfx.shoot, Sfx.throw, Sfx.getPotion, Sfx.getKey, Sfx.doorOpen, Sfx.doorClose, Sfx.chestClose, Sfx.gateOpen, Sfx.propHit, Sfx.girlThrow, Sfx.zombieAttack, Sfx.levelResults, Sfx.bat, Sfx.yes, Sfx.bulletHit]);
 	},
 
 	_musicPath: "music/music_game",

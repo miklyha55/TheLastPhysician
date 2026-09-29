@@ -508,6 +508,8 @@ export class PlayerAttack extends Component {
 		const alive = target.isValid && !target.isDead;
 		const near = alive && Vec3.distance(target.node.worldPosition, this.node.worldPosition) <= this.closeKillDistance;
 		const explosives = Explosives.instance;
+		// Whatever it is, a potion on someone knocks.
+		alive && Sfx.at(Sfx.bulletHit, at);
 		if (kind === PotionKind.Bomb && explosives) {
 			// Red: a barrel's blast, smaller.
 			explosives.bomb(at, from);
@@ -558,7 +560,10 @@ export class PlayerAttack extends Component {
 				prey.slice(),
 				this._droneFinder,
 				{ speed: this.droneSpeed, height: this.droneHeight, reach: this.droneReach, repath: 0.3, giveUp: 5, spin: this.spinSpeed },
-				(zombie, from) => this._woundBy(zombie, from),
+				(zombie, from) => {
+					zombie.isValid && !zombie.isDead && Sfx.at(Sfx.bulletHit, zombie.node);
+					this._woundBy(zombie, from);
+				},
 				(done) => done.isValid && done.destroy(),
 			),
 		);
