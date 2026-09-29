@@ -1,11 +1,14 @@
 import { _decorator, Component, instantiate, math, Node, Prefab, Quat, tween, v3, Vec3 } from "cc";
 import { PlayerAttack } from "./PlayerAttack";
+import { paintPotion, PotionKind, rollPotionKind } from "./PotionKind";
 import { Sfx } from "../managers/audio/Sfx";
 
 const { ccclass, property } = _decorator;
 
 interface Flight {
 	node: Node;
+	/** Plain, or seldom a bomb or a drone. */
+	kind: PotionKind;
 	start: Vec3;
 	time: number;
 	duration: number;
@@ -52,12 +55,20 @@ export class Chest extends Component {
 	private _left = 0;
 	private _timer = 0;
 	private _flights: Flight[] = [];
+	/** The kinds of the potions laid in it, rolled at the start: a special one is seen in the chest. */
+	private _kinds: PotionKind[] = [];
 	private _to = v3();
 	private _rotation = new Quat();
 
 	protected onLoad(): void {
 		// Open from the start.
 		this.lid && this.lid.setRotationFromEuler(this.openAngle, 0, 0);
+		// What lies in it is what comes out: now and then a red or a green one among the pink.
+		this._kinds = this.potions.map((node) => {
+			const kind = rollPotionKind();
+			paintPotion(node, kind);
+			return kind;
+		});
 	}
 
 	protected update(dt: number): void {
@@ -90,26 +101,29 @@ export class Chest extends Component {
 
 	private _throw(): void {
 		const laid = this.potions.shift();
+		const laidKind = this._kinds.shift();
 		if (laid && laid.isValid) {
 			// Out of the chest, into the level, from where it lay.
 			const start = laid.worldPosition.clone();
 			laid.setParent(this.node.parent, true);
-			this._flights.push({ node: laid, start, time: 0, duration: 0.1 });
+			this._flights.push({ node: laid, kind: laidKind || PotionKind.Plain, start, time: 0, duration: 0.1 });
 			return;
 		}
+		const kind = rollPotionKind();
 		if (!this.potion) {
 			// Nothing to show flying: the potion is simply handed over.
 			const player = PlayerAttack.instance;
-			player && player.addAmmo(1);
+			player && player.addAmmo(1, null, kind);
 			this._closeWhenDone();
 			return;
 		}
 		const node = instantiate(this.potion);
+		paintPotion(node, kind);
 		node.setParent(this.node.parent);
 		const at = this.node.worldPosition;
 		const start = v3(at.x, at.y + this.mouthHeight, at.z);
 		node.setWorldPosition(start);
-		this._flights.push({ node, start, time: 0, duration: 0.1 });
+		this._flights.push({ node, kind, start, time: 0, duration: 0.1 });
 	}
 
 	/** Each potion arcs to the top of the player's stack as it is now; on arrival it lies there. */
@@ -126,7 +140,7 @@ export class Chest extends Component {
 			if (t >= 1) {
 				this._flights.splice(i, 1);
 				if (player && !player.isDead) {
-					player.addAmmo(1, flight.node);
+					player.addAmmo(1, flight.node, flight.kind);
 				} else {
 					flight.node.destroy();
 				}

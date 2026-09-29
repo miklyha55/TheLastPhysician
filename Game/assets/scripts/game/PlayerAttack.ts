@@ -20,10 +20,20 @@ import { Zombie } from "./Zombie";
 import { LevelStats } from "../managers/LevelStats";
 import { Sfx } from "../managers/audio/Sfx";
 import { Footsteps } from "./Footsteps";
+import { HazardVictims } from "./HazardVictims";
+import { PathFinder } from "./PathFinder";
+import { PotionDrone } from "./PotionDrone";
+import { paintPotion, PotionKind } from "./PotionKind";
 
 const { ccclass, property } = _decorator;
 
 const DEATH = "death";
+
+/**
+ * The potions the game starts with, from the bottom — the first shot — up: the second a green one,
+ * the third a red one, so the player meets both early; the rest plain.
+ */
+const START_KINDS = [PotionKind.Plain, PotionKind.Drone, PotionKind.Bomb];
 
 interface Shot {
 	node: Node;
@@ -31,6 +41,10 @@ interface Shot {
 	target: Zombie;
 	/** The barrel it is shot at, flying; it goes off when the potion reaches it. */
 	barrel: Body;
+	/** What it is: plain, a bomb, a drone. */
+	kind: PotionKind;
+	/** A drone's prey: the zombies on the screen when it was thrown. */
+	prey: Zombie[];
 	start: Vec3;
 	aim: Vec3;
 	time: number;
@@ -92,6 +106,12 @@ export class PlayerAttack extends Component {
 	spinSpeed: number = 720;
 	@property({ tooltip: "Height above a zombie's feet the potion flies at" })
 	aimHeight: number = 0.4;
+	@property({ tooltip: "A green potion's drone: units per second" })
+	droneSpeed: number = 5;
+	@property({ tooltip: "A green potion's drone: height over the floor it flies at" })
+	droneHeight: number = 0.5;
+	@property({ tooltip: "A green potion's drone: how near it comes to a zombie to kill it" })
+	droneReach: number = 0.35;
 	@property({ tooltip: "A zombie shot down this near, units, and the player cries \"yes!\"" })
 	closeKillDistance: number = 0.9;
 	@property({ tooltip: "Seconds at the least between two of the player's \"yes!\" — a chain of barrels says it once" })
@@ -117,6 +137,8 @@ export class PlayerAttack extends Component {
 	/** When the player last cried "yes!", ms. */
 	private _cheeredAt = -Infinity;
 	private _spare: Node[] = [];
+	private _drones: PotionDrone[] = [];
+	private _droneFinder: PathFinder = null;
 	private _to = v3();
 
 	get isDead(): boolean {
@@ -198,7 +220,7 @@ export class PlayerAttack extends Component {
 		// Everything drawn once behind the loading screen before the level is played.
 		Prewarm.run(GameState.title);
 		if (!carried) {
-			this.stack && this.stack.fill(this.ammo);
+			this.stack && this.stack.fill(this.ammo, START_KINDS);
 			return;
 		}
 		this.ammo = carried.filter((item) => !item.key).length;
@@ -225,7 +247,7 @@ export class PlayerAttack extends Component {
 	 * Potions handed to the player — from a chest. `visual`, a potion that has flown in, goes
 	 * onto the stack on the back as it is; the rest are laid there fresh.
 	 */
-	addAmmo(count: number, visual: Node = null): void {
+	addAmmo(count: number, visual: Node = null, kind: PotionKind = PotionKind.Plain): void {
 		this.ammo += count;
 		LevelStats.collected += count;
 		// A clink for each potion in; a stream of them from a chest not all at once.
@@ -236,7 +258,7 @@ export class PlayerAttack extends Component {
 		}
 		for (let i = 0; i < count; i++) {
 			if (this.stack) {
-				this.stack.push(i === 0 ? visual : null);
+				this.stack.push(i === 0 ? visual : null, kind);
 			} else if (i === 0 && visual) {
 				visual.destroy();
 			}
@@ -279,6 +301,7 @@ export class PlayerAttack extends Component {
 
 	protected update(dt: number): void {
 		this._updateShots(dt);
+		this._updateDrones(dt);
 		if (this._dead) {
 			return;
 		}
@@ -294,8 +317,9 @@ export class PlayerAttack extends Component {
 				if (this._throwAt && this._throwAt.isValid && !this._throwAt.isDead && this.ammo > 0) {
 					this.ammo--;
 					LevelStats.thrown++;
-					this.stack && this.stack.pop();
-					this._throw(this._throwAt);
+					// The lowest goes, whatever it is: its kind is the shot's.
+					const kind = this.stack ? this.stack.pop() : PotionKind.Plain;
+					this._throw(this._throwAt, kind);
 				}
 			}
 		}
@@ -336,7 +360,8 @@ export class PlayerAttack extends Component {
 	}
 
 	private _canShoot(zombie: Zombie): boolean {
-		if (!zombie || !zombie.isValid || zombie.isDead) {
+		// One a drone is already after is as good as dead: no potion spent on it.
+		if (!zombie || !zombie.isValid || zombie.isDead || zombie.doomed) {
 			return false;
 		}
 		const at = zombie.node.worldPosition;
@@ -349,15 +374,23 @@ export class PlayerAttack extends Component {
 
 	// --- potions
 
-	private _throw(target: Zombie): void {
+	private _throw(target: Zombie, kind: PotionKind = PotionKind.Plain): void {
+		// A drone takes note, as it leaves, of every zombie on the screen: those, and no others.
+		const prey = kind === PotionKind.Drone ? HazardVictims.zombies().filter((zombie) => zombie !== target) : null;
+		// Marked at once, while it is still in the air: the next shots go to the others.
+		if (prey) {
+			target.doomed = true;
+			prey.forEach((zombie) => (zombie.doomed = true));
+		}
 		if (!this.projectile) {
 			// Nothing to throw: the hit lands at once.
-			this._hit(target, this.muzzle ? this.muzzle.worldPosition : this.node.worldPosition, this._aim(target, v3()));
+			this._hit(target, this.muzzle ? this.muzzle.worldPosition : this.node.worldPosition, this._aim(target, v3()), kind);
 			return;
 		}
 		const node = this._spare.pop() || instantiate(this.projectile);
 		node.setParent(this.projectileParent || this.node.parent);
 		node.active = true;
+		paintPotion(node, kind);
 		const start = (this.muzzle ? this.muzzle.worldPosition : this.node.worldPosition).clone();
 		node.setWorldPosition(start);
 		const aim = this._aim(target, v3());
@@ -367,7 +400,7 @@ export class PlayerAttack extends Component {
 		const duration = Math.max(0.1, distance / Math.max(this.projectileSpeed, 0.01));
 		// Point-blank the potion barely rises; lobbed across the whole radius it rises to arcHeight.
 		const height = this.arcHeight * Math.min(1, distance / Math.max(this.shootRadius, 0.01));
-		this._shots.push({ node, target, barrel: null, start, aim, time: 0, duration, height });
+		this._shots.push({ node, target, barrel: null, kind, prey, start, aim, time: 0, duration, height });
 	}
 
 	/**
@@ -397,7 +430,7 @@ export class PlayerAttack extends Component {
 		node.setParent(this.projectileParent || this.node.parent);
 		node.active = true;
 		node.setWorldPosition(start);
-		this._shots.push({ node, target: null, barrel, start, aim, time: 0, duration, height: 0 });
+		this._shots.push({ node, target: null, barrel, kind: PotionKind.Plain, prey: null, start, aim, time: 0, duration, height: 0 });
 		return true;
 	}
 
@@ -427,10 +460,11 @@ export class PlayerAttack extends Component {
 			const t = Math.min(1, shot.time / shot.duration);
 			if (t >= 1) {
 				if (shot.target.isValid) {
-					this._hit(shot.target, shot.start, shot.aim);
+					this._hit(shot.target, shot.start, shot.aim, shot.kind);
 				}
-				this._release(shot.node);
 				this._shots.splice(i, 1);
+				// A drone flies on from here to the rest of its prey; any other potion is spent.
+				shot.kind === PotionKind.Drone && shot.prey && shot.prey.length ? this._launchDrone(shot.node, shot.prey) : this._release(shot.node);
 				continue;
 			}
 			Vec3.lerp(this._to, shot.start, shot.aim, t);
@@ -468,12 +502,18 @@ export class PlayerAttack extends Component {
 	 * A potion lands: it bursts, and with Explosives in the scene everyone round the spot loses
 	 * a life and a barrel near it goes off; without it, just the zombie hit loses one.
 	 */
-	private _hit(target: Zombie, from: Vec3, at: Vec3): void {
+	private _hit(target: Zombie, from: Vec3, at: Vec3, kind: PotionKind = PotionKind.Plain): void {
 		// Shot down at arm's length: the player's "yes!".
 		const alive = target.isValid && !target.isDead;
 		const near = alive && Vec3.distance(target.node.worldPosition, this.node.worldPosition) <= this.closeKillDistance;
 		const explosives = Explosives.instance;
-		if (explosives) {
+		if (kind === PotionKind.Bomb && explosives) {
+			// Red: a barrel's blast, smaller.
+			explosives.bomb(at, from);
+		} else if (kind === PotionKind.Drone) {
+			// Green: the one it was thrown at dies, whatever lives it had.
+			alive && this._killBy(target, from);
+		} else if (explosives) {
 			explosives.potionBurst(at, from, target);
 		} else if (alive) {
 			target.takeHit();
@@ -492,6 +532,41 @@ export class PlayerAttack extends Component {
 		Sfx.at(Sfx.yes, this.node);
 	}
 
+	/** A zombie killed outright by a potion: its blood, and down it goes. */
+	private _killBy(zombie: Zombie, from: Vec3): void {
+		if (!zombie.isValid || zombie.isDead) {
+			return;
+		}
+		if (this.zombieBlood) {
+			const at = zombie.node.worldPosition;
+			this.zombieBlood.splash(v3(at.x, at.y + this.aimHeight, at.z), from, this.killSplash);
+		}
+		zombie.kill();
+	}
+
+	/** A green potion's first kill done: on it flies to the rest of what it saw. */
+	private _launchDrone(node: Node, prey: Zombie[]): void {
+		if (!this._droneFinder && this._walls) {
+			this._droneFinder = new PathFinder(this._walls, 0.25);
+		}
+		this._drones.push(
+			new PotionDrone(
+				node,
+				prey.slice(),
+				this._droneFinder,
+				{ speed: this.droneSpeed, height: this.droneHeight, reach: this.droneReach, repath: 0.3, giveUp: 5, spin: this.spinSpeed },
+				(zombie, from) => this._killBy(zombie, from),
+				(done) => done.isValid && done.destroy(),
+			),
+		);
+	}
+
+	private _updateDrones(dt: number): void {
+		for (let i = this._drones.length - 1; i >= 0; i--) {
+			this._drones[i].update(dt) && this._drones.splice(i, 1);
+		}
+	}
+
 	/** A potion that landed waits for the next throw instead of being made again. */
 	private _release(node: Node): void {
 		node.active = false;
@@ -507,9 +582,11 @@ export class PlayerAttack extends Component {
 		this._occlusion && this._occlusion.setTarget(null);
 		// What the player carried falls off their back and scatters over the floor.
 		this.stack && this.stack.scatter(this.node.parent);
-		// Potions in the air are gone with the thrower.
+		// Potions in the air are gone with the thrower — and what a drone was to kill is free again.
 		for (const shot of this._shots) {
 			this._release(shot.node);
+			shot.target && shot.target.isValid && (shot.target.doomed = false);
+			shot.prey && shot.prey.forEach((zombie) => zombie.isValid && (zombie.doomed = false));
 		}
 		this._shots.length = 0;
 		// All of the player's logic stops: no running, turning, colliding, shooting or

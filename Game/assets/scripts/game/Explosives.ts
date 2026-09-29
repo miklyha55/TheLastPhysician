@@ -125,6 +125,38 @@ export class Explosives extends Component {
 		this._chain(ground);
 	}
 
+	/** Share of a barrel's blast a red potion bursts with — its circle, and its shake. */
+	@property({ tooltip: "A red potion bursts like a barrel this much of its size: the circle it kills in, and the shake" })
+	bombScale: number = 0.5;
+
+	/**
+	 * A red potion bursts at `at`, having flown from `from`: a barrel's blast, `bombScale` of its
+	 * size — every zombie in the circle dies, a barrel in it goes off; the player it spares.
+	 */
+	bomb(at: Vec3, from: Vec3): void {
+		const radius = this.blastRadius * this.bombScale;
+		this.barrelFire && this.barrelFire.burst(at);
+		this.potionShards && this.potionShards.splash(at, from);
+		Sfx.at(Sfx.explosion, at);
+		const camera = CameraManager.instance;
+		camera && camera.shake(this.shake * this.bombScale, this.shakeFor);
+		const player = PlayerAttack.instance;
+		for (const zombie of Zombie.all.slice()) {
+			if (zombie.isDead || !this._within(zombie.node.worldPosition, at, radius)) {
+				continue;
+			}
+			const blood = player && player.zombieBlood;
+			if (blood) {
+				const z = zombie.node.worldPosition;
+				blood.splash(v3(z.x, z.y + 0.4, z.z), at, player.killSplash);
+			}
+			zombie.kill();
+		}
+		for (const body of this._barrelsNear(at, radius)) {
+			this.explode(body);
+		}
+	}
+
 	/** A blast with no barrel behind it — a fireball bursting: the barrel's fire and the shake, nothing thrown about. */
 	fireBlast(at: Vec3, shake = true): void {
 		this.barrelFire && this.barrelFire.burst(at);

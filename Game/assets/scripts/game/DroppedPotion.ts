@@ -1,5 +1,6 @@
 import { _decorator, Component, Quat, v3, Vec3 } from "cc";
 import { PlayerAttack } from "./PlayerAttack";
+import { PotionKind } from "./PotionKind";
 
 const { ccclass } = _decorator;
 
@@ -38,6 +39,8 @@ const _rotation = new Quat();
 @ccclass("DroppedPotion")
 export class DroppedPotion extends Component {
 	private _settings: DropSettings = null;
+	/** Plain, or seldom a bomb or a drone: it goes onto the stack as what it is. */
+	private _kind: PotionKind = PotionKind.Plain;
 	private _state = State.Falling;
 	private _start = v3();
 	private _end = v3();
@@ -48,8 +51,9 @@ export class DroppedPotion extends Component {
 	private _spin = 0;
 
 	/** Off it goes, from `from` to lie at `to`. */
-	launch(from: Vec3, to: Vec3, settings: DropSettings): void {
+	launch(from: Vec3, to: Vec3, settings: DropSettings, kind: PotionKind = PotionKind.Plain): void {
 		this._settings = settings;
+		this._kind = kind;
 		this._start.set(from);
 		this._end.set(to);
 		this._duration = settings.fallTime * (0.85 + Math.random() * 0.3);
@@ -137,10 +141,10 @@ export class DroppedPotion extends Component {
 		const duration = Math.max(0.15, distance / Math.max(settings.collectSpeed, 0.01));
 		const t = Math.min(1, this._time / duration);
 		if (t >= 1) {
-			// On the stack it is a plain potion again.
+			// On the stack a potion again, of its kind.
 			this._settings = null;
 			this.destroy();
-			player.addAmmo(1, this.node);
+			player.addAmmo(1, this.node, this._kind);
 			return;
 		}
 		Vec3.lerp(_at, this._start, _to, t);

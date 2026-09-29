@@ -2,6 +2,7 @@ import { _decorator, Component, instantiate, math, MeshRenderer, Node, Prefab, v
 import { DroppedPotion, DropSettings } from "./DroppedPotion";
 import { PlayerAttack } from "./PlayerAttack";
 import { Zombie } from "./Zombie";
+import { DROP_CHANCE, paintPotion, rollPotionKind } from "./PotionKind";
 
 const { ccclass, property } = _decorator;
 
@@ -90,6 +91,9 @@ export class PotionDrops extends Component {
 			const angle = turn + (i / count) * Math.PI * 2 + math.randomRange(-0.4, 0.4);
 			const reach = math.randomRange(this.scatter.x, this.scatter.y);
 			const node = instantiate(prefab);
+			// Now and then a red or a green one: seen as such on the floor.
+			const kind = rollPotionKind(DROP_CHANCE);
+			paintPotion(node, kind);
 			// Next to the zombie, not under it: it sinks away and is gone, the potions stay.
 			parent.addChild(node);
 			node.setWorldScale(this.size, this.size, this.size);
@@ -98,6 +102,7 @@ export class PotionDrops extends Component {
 				v3(at.x, at.y + this.dropHeight, at.z),
 				v3(at.x + Math.cos(angle) * reach, at.y + lie, at.z + Math.sin(angle) * reach),
 				settings,
+				kind,
 			);
 		}
 	}

@@ -1,6 +1,7 @@
 import { _decorator, Component, instantiate, math, Node, Prefab, Quat, tween, Tween, v3, Vec3 } from "cc";
 import { StackItem } from "../managers/GameState";
 import { Debris } from "./Debris";
+import { paintPotion, PotionKind } from "./PotionKind";
 
 const { ccclass, property } = _decorator;
 
@@ -8,12 +9,15 @@ interface Entry {
 	node: Node;
 	key: boolean;
 	color: number;
+	/** A potion's kind; keys are plain. */
+	kind: PotionKind;
 	height: number;
 }
 
 // What the player carries, in sight: a stack on the back growing upwards. Potions go on top,
 // one for every shot left; keys, laid flat, always at the bottom, under the potions. A shot takes the
-// topmost potion away, a door takes a key of its colour, and whatever lay above settles down.
+// lowest potion — the one right over the keys: the first in is the first out — a door takes a key
+// of its colour, and whatever lay above settles down.
 // The stack follows the back (`anchor`) but always stands straight up: it rides on a mount of
 // its own that takes the anchor's place every frame and only the heading of the body — a lean,
 // a crouch, a recoil leave it upright.
@@ -101,7 +105,7 @@ export class PotionStack extends Component {
 
 	/** What lies in the stack, bottom to top — what goes on to the next level. */
 	contents(): StackItem[] {
-		return this._items.map((entry) => ({ key: entry.key, color: entry.color }));
+		return this._items.map((entry) => ({ key: entry.key, color: entry.color, kind: entry.kind }));
 	}
 
 	/** The stack as it was brought from the last level, laid at once. */
@@ -110,7 +114,7 @@ export class PotionStack extends Component {
 		const ordered = items.filter((item) => item.key).concat(items.filter((item) => !item.key));
 		for (const item of ordered) {
 			if (!item.key) {
-				this.push();
+				this.push(null, item.kind || PotionKind.Plain);
 				continue;
 			}
 			const prefab = this.keyPrefabs[item.color];
@@ -129,15 +133,18 @@ export class PotionStack extends Component {
 		}
 	}
 
-	/** As many potions as the player has, made at once — the start. */
-	fill(count: number): void {
+	/**
+	 * As many potions as the player has, made at once — the start. `kinds` — what they are, from
+	 * the bottom (the first to be shot) up; past its end, and where it says nothing, plain.
+	 */
+	fill(count: number, kinds: PotionKind[] = []): void {
 		while (this.count < count) {
-			this.push();
+			this.push(null, kinds[this.count] || PotionKind.Plain);
 		}
 	}
 
-	/** A new potion on top; `node` — one that has just flown in and stays — or a fresh one. */
-	push(node: Node = null): void {
+	/** A new potion of `kind` on top; `node` — one that has just flown in and stays — or a fresh one. */
+	push(node: Node = null, kind: PotionKind = PotionKind.Plain): void {
 		if (!this.anchor) {
 			node && node.destroy();
 			return;
@@ -148,8 +155,9 @@ export class PotionStack extends Component {
 			}
 			node = instantiate(this.item);
 		}
+		paintPotion(node, kind);
 		this._adopt(node, this.itemScale, 0, this._centre(this._items.length, this.step));
-		this._items.push({ node, key: false, color: -1, height: this.step });
+		this._items.push({ node, key: false, color: -1, kind, height: this.step });
 	}
 
 	/** A key of a colour, laid flat on top. */
@@ -161,7 +169,7 @@ export class PotionStack extends Component {
 		// Keys always go to the bottom, above the keys already there: the potions above rise.
 		const index = this.keyCount;
 		this._adopt(node, this.keyScale, 90, this._centre(index, this.keyStep));
-		this._items.splice(index, 0, { node, key: true, color, height: this.keyStep });
+		this._items.splice(index, 0, { node, key: true, color, kind: PotionKind.Plain, height: this.keyStep });
 		this._layout(index + 1);
 	}
 
@@ -205,22 +213,27 @@ export class PotionStack extends Component {
 		return null;
 	}
 
-	/** The topmost potion goes — a shot; what lay above it settles down. Keys stay. */
-	pop(): void {
-		let index = this._items.length - 1;
-		while (index >= 0 && this._items[index].key) {
-			index--;
+	/** The kind of the potion that goes next — the lowest, right over the keys; plain when there is none. */
+	get nextKind(): PotionKind {
+		const index = this.keyCount;
+		return index < this._items.length ? this._items[index].kind : PotionKind.Plain;
+	}
+
+	/** The lowest potion goes — a shot; what lay above it settles down. Keys stay. Its kind. */
+	pop(): PotionKind {
+		const index = this.keyCount;
+		if (index >= this._items.length) {
+			return PotionKind.Plain;
 		}
-		if (index < 0) {
-			return;
-		}
-		const node = this._items.splice(index, 1)[0].node;
+		const entry = this._items.splice(index, 1)[0];
+		const node = entry.node;
 		this._layout(index);
 		Tween.stopAllByTarget(node);
 		tween(node)
 			.to(this.popTime, { scale: v3() })
 			.call(() => node.destroy())
 			.start();
+		return entry.kind;
 	}
 
 	/**

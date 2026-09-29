@@ -19,6 +19,8 @@ import { Yandex } from "./Yandex";
 export interface StackItem {
 	key: boolean;
 	color: number;
+	/** A potion's kind (PotionKind): plain, bomb or drone; none — plain. */
+	kind?: number;
 }
 
 // What lives across the levels, and how the game goes from one to the next. Every level is a

@@ -142,6 +142,12 @@ export class Zombie extends Component {
 		return this._mode === Mode.Dead;
 	}
 
+	/**
+	 * A green potion's drone is on its way to it: as good as dead, so the player does not shoot at
+	 * it again. Taken off if the drone leaves it after all.
+	 */
+	doomed = false;
+
 	/** Is it in the air (Bat): over the floor's traps and furniture, out of the walkers' way. */
 	get flies(): boolean {
 		return false;

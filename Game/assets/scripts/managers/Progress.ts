@@ -69,7 +69,7 @@ export class Progress {
 	/** What the player enters level `index` with; null — the level's own start. */
 	static entry(index: number): StackItem[] {
 		const stack = Progress._state.entries[String(index)];
-		return stack ? stack.map((item) => ({ key: item.key, color: item.color })) : null;
+		return stack ? stack.map((item) => ({ key: item.key, color: item.color, kind: item.kind || 0 })) : null;
 	}
 
 	/**
@@ -86,7 +86,7 @@ export class Progress {
 		if (stack !== undefined) {
 			const key = String(index);
 			const before = JSON.stringify(state.entries[key] || null);
-			stack ? (state.entries[key] = stack.map((item) => ({ key: item.key, color: item.color }))) : delete state.entries[key];
+			stack ? (state.entries[key] = stack.map((item) => ({ key: item.key, color: item.color, kind: item.kind || 0 }))) : delete state.entries[key];
 			changed = changed || before !== JSON.stringify(stack || null);
 		}
 		if (index + 1 > state.reached) {
@@ -169,7 +169,11 @@ export class Progress {
 				if (Array.isArray(stack) && /^\d+$/.test(key)) {
 					state.entries[key] = stack
 						.filter((item) => item && typeof item === "object")
-						.map((item) => ({ key: !!item.key, color: typeof item.color === "number" ? item.color : -1 }));
+						.map((item) => ({
+							key: !!item.key,
+							color: typeof item.color === "number" ? item.color : -1,
+							kind: item.kind === 1 || item.kind === 2 ? item.kind : 0,
+						}));
 				}
 			}
 		}
