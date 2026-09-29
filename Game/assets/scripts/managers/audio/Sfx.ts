@@ -14,7 +14,7 @@ function any(set: string[]): string {
  * never tiring. Worked out from how loud each file is while it sounds (its loud part, in dB)
  * against a level for what it is for:
  *
- *   explosion −14 · "yes!" −14.4 · player's death −16 · intro −18 · gate −20 · prop hit −20 · girl's throw −21
+ *   explosion −14 · player's death −16 · "yes!" −16.9 · intro −18 · gate −20 · prop hit −20 · girl's throw −21
  *   chest −22 · shot, throw −22
  *   jump −23 · door −24 · fire −24 · key −24 · bat −25 · potion −26 · zombie's strike −26.5 · zombies −30.5 · music −32
  *   steps −35.5 · level's results −20 (a card over the game, not from a place)
@@ -57,7 +57,7 @@ const GAIN: { [path: string]: number } = {
 	"throw_zombie_wooman": 0.32, // −11.1, to −21: the girl's throw, a warning to hear — a step down by ear
 	"zombie_man_attack": 0.27, // −15.2, to −26.5: a zombie's swing, a little over their voices
 	"show_results_by_level": 1.0, // −28.4, recorded quiet: as it is
-	"yes": 0.6, // −10.0, to −14.4: the player's "yes!", up by ear to the blast's level — heard over it
+	"yes": 0.45, // −10.0, to −16.9: the player's "yes!", heard over the blast — up by ear, then a step back down
 	"bat": 0.35, // −15.8, to −25: a bat's cry, a warning to hear, a touch over a zombie's swing
 };
 

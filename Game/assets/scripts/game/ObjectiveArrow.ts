@@ -214,7 +214,9 @@ export class ObjectiveArrow extends Component {
 		if (this._nearest(doors.map((lock) => lock.node), true)) {
 			return;
 		}
-		const pickups = scene.getComponentsInChildren(KeyPickup).filter((key) => key.isValid && !key.taken);
+		// Only keys that are keys: the warm-up (Prewarm) lays copies of them out for a frame with their
+		// logic off, and one of those, nearest, was the goal for the first moment of the level.
+		const pickups = scene.getComponentsInChildren(KeyPickup).filter((key) => key.isValid && key.enabledInHierarchy && !key.taken);
 		if (this._nearest(pickups.map((key) => key.node), false)) {
 			return;
 		}

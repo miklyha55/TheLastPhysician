@@ -126,10 +126,10 @@ export class Explosives extends Component {
 	}
 
 	/** A blast with no barrel behind it — a fireball bursting: the barrel's fire and the shake, nothing thrown about. */
-	fireBlast(at: Vec3): void {
+	fireBlast(at: Vec3, shake = true): void {
 		this.barrelFire && this.barrelFire.burst(at);
 		const camera = CameraManager.instance;
-		camera && camera.shake(this.shake, this.shakeFor);
+		shake && camera && camera.shake(this.shake, this.shakeFor);
 	}
 
 	/** Barrels lying near go off too, one after another. */

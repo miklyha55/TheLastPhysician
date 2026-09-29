@@ -291,12 +291,12 @@ export class Gargoyle extends Component {
 		return null;
 	}
 
-	/** On a zombie: the same blast, and it dies. */
+	/** On a zombie: the same blast, and it dies — the camera left still: a zombie far off is no jolt to the player. */
 	private _burst(ball: Ball, zombie: Zombie): void {
 		const at = ball.node.worldPosition.clone();
 		this._land(ball);
 		const explosives = Explosives.instance;
-		explosives && explosives.fireBlast(at);
+		explosives && explosives.fireBlast(at, false);
 		HazardVictims.kill(zombie, Vec3.subtract(v3(), at, ball.direction));
 	}
 
