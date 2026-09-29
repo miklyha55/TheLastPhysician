@@ -1,5 +1,6 @@
 import { assetManager, ImageAsset, resources } from "cc";
 import { focusGame } from "./FocusGame";
+import { onRelease } from "./OnRelease";
 import { ResultsButton, ResultsRow } from "./ResultsScreen";
 
 /** What a splash shows. */
@@ -74,9 +75,10 @@ export class SplashScreen {
 		if (!root) {
 			return;
 		}
-		root.classList.remove("tlp-splash--shown");
+		// At once: it goes on a button, and nothing fades after a press.
 		clearTimeout(SplashScreen._hideTimer);
-		SplashScreen._hideTimer = setTimeout(() => (root.style.display = "none"), SplashScreen.fadeTime * 1000) as unknown as number;
+		root.classList.remove("tlp-splash--shown");
+		root.style.display = "none";
 	}
 
 	/** The picture from the resources bundle, once; on the page as a background. */
@@ -192,7 +194,7 @@ export class SplashScreen {
 			const button = document.createElement("button");
 			button.className = "tlp-splash__button" + (spec.primary ? "" : " tlp-splash__button--quiet");
 			button.textContent = spec.text;
-			button.addEventListener("click", () => {
+			onRelease(button, () => {
 				if (SplashScreen._pressed) {
 					return;
 				}
@@ -275,9 +277,10 @@ export class SplashScreen {
 	box-shadow: 0 7px 0 #1d7a14, 0 12px 22px rgba(0, 0, 0, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.5);
 	animation: tlp-splash-pulse 1.4s ease-in-out 0.8s infinite;
 	-webkit-tap-highlight-color: transparent;
+	transition: scale 80ms ease-out;
 }
-.tlp-splash__button:active { transform: translateY(5px); box-shadow: 0 2px 0 #1d7a14, 0 5px 12px rgba(0, 0, 0, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.5); animation: none; }
-.tlp-splash__button:disabled { filter: saturate(0.4); animation: none; }
+/* A press is only the button giving under the finger, as on the results. */
+.tlp-splash__button:active { scale: 0.94; }
 .tlp-splash__button--quiet {
 	background: linear-gradient(180deg, #7a6bc4 0%, #4d3f94 100%); text-shadow: 0 2px 0 #2b2160; font-size: 20px;
 	box-shadow: 0 7px 0 #2b2160, 0 12px 22px rgba(0, 0, 0, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.35);

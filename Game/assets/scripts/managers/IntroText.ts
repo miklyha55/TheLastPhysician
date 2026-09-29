@@ -8,6 +8,8 @@
 // speech at once would not fit, and a running tail reads better than a sheet. Each line starts at
 // the moment measured in the recording, and is typed over most of its time, the rest a pause.
 
+import { onRelease } from "./OnRelease";
+
 export interface IntroScript {
 	/** The lines, in the order spoken. */
 	lines: string[];
@@ -69,11 +71,19 @@ export class IntroText {
 		this._tick();
 	}
 
-	stop(): void {
+	/** The text goes; `now` — on the skip button — with no fade: nothing fades after a press. */
+	stop(now = false): void {
 		cancelAnimationFrame(this._frame);
 		this._frame = 0;
 		if (!this._root) {
 			return;
+		}
+		if (now) {
+			this._root.style.transition = this._skip.style.transition = "none";
+			clearTimeout(this._skipTimer);
+			clearTimeout(this._skipFade);
+			this._skip.classList.remove("tlp-skip--on");
+			this._skip.hidden = true;
 		}
 		this._root.classList.remove("tlp-radiotext--on");
 		this._typed.textContent = "";
@@ -81,6 +91,10 @@ export class IntroText {
 		this._shown = "";
 		this._plan = null;
 		this.hideSkip();
+		if (now) {
+			void this._root.offsetWidth;
+			this._root.style.transition = this._skip.style.transition = "";
+		}
 	}
 
 	/**
@@ -197,7 +211,7 @@ export class IntroText {
 		// Filled from the start: an empty hidden button held less room than a full one, and grew
 		// when shown, pushing the plate down.
 		label.textContent = "Esc";
-		label.addEventListener("click", () => this.onSkip && this.onSkip());
+		onRelease(label, () => this.onSkip && this.onSkip());
 		skip.appendChild(label);
 
 		// The whole line lies in the element from the start, its untyped tail transparent:
@@ -258,7 +272,7 @@ const STYLE = `
 	color: #ffe066; font: inherit; font-size: 11px; line-height: 1; font-weight: 900;
 	letter-spacing: 0.1em; text-transform: uppercase;
 	cursor: pointer; -webkit-tap-highlight-color: transparent;
-	transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+	transition: transform 80ms ease-out;
 }
 .tlp-skip__label:hover { background: rgba(59, 42, 110, 0.92); border-color: #ffcf4a; }
 .tlp-skip__label:active { transform: scale(0.94); }

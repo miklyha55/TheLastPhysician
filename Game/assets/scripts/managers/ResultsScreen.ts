@@ -1,4 +1,5 @@
 import { focusGame } from "./FocusGame";
+import { onRelease } from "./OnRelease";
 // The results of a level, in the page itself over the game's canvas: a card that bounces in
 // with what the player did on the level — zombies killed of how many, and how, potions thrown and
 // picked up, barrels, time, the attempt — and buttons: on to the next level, or, after a death,
@@ -64,7 +65,7 @@ export class ResultsScreen {
 			const button = document.createElement("button");
 			button.className = "tlp-results__button" + (spec.primary ? "" : " tlp-results__button--quiet");
 			button.textContent = spec.text;
-			button.addEventListener("click", () => {
+			onRelease(button, () => {
 				if (ResultsScreen._pressed) {
 					return;
 				}
@@ -95,6 +96,14 @@ export class ResultsScreen {
 			list.appendChild(line);
 		});
 		const root = ResultsScreen._root;
+		// Already up — the answer to a button on it (the question of "from scratch", the card back
+		// after it): the new content in place, with no entrance; a card bouncing in again reads as
+		// the screen twitching.
+		if (ResultsScreen.shown) {
+			clearTimeout(ResultsScreen._settleTimer);
+			root.classList.add("tlp-results--settled");
+			return;
+		}
 		root.style.display = "flex";
 		// Restart the card's entrance. Shown at once, not in the next animation frame: on a phone
 		// that frame can come late or not at all (the page throttled, back from an ad), and the card
@@ -111,15 +120,15 @@ export class ResultsScreen {
 		ResultsScreen._settleTimer = setTimeout(() => root.classList.add("tlp-results--settled"), 1500) as unknown as number;
 	}
 
-	/** Fades away. */
+	/** Goes at once: it goes on a button, and nothing fades after a press. */
 	static hide(): void {
 		const root = ResultsScreen._root;
 		if (!root) {
 			return;
 		}
-		root.classList.remove("tlp-results--shown");
 		clearTimeout(ResultsScreen._hideTimer);
-		ResultsScreen._hideTimer = setTimeout(() => (root.style.display = "none"), ResultsScreen.fadeTime * 1000) as unknown as number;
+		root.classList.remove("tlp-results--shown");
+		root.style.display = "none";
 	}
 
 	private static _build(): void {
@@ -183,15 +192,16 @@ export class ResultsScreen {
 	box-shadow: 0 6px 0 #1d7a14, 0 10px 18px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.5);
 	animation: tlp-results-pulse 1.4s ease-in-out 0.9s infinite;
 	-webkit-tap-highlight-color: transparent;
+	transition: scale 80ms ease-out;
 }
-.tlp-results__button:active { transform: translateY(4px); box-shadow: 0 2px 0 #1d7a14, 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.5); animation: none; }
-.tlp-results__button:disabled { filter: saturate(0.4); animation: none; }
+/* A press is only the button giving under the finger: its own scale, apart from the pulse's
+   transform, so neither cuts the other short. Nothing else on the screen moves for it. */
+.tlp-results__button:active { scale: 0.94; }
 .tlp-results__button--quiet {
 	background: linear-gradient(180deg, #7a6bc4 0%, #4d3f94 100%); text-shadow: 0 2px 0 #2b2160;
 	box-shadow: 0 6px 0 #2b2160, 0 10px 18px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.35);
 	animation: none;
 }
-.tlp-results__button--quiet:active { box-shadow: 0 2px 0 #2b2160, 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.35); }
 .tlp-results__title--lost { color: #ff6b6b; text-shadow: 0 3px 0 #7a1414, 0 6px 12px rgba(0, 0, 0, 0.5); }
 /* A phone on its side: a wide card, the stats in two columns. */
 @media (orientation: landscape) and (max-height: 540px) {

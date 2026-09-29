@@ -27,12 +27,15 @@ export class LoadingScreen {
 		const root = LoadingScreen._root;
 		LoadingScreen._title.textContent = title;
 		LoadingScreen.progress(0);
+		// Up at once, no fade: it comes on a button, and a screen fading in over another fading out
+		// lets the game flicker through between them. The scene is let go a moment later, once the
+		// cover has been drawn.
+		root.style.transition = "none";
 		root.style.display = "flex";
-		// Out of the hidden state on the next frame, so the fade plays.
-		requestAnimationFrame(() => {
-			root.classList.add("tlp-loading--shown");
-			setTimeout(onShown, LoadingScreen.fadeTime * 1000);
-		});
+		root.classList.add("tlp-loading--shown");
+		void root.offsetWidth;
+		root.style.transition = "";
+		setTimeout(onShown, 50);
 	}
 
 	/** Covers the game at once, no fade — the very start, before anything has been seen. */

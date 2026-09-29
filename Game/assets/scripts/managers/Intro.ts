@@ -92,6 +92,7 @@ export class Intro {
 		Intro._played = true;
 		Intro._forgetWakeup();
 		Sound.stop(CHANNEL);
+		Intro._text.stop(true);
 		Intro._release();
 	}
 
@@ -112,6 +113,7 @@ export class Intro {
 		Intro._played = true;
 		Intro._forgetWakeup();
 		Sound.stop(CHANNEL);
+		Intro._text.stop(true);
 		Intro._release();
 	}
 
