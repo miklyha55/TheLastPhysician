@@ -27,6 +27,7 @@ export class ResultsScreen {
 	private static _title: HTMLDivElement = null;
 	private static _subtitle: HTMLDivElement = null;
 	private static _rows: HTMLDivElement = null;
+	private static _stars: HTMLDivElement = null;
 	private static _buttons: HTMLDivElement = null;
 	private static _pressed = false;
 	private static _hideTimer = 0;
@@ -46,9 +47,10 @@ export class ResultsScreen {
 
 	/**
 	 * Shows `rows` under `title`, with `buttons` below; the first button pressed is the only one
-	 * that counts. Without a page the first button is taken at once.
+	 * that counts. `stars` — how many of three are earned, shown in a row of their own; below 0 —
+	 * no stars. Without a page the first button is taken at once.
 	 */
-	static show(title: string, subtitle: string, rows: ResultsRow[], buttons: ResultsButton[], lost = false): void {
+	static show(title: string, subtitle: string, rows: ResultsRow[], buttons: ResultsButton[], lost = false, stars = -1): void {
 		if (!ResultsScreen._available) {
 			buttons[0] && buttons[0].onClick();
 			return;
@@ -77,8 +79,21 @@ export class ResultsScreen {
 			});
 			bar.appendChild(button);
 		}
+		// Three stars, the earned ones lit, popping in one after another.
+		const starRow = ResultsScreen._stars;
+		starRow.textContent = "";
+		starRow.style.display = stars >= 0 ? "" : "none";
+		for (let i = 0; stars >= 0 && i < 3; i++) {
+			const star = document.createElement("span");
+			star.className = "tlp-results__star" + (i < stars ? " tlp-results__star--on" : "");
+			star.textContent = "★";
+			star.style.animationDelay = `${0.3 + i * 0.18}s`;
+			starRow.appendChild(star);
+		}
 		const list = ResultsScreen._rows;
 		list.textContent = "";
+		// No lines — no room kept for them.
+		list.style.display = rows.length ? "" : "none";
 		rows.forEach((row, i) => {
 			const line = document.createElement("div");
 			line.className = "tlp-results__row" + (row.minor ? " tlp-results__row--minor" : "");
@@ -216,8 +231,18 @@ export class ResultsScreen {
 	/* The small line of how belongs under "killed": the whole width, so it does not stray. */
 	.tlp-results__row--minor { grid-column: 1 / -1; padding: 1px 10px 1px 40px; font-size: 12px; }
 }
-.tlp-results--settled .tlp-results__card, .tlp-results--settled .tlp-results__row { animation: none; opacity: 1; transform: none; }
+.tlp-results__stars { display: flex; justify-content: center; align-items: flex-end; gap: clamp(6px, 2vmin, 12px); margin: 0 0 clamp(14px, 4.5vmin, 24px); flex-shrink: 0; }
+.tlp-results__star {
+	font-size: clamp(44px, 14vmin, 64px); line-height: 1; color: #4a3c86;
+	text-shadow: 0 4px 0 #16102d;
+	animation: tlp-results-star 0.4s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+/* The middle one a little bigger and higher: the three stand as a crown. */
+.tlp-results__star:nth-child(2) { font-size: clamp(54px, 17vmin, 78px); margin-bottom: clamp(6px, 2vmin, 12px); }
+.tlp-results__star--on { color: #ffd23f; text-shadow: 0 4px 0 #b8560f, 0 0 18px rgba(255, 210, 63, 0.55); }
+.tlp-results--settled .tlp-results__card, .tlp-results--settled .tlp-results__row, .tlp-results--settled .tlp-results__star { animation: none; opacity: 1; transform: none; }
 @keyframes tlp-results-pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes tlp-results-star { from { transform: scale(0.2) rotate(-30deg); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes tlp-results-row { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes tlp-results-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
 `;
@@ -230,11 +255,13 @@ export class ResultsScreen {
 		title.className = "tlp-results__title";
 		const subtitle = document.createElement("div");
 		subtitle.className = "tlp-results__subtitle";
+		const stars = document.createElement("div");
+		stars.className = "tlp-results__stars";
 		const rows = document.createElement("div");
 		rows.className = "tlp-results__rows";
 		const buttons = document.createElement("div");
 		buttons.className = "tlp-results__buttons";
-		card.append(title, subtitle, rows, buttons);
+		card.append(title, subtitle, stars, rows, buttons);
 		root.appendChild(card);
 		document.body.appendChild(root);
 		ResultsScreen._root = root;
@@ -242,6 +269,7 @@ export class ResultsScreen {
 		ResultsScreen._title = title;
 		ResultsScreen._subtitle = subtitle;
 		ResultsScreen._rows = rows;
+		ResultsScreen._stars = stars;
 		ResultsScreen._buttons = buttons;
 	}
 }

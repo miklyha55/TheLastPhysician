@@ -168,6 +168,8 @@ export class SplashScreen {
 		const list = SplashScreen._rows;
 		list.textContent = "";
 		list.style.display = rows.length ? "" : "none";
+		// A couple of numbers — a strip of pills over the button, the picture left clear above them.
+		list.classList.toggle("tlp-splash__rows--strip", rows.length > 0 && rows.length <= 3);
 		rows.forEach((row, i) => {
 			const line = document.createElement("div");
 			line.className = "tlp-splash__row" + (row.minor ? " tlp-splash__row--minor" : "");
@@ -268,6 +270,16 @@ export class SplashScreen {
 .tlp-splash__value { color: #7dff5a; font-size: clamp(15px, 4.6vmin, 19px); white-space: nowrap; font-weight: 900; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); }
 .tlp-splash__row--minor .tlp-splash__value { color: #ffcf4a; font-size: 14px; }
 .tlp-splash__rows::-webkit-scrollbar { display: none; }
+.tlp-splash__rows.tlp-splash__rows--strip {
+	display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 8px;
+	padding: 0; background: none; border: none; box-shadow: none; overflow: visible;
+}
+.tlp-splash__rows.tlp-splash__rows--strip .tlp-splash__row {
+	flex: 0 1 auto; padding: 7px 14px; border-radius: 999px; gap: 8px;
+	background: rgba(36, 26, 71, 0.88); border: 2px solid #ffcf4a;
+	box-shadow: 0 4px 0 #16102d, 0 8px 18px rgba(0, 0, 0, 0.5);
+}
+.tlp-splash__rows.tlp-splash__rows--strip .tlp-splash__label { flex: 0 1 auto; color: #e6dcff; font-size: clamp(12px, 3.6vmin, 15px); }
 .tlp-splash__buttons { width: 100%; display: flex; gap: 10px; margin-top: clamp(12px, 3.5vmin, 20px); flex-shrink: 0; }
 .tlp-splash__button {
 	flex: 1; min-width: 0; padding: clamp(12px, 3.8vmin, 18px) 6px; border: none; border-radius: 20px; cursor: pointer; white-space: nowrap;

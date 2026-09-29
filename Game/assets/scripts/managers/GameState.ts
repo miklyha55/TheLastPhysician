@@ -72,7 +72,7 @@ export class GameState {
 	private static _totals = GameState._freshTotals();
 
 	private static _freshTotals() {
-		return { levels: 0, zombies: 0, killed: 0, byTraps: 0, byBarrels: 0, thrown: 0, collected: 0, barrels: 0, seconds: 0, deaths: 0 };
+		return { levels: 0, zombies: 0, killed: 0, byTraps: 0, byBarrels: 0, thrown: 0, collected: 0, barrels: 0, seconds: 0, deaths: 0, stars: 0 };
 	}
 
 	private static _platform: Promise<void> = null;
@@ -267,6 +267,8 @@ export class GameState {
 		}
 		const last = GameState._level < 0 || next >= GameState.levels.length;
 		const carried = stack.slice();
+		// The run's count as it was before this level: played again, the level is counted once.
+		const before = { ...GameState._totals };
 		GameState._addToTotals();
 		// Passed, into the cloud — and the next level with what the player takes into it: closed on
 		// the results, the game opens there.
@@ -284,7 +286,8 @@ export class GameState {
 		ResultsScreen.show(
 			GameState._level >= 0 ? I18n.t("level.passed", GameState._level + 1) : I18n.t("level.passedPlain"),
 			LevelStats.killed >= LevelStats.zombies && LevelStats.zombies > 0 ? I18n.t("level.allKilled") : I18n.t("level.goodJob"),
-			GameState._results(),
+			// Between levels just the stars; the numbers wait for the final screen.
+			[],
 			[
 				{
 					text: I18n.t(last ? "level.finish" : "level.continue"),
@@ -310,7 +313,22 @@ export class GameState {
 						});
 					},
 				},
+				{
+					// The same level again from its start, with what the player came into it with.
+					text: I18n.t("level.replay"),
+					onClick: () => {
+						Yandex.showFullscreen().then(() => {
+							director.resume();
+							GameState._totals = before;
+							GameState._attempt = 1;
+							const scene = GameState._level >= 0 ? GameState.levels[GameState._level] : director.getScene().name;
+							GameState._load(scene, GameState._entry ? GameState._entry.slice() : null, () => ResultsScreen.hide());
+						});
+					},
+				},
 			],
+			false,
+			GameState._stars(),
 		);
 	}
 
@@ -328,7 +346,7 @@ export class GameState {
 		ResultsScreen.show(
 			I18n.t("death.title"),
 			GameState._level >= 0 ? I18n.t("level.title", GameState._level + 1) : "",
-			GameState._results(),
+			[],
 			[
 				{ text: I18n.t("death.again"), primary: true, onClick: () => GameState._again() },
 				{ text: I18n.t("death.fromStart"), onClick: () => GameState._confirmFromStart() },
@@ -409,6 +427,7 @@ export class GameState {
 		t.barrels += LevelStats.barrels;
 		t.seconds += LevelStats.seconds;
 		t.deaths += GameState._attempt - 1;
+		t.stars += GameState._stars();
 	}
 
 	/**
@@ -426,17 +445,11 @@ export class GameState {
 	private static _showFinal(): void {
 		const t = GameState._totals;
 		const seconds = Math.round(t.seconds);
+		// Only how long the whole way took and the stars gathered on it, of all there were.
 		const rows: ResultsRow[] = [
-			{ icon: "🏰", label: I18n.t("row.levels"), value: `${t.levels}` },
-			{ icon: "🧟", label: I18n.t("row.killed"), value: `${t.killed} / ${t.zombies}` },
+			{ icon: "⏱️", label: I18n.t("row.time"), value: `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` },
+			{ icon: "⭐", label: I18n.t("row.stars"), value: `${t.stars} / ${t.levels * 3}` },
 		];
-		const how = GameState._how(t.byTraps, t.byBarrels);
-		how && rows.push(how);
-		rows.push({ icon: "🧪", label: I18n.t("row.thrown"), value: `${t.thrown}` });
-		rows.push({ icon: "🎁", label: I18n.t("row.collected"), value: `${t.collected}` });
-		t.barrels > 0 && rows.push({ icon: "🛢️", label: I18n.t("row.barrels"), value: `${t.barrels}` });
-		rows.push({ icon: "⏱️", label: I18n.t("row.time"), value: `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` });
-		rows.push({ icon: "💀", label: I18n.t("row.deaths"), value: `${t.deaths}` });
 		gameEventTarget.emit(GameEvent.GAME_COMPLETE);
 		Yandex.pause();
 		Sfx.playMusic(true);
@@ -462,32 +475,16 @@ export class GameState {
 		});
 	}
 
-	/** How the zombies died besides the potions, in one small line: by traps, by barrels; null — neither. */
-	private static _how(traps: number, barrels: number): ResultsRow {
-		if (traps > 0 && barrels > 0) {
-			return { icon: "🔥", label: I18n.t("row.byBoth"), value: `${traps} · ${barrels}`, minor: true };
+	/**
+	 * Stars for a level passed, of three, by the zombies killed on it (bats among them): all of
+	 * them — three; half or more — two; fewer — one, for getting through. A level with none — three.
+	 */
+	private static _stars(): number {
+		const all = LevelStats.zombies;
+		if (all <= 0 || LevelStats.killed >= all) {
+			return 3;
 		}
-		if (traps > 0) {
-			return { icon: "🔥", label: I18n.t("row.byTraps"), value: `${traps}`, minor: true };
-		}
-		if (barrels > 0) {
-			return { icon: "💥", label: I18n.t("row.byBarrels"), value: `${barrels}`, minor: true };
-		}
-		return null;
-	}
-
-	/** The lines of the results screen, from what LevelStats counted. */
-	private static _results(): ResultsRow[] {
-		const rows: ResultsRow[] = [{ icon: "🧟", label: I18n.t("row.killed"), value: `${LevelStats.killed} / ${LevelStats.zombies}` }];
-		const how = GameState._how(LevelStats.byTraps, LevelStats.byBarrels);
-		how && rows.push(how);
-		rows.push({ icon: "🧪", label: I18n.t("row.thrown"), value: `${LevelStats.thrown}` });
-		rows.push({ icon: "🎁", label: I18n.t("row.collected"), value: `${LevelStats.collected}` });
-		LevelStats.barrels > 0 && rows.push({ icon: "🛢️", label: I18n.t("row.barrels"), value: `${LevelStats.barrels}` });
-		const seconds = Math.round(LevelStats.seconds);
-		rows.push({ icon: "⏱️", label: I18n.t("row.time"), value: `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` });
-		rows.push({ icon: "🔁", label: I18n.t("row.attempt"), value: `${GameState._attempt}` });
-		return rows;
+		return LevelStats.killed * 2 >= all ? 2 : 1;
 	}
 
 	/** The current level again from its start, with what the player came into it with. */

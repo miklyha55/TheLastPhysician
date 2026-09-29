@@ -17,6 +17,7 @@ const RU: { [key: string]: Text } = {
 	"level.allKilled": "Все зомби повержены",
 	"level.goodJob": "Отличная работа",
 	"level.continue": "Продолжить",
+	"level.replay": "Переиграть",
 	"level.finish": "Завершить",
 
 	"death.title": "Вы погибли",
@@ -31,17 +32,8 @@ const RU: { [key: string]: Text } = {
 	"final.subtitle": "Подземелье пройдено",
 	"final.again": "Играть снова",
 
-	"row.levels": "Уровней пройдено",
-	"row.killed": "Зомби убито",
-	"row.thrown": "Склянок брошено",
-	"row.collected": "Склянок собрано",
-	"row.barrels": "Бочек взорвано",
 	"row.time": "Время",
-	"row.deaths": "Смертей",
-	"row.attempt": "Попытка",
-	"row.byBoth": "ловушки · бочки",
-	"row.byTraps": "ловушками",
-	"row.byBarrels": "взрывами бочек",
+	"row.stars": "Звёзды",
 
 	"hint.title": "Веди героя",
 	"hint.note": "Остановись — и он сам метнёт склянку в зомби",
@@ -62,6 +54,7 @@ const EN: { [key: string]: Text } = {
 	"level.allKilled": "All zombies down",
 	"level.goodJob": "Great job",
 	"level.continue": "Continue",
+	"level.replay": "Replay",
 	"level.finish": "Finish",
 
 	"death.title": "You died",
@@ -76,17 +69,8 @@ const EN: { [key: string]: Text } = {
 	"final.subtitle": "The dungeon is behind you",
 	"final.again": "Play again",
 
-	"row.levels": "Levels cleared",
-	"row.killed": "Zombies killed",
-	"row.thrown": "Potions thrown",
-	"row.collected": "Potions collected",
-	"row.barrels": "Barrels blown up",
 	"row.time": "Time",
-	"row.deaths": "Deaths",
-	"row.attempt": "Attempt",
-	"row.byBoth": "traps · barrels",
-	"row.byTraps": "by traps",
-	"row.byBarrels": "by barrel blasts",
+	"row.stars": "Stars",
 
 	"hint.title": "Lead the hero",
 	"hint.note": "Stop — and he throws a potion at the zombie himself",
