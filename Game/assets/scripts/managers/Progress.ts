@@ -3,8 +3,8 @@ import { Yandex } from "./Yandex";
 
 // The player's progress, the way ThroughTheDeadCity keeps it: in the platform's cloud, not in the
 // browser — the platform asks that a player who reloads the page goes on where they stopped and
-// loses nothing, and a browser's storage goes with its first cleaning. Off the platform Yandex
-// keeps it in the browser instead, so a preview plays the same.
+// loses nothing, and a browser's storage goes with its first cleaning. Off the platform nothing is
+// kept: a preview starts from the first level every time.
 //
 // What is kept: the level the player is on; how far they have got — every level up to it is open
 // on the level map; the stack each level was last entered with — potions and keys, bottom to top,

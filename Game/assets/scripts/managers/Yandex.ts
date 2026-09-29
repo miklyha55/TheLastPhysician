@@ -184,14 +184,14 @@ export class Yandex {
 
 	/**
 	 * What was saved for this player — in the platform's cloud, tied to the player whether signed
-	 * in or not. Off the platform (a preview, a server of our own) it lies in the browser instead,
-	 * so the game plays the same there. Nothing saved, or no answer — an empty object: the game
-	 * starts clean rather than fails.
+	 * in or not. Off the platform (a preview, a server of our own) nothing is kept at all: the game
+	 * starts from its first level every time. Nothing saved, or no answer — an empty object: the
+	 * game starts clean rather than fails.
 	 */
 	static async loadData(): Promise<{ [key: string]: unknown }> {
 		const sdk = Yandex._sdk;
 		if (!sdk) {
-			return readLocal();
+			return {};
 		}
 		try {
 			Yandex._player = Yandex._player || (sdk.getPlayer ? await sdk.getPlayer({ scopes: false }) : null);
@@ -208,8 +208,7 @@ export class Yandex {
 	 */
 	static async saveData(state: object, now = false): Promise<void> {
 		if (!Yandex._sdk) {
-			writeLocal(state);
-			return;
+			return; // off the platform nothing is kept
 		}
 		try {
 			Yandex._player && Yandex._player.setData && (await Yandex._player.setData(state, now));
@@ -261,27 +260,6 @@ export function regainFocus(): void {
 		// the browser would not — the focus is where it was
 	}
 	focusGame();
-}
-
-/** Where the saved game lies off the platform. */
-const LOCAL_KEY = "tlp-progress";
-
-function readLocal(): { [key: string]: unknown } {
-	try {
-		const text = typeof localStorage !== "undefined" ? localStorage.getItem(LOCAL_KEY) : null;
-		const data = text ? JSON.parse(text) : null;
-		return data && typeof data === "object" ? data : {};
-	} catch {
-		return {};
-	}
-}
-
-function writeLocal(state: object): void {
-	try {
-		typeof localStorage !== "undefined" && localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
-	} catch {
-		// a private window, the storage full or shut — the game goes on unsaved
-	}
 }
 
 /** Is there a file at `src`: asked without loading it, with a limit. */
