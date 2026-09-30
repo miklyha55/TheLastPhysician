@@ -74,7 +74,7 @@ export class PlayerActions extends Component {
 
 	@property(AnimationClip) throwClip: AnimationClip = null;
 	@property({ tooltip: "Playback speed of the throw clip" })
-	throwSpeed: number = 6;
+	throwSpeed: number = 7.2;
 	@property({ tooltip: "Point of the throw clip, 0..1, where the hand takes the piece off the floor — its lowest reach" })
 	throwPickup: number = 0.2;
 	@property({ tooltip: "Point of the throw clip, 0..1, where the piece leaves the hand — the fastest swing forward" })
@@ -86,13 +86,13 @@ export class PlayerActions extends Component {
 	@property({ tooltip: "Tumble of a thrown piece, radians per second" })
 	throwSpin: number = 8;
 	@property({ tooltip: "Seconds after a throw before the next piece is picked up" })
-	throwCooldown: number = 0.45;
+	throwCooldown: number = 0.38;
 	@property({ tooltip: "Seconds a thrown piece does not touch the thrower" })
 	throwGrace: number = 0.5;
 	@property({ tooltip: "A barrel this close, gap between it and the player, is taken even standing still" })
 	grabNear: number = 0.38;
 	@property({ tooltip: "Playback speed of the throw clip when it is a barrel" })
-	barrelThrowSpeed: number = 9;
+	barrelThrowSpeed: number = 10.8;
 	@property({ tooltip: "Point of the shooting clip, 0..1, the aim is held at while a barrel flies — the gun at the shoulder, just short of the shot" })
 	aimMoment: number = 0.3;
 	@property({ tooltip: "How many times faster than a plain shot the shot at a thrown barrel plays" })

@@ -1,4 +1,5 @@
 import { _decorator, AnimationClip, Component, instantiate, math, Node, Prefab, SkeletalAnimation, v3, Vec3, Vec2 } from "cc";
+import { PREVIEW } from "cc/env";
 import GameEvent from "../enums/GameEvent";
 import { CameraManager } from "../managers/camera/CameraManager";
 import { GameState, StackItem } from "../managers/GameState";
@@ -94,7 +95,7 @@ export class PlayerAttack extends Component {
 	@property({ tooltip: "Zombies nearer than this are shot at" })
 	shootRadius: number = 3;
 	@property({ tooltip: "Seconds from one shot to the next" })
-	fireInterval: number = 0.75;
+	fireInterval: number = 0.65;
 	@property({ tooltip: "Point of the shooting clip, 0..1, at which the potion is thrown", slide: true, range: [0, 1, 0.05] })
 	shotMoment: number = 0.4;
 	@property({ tooltip: "Potion speed along the ground, units per second" })
@@ -207,6 +208,52 @@ export class PlayerAttack extends Component {
 
 	private onUp(): void {
 		this._pressed = false;
+		// In the preview: the next moments are watched for a shot that does not come (_explainNoShot).
+		PREVIEW && (this._watchRelease = 0.4);
+	}
+
+	/** Seconds left of watching, after the finger is lifted, whether a shot starts (preview only). */
+	private _watchRelease = 0;
+
+	/**
+	 * The finger lifted with a zombie close by and no shot started: why, in the console — only in the
+	 * preview, to find out what keeps the player from shooting.
+	 */
+	private _explainNoShot(dt: number, started: boolean): void {
+		if (this._watchRelease <= 0) {
+			return;
+		}
+		if (started) {
+			this._watchRelease = 0;
+			return;
+		}
+		if ((this._watchRelease -= dt) > 0) {
+			return;
+		}
+		const at = this.node.worldPosition;
+		const near = Zombie.all.filter((zombie) => zombie.isValid && Vec3.distance(zombie.node.worldPosition, at) < 1.5);
+		if (!near.length) {
+			return;
+		}
+		const why: string[] = [];
+		this._pressed && why.push("still pressed: a move came after the release");
+		this._cooldown > 0 && why.push(`cooldown ${this._cooldown.toFixed(2)}s`);
+		this._throwIn >= 0 && why.push("a shot already under way");
+		this._shots.length && why.push("a potion still in the air");
+		this.ammo <= 0 && why.push("no potions");
+		this.busy && why.push("busy: throwing or jumping");
+		for (const zombie of near) {
+			const d = Vec3.distance(zombie.node.worldPosition, at).toFixed(2);
+			const reason = zombie.isDead
+				? "dead"
+				: zombie.doomed
+				  ? "doomed by a drone"
+				  : this._walls && !this._walls.lineOfSight(at, zombie.node.worldPosition, zombie.height)
+				    ? "no line of sight"
+				    : "shootable";
+			why.push(`${zombie.node.name} at ${d}: ${reason}`);
+		}
+		console.log(`[Shoot] no shot 0.4s after release — ${why.join("; ")}; target ${this._target ? this._target.node.name : "none"}`);
 	}
 
 	protected start(): void {
@@ -314,6 +361,9 @@ export class PlayerAttack extends Component {
 		if (this._throwIn >= 0) {
 			if (this._pressed) {
 				this._throwIn = -1;
+				// Broken off before the potion left: nothing thrown, so no wait for the next one — the
+				// finger lifted by a zombie, the shot comes at once, not the rest of the interval later.
+				this._cooldown = 0;
 			} else if ((this._throwIn -= dt) < 0) {
 				this._throwIn = -1;
 				// The potion is spent only now, as it leaves the gun: a shot broken off costs nothing.
@@ -333,16 +383,19 @@ export class PlayerAttack extends Component {
 		// Walls between the camera and the target dissolve just as they do for the player.
 		this._occlusion && this._occlusion.setTarget(this._target ? this._target.node : null);
 		if (this._pressed || !this._target) {
+			PREVIEW && this._explainNoShot(dt, false);
 			return;
 		}
 		this.faceDirection && this.faceDirection.faceTowards(this._target.node.worldPosition);
 		if (!ready) {
+			PREVIEW && this._explainNoShot(dt, this._throwIn >= 0);
 			return;
 		}
 		this._cooldown = this.fireInterval;
 		const duration = this.animationController ? this.animationController.shoot() : 0;
 		this._throwAt = this._target;
 		this._throwIn = duration * this.shotMoment;
+		PREVIEW && this._explainNoShot(dt, true);
 	}
 
 	/** The nearest zombie within reach and in plain sight. */
