@@ -35,7 +35,7 @@ export function rollPotionKind(chance: { bomb: number; drone: number } = DROP_CH
 const LIQUID_CELL = 6;
 /** The liquid of each kind — and the colour its burst flashes and its glass flies in (Explosives). */
 const LIQUID: { [kind: number]: number[] } = {
-	[PotionKind.Plain]: [96, 232, 112], // lime green: the arrow's green, over the palette's own pink
+	[PotionKind.Plain]: [34, 197, 60], // green, over the palette's own pink
 	[PotionKind.Bomb]: [236, 44, 34],
 	[PotionKind.Drone]: [255, 185, 25], // amber: an orange leaning to yellow
 };

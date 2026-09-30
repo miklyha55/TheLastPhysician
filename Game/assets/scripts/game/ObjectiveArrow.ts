@@ -1,6 +1,5 @@
 import { _decorator, Color, Component, director, Material, Mesh, MeshRenderer, Node, primitives, utils, v3, Vec3 } from "cc";
 import { Prewarm } from "../managers/Prewarm";
-import { Debris } from "./Debris";
 import { Door } from "./Door";
 import { FloorButton } from "./FloorButton";
 import { Gate } from "./Gate";
@@ -68,10 +67,6 @@ export class ObjectiveArrow extends Component {
 	gateLift: number = 0;
 	@property({ tooltip: "An open door on the way stops glowing once the player is this close to it: going through" })
 	passDistance: number = 0.45;
-	@property({ tooltip: "Width of the sight under the player while something thrown at them is on its way" })
-	threatSize: number = 0.9;
-	@property({ tooltip: "Colour of that sight: the red of danger; bright — its lines are thin" })
-	threatColor: Color = new Color(255, 60, 40, 220);
 
 	private _node: Node = null;
 	private _material: Material = null;
@@ -102,10 +97,6 @@ export class ObjectiveArrow extends Component {
 	/** The door on the way that glows now, if one does: the arrow hides near it too. */
 	private _wayDoor: Vec3 = null;
 	private _markShown = 0;
-	/** A red sight under the player — they are the target: a thing thrown at them (a zombie girl's) is in the air. */
-	private _threat: Node = null;
-	private _threatMaterial: Material = null;
-	private _threatShown = 0;
 
 	protected start(): void {
 		this._node = new Node("ObjectiveArrow");
@@ -129,23 +120,11 @@ export class ObjectiveArrow extends Component {
 		this._markMaterial.initialize({ effectName: "builtin-unlit", technique: ADD });
 		glow.setSharedMaterial(this._markMaterial, 0);
 		this._mark.setScale(0, 0, 0);
-		// The danger's mark under the player: a red sight — they are the target.
-		this._threat = new Node("ThreatMark");
-		director.getScene().addChild(this._threat);
-		const danger = this._threat.addComponent(MeshRenderer);
-		danger.mesh = this._reticleMesh();
-		danger.shadowCastingMode = MeshRenderer.ShadowCastingMode.OFF;
-		danger.receiveShadow = MeshRenderer.ShadowReceivingMode.OFF;
-		this._threatMaterial = new Material();
-		this._threatMaterial.initialize({ effectName: "builtin-unlit", technique: ADD });
-		danger.setSharedMaterial(this._threatMaterial, 0);
-		this._threat.setScale(0, 0, 0);
 	}
 
 	protected onDestroy(): void {
 		this._node && this._node.isValid && this._node.destroy();
 		this._mark && this._mark.isValid && this._mark.destroy();
-		this._threat && this._threat.isValid && this._threat.destroy();
 	}
 
 	protected lateUpdate(dt: number): void {
@@ -184,28 +163,8 @@ export class ObjectiveArrow extends Component {
 		_color.set(this.color.r, this.color.g, this.color.b, Math.round(this.color.a * this._shown));
 		this._material.setProperty("mainColor", _color);
 		this._glow(alive && this._hasWay, dt);
-		const debris = Debris.instance;
-		this._danger(alive && !!debris && debris.threatening, at, dt);
 	}
 
-	/** The sight under the player while a thing thrown at them is in the air; out as soon as it is not. */
-	private _danger(on: boolean, at: Vec3, dt: number): void {
-		// Up at once — the warning is worth nothing late — and out a little slower.
-		const target = on ? 1 : 0;
-		this._threatShown += Math.sign(target - this._threatShown) * Math.min(Math.abs(target - this._threatShown), dt * (on ? 10 : 5));
-		if (this._threatShown <= 0) {
-			this._threat.setScale(0, 0, 0);
-			return;
-		}
-		// A quicker beat than the goal's: alarm, not an invitation.
-		const breath = 0.5 + 0.5 * Math.sin(this._time * Math.PI * 2 * 2.5);
-		const width = this.threatSize * this._threatShown * (0.9 + 0.1 * breath);
-		this._threat.setWorldPosition(at.x, this.height - 0.01 + this.markHeight, at.z);
-		this._threat.setScale(width, 1, width);
-		const c = this.threatColor;
-		_color.set(c.r, c.g, c.b, Math.round(c.a * this._threatShown * (0.7 + 0.3 * breath)));
-		this._threatMaterial.setProperty("mainColor", _color);
-	}
 
 	/** The glow under the goal: breathing while it is the goal; out, then over to the next one. */
 	private _glow(on: boolean, dt: number): void {
@@ -446,58 +405,6 @@ export class ObjectiveArrow extends Component {
 	}
 
 	/** A flat arrow on the floor, pointing along +Z from `offset` out: a shaft and a head, seen from either side. */
-	/**
-	 * A sight's reticle, flat on the floor, a unit across: a ring, and a tick on each of the four
-	 * sides crossing it and running in towards the middle, which is left empty — the player stands
-	 * there. Both faces, like the arrow.
-	 */
-	private _reticleMesh(): Mesh {
-		const positions: number[] = [];
-		const indices: number[] = [];
-		const quad = (a: number[], b: number[], c: number[], d: number[]) => {
-			const i = positions.length / 3;
-			positions.push(...a, ...b, ...c, ...d);
-			indices.push(i, i + 2, i + 1, i, i + 3, i + 2, i, i + 1, i + 2, i, i + 2, i + 3);
-		};
-		// The ring.
-		const inner = 0.34;
-		const outer = 0.42;
-		const steps = 32;
-		for (let k = 0; k < steps; k++) {
-			const a0 = (k / steps) * Math.PI * 2;
-			const a1 = ((k + 1) / steps) * Math.PI * 2;
-			const c0 = Math.cos(a0), s0 = Math.sin(a0), c1 = Math.cos(a1), s1 = Math.sin(a1);
-			quad([c0 * inner, 0, s0 * inner], [c0 * outer, 0, s0 * outer], [c1 * outer, 0, s1 * outer], [c1 * inner, 0, s1 * inner]);
-		}
-		// The four ticks, from near the middle out through the ring — in two pieces each, inside it and
-		// outside it, meeting its edges: nothing lies over anything. The glow adds up where shapes
-		// overlap, and a crossing came out white.
-		const from = 0.16;
-		const to = 0.56;
-		const half = 0.03;
-		// Where a tick's side meets the ring's edge: the edges are circles, so a hair further in.
-		const reachIn = Math.sqrt(inner * inner - half * half);
-		const reachOut = Math.sqrt(outer * outer - half * half);
-		for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-			const px = -dz * half, pz = dx * half; // across the tick
-			for (const [a, b] of [[from, reachIn], [reachOut, to]]) {
-				quad(
-					[dx * a + px, 0, dz * a + pz],
-					[dx * b + px, 0, dz * b + pz],
-					[dx * b - px, 0, dz * b - pz],
-					[dx * a - px, 0, dz * a - pz],
-				);
-			}
-		}
-		const count = positions.length / 3;
-		const normals: number[] = [];
-		const uvs: number[] = [];
-		for (let i = 0; i < count; i++) {
-			normals.push(0, 1, 0);
-			uvs.push(0, 0);
-		}
-		return utils.MeshUtils.createMesh({ positions, normals, uvs, indices });
-	}
 
 	private _arrowMesh(): Mesh {
 		const o = this.offset;

@@ -78,7 +78,7 @@
     },
     "autoReleaseAssets": false,
     "_globals": {
-      "__id__": 2207
+      "__id__": 2225
     },
     "_id": "f8969202-4e50-4220-8815-68277a29218e"
   },
@@ -23955,7 +23955,7 @@
     "propertyPath": [
       "count"
     ],
-    "value": 6
+    "value": 7
   },
   {
     "__type__": "cc.TargetInfo",
@@ -24110,7 +24110,7 @@
     "propertyPath": [
       "count"
     ],
-    "value": 6
+    "value": 7
   },
   {
     "__type__": "cc.TargetInfo",
@@ -32476,6 +32476,24 @@
       },
       {
         "__id__": 2204
+      },
+      {
+        "__id__": 2207
+      },
+      {
+        "__id__": 2210
+      },
+      {
+        "__id__": 2213
+      },
+      {
+        "__id__": 2216
+      },
+      {
+        "__id__": 2219
+      },
+      {
+        "__id__": 2222
       }
     ],
     "nestedPrefabInstanceRoots": [
@@ -33993,30 +34011,220 @@
     ]
   },
   {
-    "__type__": "cc.SceneGlobals",
-    "ambient": {
+    "__type__": "cc.TargetOverrideInfo",
+    "source": {
+      "__id__": 1610
+    },
+    "sourceInfo": {
       "__id__": 2208
     },
-    "shadows": {
+    "propertyPath": [
+      "lid"
+    ],
+    "target": {
+      "__id__": 1610
+    },
+    "targetInfo": {
       "__id__": 2209
+    }
+  },
+  {
+    "__type__": "cc.TargetInfo",
+    "localID": [
+      "5aYHWy75pMd5uYYj2GYqel"
+    ]
+  },
+  {
+    "__type__": "cc.TargetInfo",
+    "localID": [
+      "c9OliYAQhO+be0HKqv9A/i"
+    ]
+  },
+  {
+    "__type__": "cc.TargetOverrideInfo",
+    "source": {
+      "__id__": 1610
     },
-    "_skybox": {
-      "__id__": 2210
-    },
-    "fog": {
+    "sourceInfo": {
       "__id__": 2211
     },
-    "octree": {
+    "propertyPath": [
+      "potions",
+      "0"
+    ],
+    "target": {
+      "__id__": 1610
+    },
+    "targetInfo": {
       "__id__": 2212
+    }
+  },
+  {
+    "__type__": "cc.TargetInfo",
+    "localID": [
+      "5aYHWy75pMd5uYYj2GYqel"
+    ]
+  },
+  {
+    "__type__": "cc.TargetInfo",
+    "localID": [
+      "e6i4jFaFpKFKkT4tucK+Bx",
+      "9401VqTeRBb7jpPXcwkCJD"
+    ]
+  },
+  {
+    "__type__": "cc.TargetOverrideInfo",
+    "source": {
+      "__id__": 1610
     },
-    "skin": {
-      "__id__": 2213
-    },
-    "lightProbeInfo": {
+    "sourceInfo": {
       "__id__": 2214
     },
-    "postSettings": {
+    "propertyPath": [
+      "potions",
+      "1"
+    ],
+    "target": {
+      "__id__": 1610
+    },
+    "targetInfo": {
       "__id__": 2215
+    }
+  },
+  {
+    "__type__": "cc.TargetInfo",
+    "localID": [
+      "5aYHWy75pMd5uYYj2GYqel"
+    ]
+  },
+  {
+    "__type__": "cc.TargetInfo",
+    "localID": [
+      "bbH2to/P9Airpk/G9NMlBz",
+      "9401VqTeRBb7jpPXcwkCJD"
+    ]
+  },
+  {
+    "__type__": "cc.TargetOverrideInfo",
+    "source": {
+      "__id__": 1610
+    },
+    "sourceInfo": {
+      "__id__": 2217
+    },
+    "propertyPath": [
+      "potions",
+      "2"
+    ],
+    "target": {
+      "__id__": 1610
+    },
+    "targetInfo": {
+      "__id__": 2218
+    }
+  },
+  {
+    "__type__": "cc.TargetInfo",
+    "localID": [
+      "5aYHWy75pMd5uYYj2GYqel"
+    ]
+  },
+  {
+    "__type__": "cc.TargetInfo",
+    "localID": [
+      "76am8EfpNHqY8SIKcKduF1",
+      "9401VqTeRBb7jpPXcwkCJD"
+    ]
+  },
+  {
+    "__type__": "cc.TargetOverrideInfo",
+    "source": {
+      "__id__": 1610
+    },
+    "sourceInfo": {
+      "__id__": 2220
+    },
+    "propertyPath": [
+      "potions",
+      "3"
+    ],
+    "target": {
+      "__id__": 1610
+    },
+    "targetInfo": {
+      "__id__": 2221
+    }
+  },
+  {
+    "__type__": "cc.TargetInfo",
+    "localID": [
+      "5aYHWy75pMd5uYYj2GYqel"
+    ]
+  },
+  {
+    "__type__": "cc.TargetInfo",
+    "localID": [
+      "eeGrZ9BQ5FmLul2cszUuDJ",
+      "9401VqTeRBb7jpPXcwkCJD"
+    ]
+  },
+  {
+    "__type__": "cc.TargetOverrideInfo",
+    "source": {
+      "__id__": 1610
+    },
+    "sourceInfo": {
+      "__id__": 2223
+    },
+    "propertyPath": [
+      "potions",
+      "4"
+    ],
+    "target": {
+      "__id__": 1610
+    },
+    "targetInfo": {
+      "__id__": 2224
+    }
+  },
+  {
+    "__type__": "cc.TargetInfo",
+    "localID": [
+      "5aYHWy75pMd5uYYj2GYqel"
+    ]
+  },
+  {
+    "__type__": "cc.TargetInfo",
+    "localID": [
+      "79p15A6rhERbLYg+wSTZmz",
+      "9401VqTeRBb7jpPXcwkCJD"
+    ]
+  },
+  {
+    "__type__": "cc.SceneGlobals",
+    "ambient": {
+      "__id__": 2226
+    },
+    "shadows": {
+      "__id__": 2227
+    },
+    "_skybox": {
+      "__id__": 2228
+    },
+    "fog": {
+      "__id__": 2229
+    },
+    "octree": {
+      "__id__": 2230
+    },
+    "skin": {
+      "__id__": 2231
+    },
+    "lightProbeInfo": {
+      "__id__": 2232
+    },
+    "postSettings": {
+      "__id__": 2233
     },
     "bakedWithStationaryMainLight": false,
     "bakedWithHighpLightmap": false
