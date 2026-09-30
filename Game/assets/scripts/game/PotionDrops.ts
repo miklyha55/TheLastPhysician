@@ -91,7 +91,7 @@ export class PotionDrops extends Component {
 			const angle = turn + (i / count) * Math.PI * 2 + math.randomRange(-0.4, 0.4);
 			const reach = math.randomRange(this.scatter.x, this.scatter.y);
 			const node = instantiate(prefab);
-			// Now and then a red or a yellow one: seen as such on the floor.
+			// Red or yellow, never the plain green (DROP_CHANCE): seen as such on the floor.
 			const kind = rollPotionKind(DROP_CHANCE);
 			paintPotion(node, kind);
 			// Next to the zombie, not under it: it sinks away and is gone, the potions stay.

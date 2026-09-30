@@ -220,7 +220,7 @@ export class SplashScreen {
 .tlp-splash {
 	position: fixed; inset: 0; z-index: 10010;
 	display: none; flex-direction: column; align-items: center;
-	padding: calc(max(20px, env(safe-area-inset-top)) + 7vh) max(16px, env(safe-area-inset-right)) calc(max(20px, env(safe-area-inset-bottom)) + 6vh) max(16px, env(safe-area-inset-left));
+	padding: calc(max(20px, env(safe-area-inset-top)) + 12vh) max(16px, env(safe-area-inset-right)) calc(max(20px, env(safe-area-inset-bottom)) + 11vh) max(16px, env(safe-area-inset-left));
 	box-sizing: border-box;
 	background: #0b0d14; overflow: hidden;
 	opacity: 0; transition: opacity ${SplashScreen.fadeTime}s ease;
@@ -308,7 +308,7 @@ export class SplashScreen {
 }
 /* A phone on its side: less air at the edges, a wider block, the stats in two columns. */
 @media (orientation: landscape) and (max-height: 540px) {
-	.tlp-splash { padding-top: max(14px, env(safe-area-inset-top)); padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+	.tlp-splash { padding-top: calc(max(14px, env(safe-area-inset-top)) + 7vh); padding-bottom: calc(max(14px, env(safe-area-inset-bottom)) + 7vh); }
 	.tlp-splash__content { width: min(680px, 100%); }
 	.tlp-splash__rows { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: row dense; align-content: start; gap: 3px 6px; padding: 6px; }
 	.tlp-splash__row { padding: 4px 10px; font-size: 13px; }

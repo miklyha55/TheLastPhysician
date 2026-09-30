@@ -3,13 +3,13 @@ import { noShadow } from "./SmallShadows";
 
 // The kinds of potion the player shoots. Green — the plain one: one life off whoever it lands on.
 // Red — a bomb: it bursts like a barrel, half as wide, killing every zombie in the circle and
-// setting off the barrels in it; the player it spares. Yellow — a drone: a life off the one it is
+// setting off the barrels in it; the player it spares. Yellow — a drone: two lives off the one it is
 // thrown at, then it flies on round the walls to every other zombie that was on the screen the
-// moment it was thrown, one after another, and takes a life off each; whoever comes into sight
+// moment it was thrown, one after another, and takes two lives off each; whoever comes into sight
 // later it leaves.
 //
-// They come out of chests, as many of each as the level is reckoned to need, and fall from zombies
-// by the dice; on the back they are shot in turn, the lowest first — the one right over the keys.
+// They come out of chests, as many of each as the level is reckoned to need; zombies drop only red
+// and yellow ones, by the dice; on the back they are shot in turn, the lowest first — the one right over the keys.
 // A kind is only the colour of its liquid on the model: the potion's material with its palette's
 // liquid cell painted over — glass, cork and rope stay as they are.
 
@@ -19,8 +19,11 @@ export enum PotionKind {
 	Drone = 2,
 }
 
-/** Chance of each special kind, for every potion a zombie drops. A chest's are set for its level (Chest). */
-export const DROP_CHANCE = { bomb: 0.15, drone: 0.15 };
+/**
+ * Chance of each kind, for every potion a zombie drops: only red and yellow ones fall from them —
+ * the plain green come from the chests. A chest's are set for its level (Chest).
+ */
+export const DROP_CHANCE = { bomb: 0.4, drone: 0.6 };
 
 /** A potion's kind by the dice. */
 export function rollPotionKind(chance: { bomb: number; drone: number } = DROP_CHANCE): PotionKind {

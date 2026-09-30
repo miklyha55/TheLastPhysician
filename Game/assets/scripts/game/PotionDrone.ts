@@ -4,7 +4,7 @@ import type { Zombie } from "./Zombie";
 
 // A yellow potion after its first hit: a drone. It keeps the zombies that were on the screen the
 // moment it was thrown — those and no others — and flies to them one after another, the nearest
-// next, the way round the walls as a zombie would walk it, and takes a life off each it reaches. A zombie
+// next, the way round the walls as a zombie would walk it, and takes two lives off each it reaches (PlayerAttack.droneDamage). A zombie
 // dead meanwhile is struck off; one it cannot get to, or does not reach in `giveUp` seconds, it
 // leaves. When none is left it shrinks away. PlayerAttack drives it, frame by frame.
 
@@ -37,7 +37,7 @@ export class PotionDrone {
 		private readonly _targets: Zombie[],
 		private readonly _finder: PathFinder,
 		private readonly _options: DroneOptions,
-		/** A zombie reached: the player takes a life off it (blood, the count). */
+		/** A zombie reached: the player takes its lives off it (blood, the count). */
 		private readonly _kill: (zombie: Zombie, from: Vec3) => void,
 		/** Nothing more to fly to: the node, shrunk to nothing, is done with. */
 		private readonly _finish: (node: Node) => void,

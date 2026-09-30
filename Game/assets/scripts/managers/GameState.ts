@@ -2,6 +2,7 @@ import { assetManager, Director, director } from "cc";
 import { EDITOR } from "cc/env";
 import GameEvent from "../enums/GameEvent";
 import { gameEventTarget } from "../plugins/GameEventTarget";
+import { LevelMap, LevelMapEntry } from "./LevelMap";
 import { LevelStats } from "./LevelStats";
 import { I18n } from "./I18n";
 import { Intro } from "./Intro";
@@ -104,6 +105,7 @@ export class GameState {
 				})
 				.then(() => {
 					Progress.totals && (GameState._totals = { ...GameState._freshTotals(), ...Progress.totals });
+					GameState._setUpMap();
 				});
 		}
 		return GameState._platform;
@@ -148,6 +150,66 @@ export class GameState {
 		typeof document !== "undefined" &&
 			document.addEventListener("visibilitychange", () => (document.hidden ? Yandex.pause() : GameState._running() && Yandex.play()));
 	}
+
+	/** The level map stopped the world, and gives it back on closing. */
+	private static _mapHeld = false;
+
+	/**
+	 * The level map (LevelMap): its levels and their best stars from the saved progress, open while
+	 * a level is being played with the player on their feet; while it is up the world stands, and a
+	 * level picked on it is loaded with the stack the player last came into it with.
+	 */
+	private static _setUpMap(): void {
+		LevelMap.entries = () => {
+			const reached = Math.min(Progress.reached, GameState.levels.length);
+			return GameState.levels.map(
+				(name, index): LevelMapEntry => ({
+					index,
+					here: index === GameState._level,
+					passed: index < reached - 1 || Progress.stars(index) > 0,
+					locked: index >= reached,
+					stars: Progress.stars(index),
+				}),
+			);
+		};
+		LevelMap.canOpen = () => GameState._begun && GameState._running() && !Intro.locked && GameState._playerUp();
+		LevelMap.onToggle = (open) => {
+			if (open) {
+				GameState._mapHeld = !director.isPaused();
+				GameState._mapHeld && director.pause();
+				Yandex.pause();
+				return;
+			}
+			GameState._mapHeld && director.resume();
+			GameState._mapHeld = false;
+			GameState._running() && Yandex.play();
+		};
+		LevelMap.onPick = (index) => {
+			if (GameState._loading || index < 0 || index >= GameState.levels.length) {
+				return;
+			}
+			GameState._attempt = 1;
+			GameState._load(GameState.levels[index], Progress.entry(index));
+		};
+		LevelMap.start();
+	}
+
+	/** Is the player of this level alive — found by name: the player's scripts reach back here. */
+	private static _playerUp(): boolean {
+		const scene = director.getScene();
+		if (!scene) {
+			return false;
+		}
+		if (GameState._playerScene !== scene) {
+			GameState._playerScene = scene;
+			GameState._player = scene.getComponentInChildren("PlayerAttack") as unknown as { isDead: boolean; isValid: boolean };
+		}
+		const player = GameState._player;
+		return !!player && player.isValid && !player.isDead;
+	}
+
+	private static _playerScene: unknown = null;
+	private static _player: { isDead: boolean; isValid: boolean } = null;
 
 	/** Is the world going now, with the player in it: no card, no start screen, no loading, no pause. */
 	private static _running(): boolean {
@@ -275,7 +337,7 @@ export class GameState {
 		GameState._addToTotals();
 		// Passed, into the cloud — and the next level with what the player takes into it: closed on
 		// the results, the game opens there.
-		GameState._level >= 0 && Progress.pass(GameState._level, GameState._totals);
+		GameState._level >= 0 && Progress.pass(GameState._level, GameState._totals, GameState._stars());
 		!last && Progress.enter(next, carried);
 		// The results first, the game held still under them; on with the button.
 		GameState._loading = true;
@@ -386,22 +448,14 @@ export class GameState {
 	}
 
 	/**
-	 * "Once more": the same level from its start, through a rewarded video. It starts after the
-	 * video watched — and with no video at all: off the platform, or when none was given, the
-	 * button simply plays the level again; locking a restart behind an ad would stop the game dead
-	 * at the first network failure. Only one thing keeps the level from starting: the player saw
-	 * the video and closed it before it counted — then the death card stays, and they choose
-	 * again. The moment is the right one: the player has just died and pressed the button, nobody
-	 * is steering — ads where the screen is being played on the platform forbids outright.
+	 * "Once more": the same level from its start, after a full-screen ad — the platform's logical
+	 * pause, the player has just died and pressed the button, nobody is steering; how often one is
+	 * shown the platform decides. The level starts whatever the ad did. Not a rewarded video: the
+	 * platform allows one only on a button of the player's choice that says it is an ad and what it
+	 * gives, and never for what the game cannot go on without — and playing again is that.
 	 */
 	private static _again(): void {
-		Yandex.showRewarded().then((result) => {
-			if (result === "declined") {
-				GameState.died();
-				return;
-			}
-			GameState.restart(() => ResultsScreen.hide());
-		});
+		Yandex.showFullscreen().then(() => GameState.restart(() => ResultsScreen.hide()));
 	}
 
 	/** The game from its first level, carrying nothing — as if it had just been started. */

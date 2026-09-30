@@ -9,7 +9,8 @@ import { Yandex } from "./Yandex";
 // What is kept: the level the player is on; how far they have got — every level up to it is open
 // on the level map; the stack each level was last entered with — potions and keys, bottom to top,
 // laid back on the player whether the level is gone on to, played again from the map, or the
-// game reopened on it; and the run's totals, for the final screen after a game played in sittings.
+// game reopened on it; the run's totals, for the final screen after a game played in sittings; and
+// the best stars each level was passed with, for the level map.
 //
 // One object in memory is the truth for the game, and it is written whole, on events — a level
 // entered, a level passed, the game wiped — never on a timer: the platform limits writes, and the
@@ -27,10 +28,12 @@ export interface ProgressState {
 	entries: { [level: string]: StackItem[] };
 	/** The run's totals so far; null — none yet. */
 	totals: { [name: string]: number } | null;
+	/** The best stars each level was passed with, by its index, 1..3; none — not passed yet. */
+	stars: { [level: string]: number };
 }
 
 function fresh(): ProgressState {
-	return { level: 0, reached: 1, entries: {}, totals: null };
+	return { level: 0, reached: 1, entries: {}, totals: null, stars: {} };
 }
 
 export class Progress {
@@ -96,11 +99,18 @@ export class Progress {
 		changed && Progress._save();
 	}
 
-	/** Level `index` passed: the next one opens. */
-	static pass(index: number, totals: { [name: string]: number }): void {
+	/** The best stars level `index` was passed with, 0..3; 0 — not passed yet (the level map). */
+	static stars(index: number): number {
+		return Progress._state.stars[String(index)] || 0;
+	}
+
+	/** Level `index` passed, with `stars` of three: the next one opens; the stars kept if they are its best. */
+	static pass(index: number, totals: { [name: string]: number }, stars = 0): void {
 		const state = Progress._state;
 		state.reached = Math.max(state.reached, index + 2);
 		state.totals = { ...totals };
+		const key = String(index);
+		stars > (state.stars[key] || 0) && (state.stars[key] = stars);
 		Progress._save();
 	}
 
@@ -175,6 +185,12 @@ export class Progress {
 							kind: item.kind === 1 || item.kind === 2 ? item.kind : 0,
 						}));
 				}
+			}
+		}
+		const stars = saved.stars;
+		if (stars && typeof stars === "object") {
+			for (const [key, value] of Object.entries(stars as object)) {
+				/^\d+$/.test(key) && typeof value === "number" && value >= 1 && (state.stars[key] = Math.min(3, Math.floor(value)));
 			}
 		}
 		const totals = saved.totals;

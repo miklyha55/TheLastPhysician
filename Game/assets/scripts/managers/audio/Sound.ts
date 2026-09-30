@@ -65,6 +65,8 @@ export class Sound {
 	private static _clips = new Map<string, AudioClip>();
 	private static _loading = new Map<string, Promise<AudioClip>>();
 	private static _volume = -1;
+	/** The window has lost the focus — another window, another app, the portal's page around the game: silent till it is back. */
+	private static _unfocused = false;
 	private static _listening = false;
 	private static _following = false;
 
@@ -139,7 +141,7 @@ export class Sound {
 	static playOneShot(sound: SoundRef, volume = 1): void {
 		Sound._clip(sound, (clip) => {
 			const source = Sound._oneShotSource();
-			clip && source && source.playOneShot(clip, Math.max(0, volume) * Sound.volume);
+			clip && source && !Sound._unfocused && source.playOneShot(clip, Math.max(0, volume) * Sound.volume);
 		});
 	}
 
@@ -213,7 +215,7 @@ export class Sound {
 			return;
 		}
 		const heard = channel.at ? Sound.attenuation(channel.at, channel.near, channel.far) : 1;
-		channel.source.volume = channel.volume * heard * Sound.volume;
+		channel.source.volume = Sound._unfocused ? 0 : channel.volume * heard * Sound.volume;
 	}
 
 	/** Channels sounding from a place: kept up with the camera and the thing, every frame. */
@@ -388,5 +390,20 @@ export class Sound {
 		};
 		gameEventTarget.on(GameEvent.SET_AUDIO_VOLUME, (event: CustomEvent) => fromEvent(event && event.detail));
 		typeof window !== "undefined" && window.addEventListener("setAudioVolume", (event: Event) => fromEvent((event as CustomEvent).detail));
+		// The platform's rule: the browser's focus lost, the game's sound stops. A hidden tab the engine
+		// pauses itself; a window still in sight but not in focus it does not — that is heard here.
+		// A touch or a key on the game is the focus back even where the browser says nothing of it.
+		if (typeof window !== "undefined") {
+			const focus = (on: boolean) => {
+				if (Sound._unfocused === !on) {
+					return;
+				}
+				Sound._unfocused = !on;
+				Sound._channels.forEach((channel) => Sound._apply(channel));
+			};
+			window.addEventListener("blur", () => focus(false));
+			window.addEventListener("focus", () => focus(true));
+			for (const event of ["pointerdown", "keydown"]) window.addEventListener(event, () => focus(true), { capture: true });
+		}
 	}
 }

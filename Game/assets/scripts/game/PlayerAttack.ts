@@ -116,6 +116,8 @@ export class PlayerAttack extends Component {
 	droneHeight: number = 0.5;
 	@property({ tooltip: "A yellow potion's drone: how near it comes to a zombie to kill it" })
 	droneReach: number = 0.35;
+	@property({ tooltip: "A yellow potion: lives it takes off the one it lands on, and off each its drone reaches" })
+	droneDamage: number = 2;
 	@property({ tooltip: "A zombie shot down this near, units, and the player cries \"yes!\"" })
 	closeKillDistance: number = 0.9;
 	@property({ tooltip: "Seconds at the least between two of the player's \"yes!\" — a chain of barrels says it once" })
@@ -435,11 +437,12 @@ export class PlayerAttack extends Component {
 	private _throw(target: Zombie, kind: PotionKind = PotionKind.Plain): void {
 		// A drone takes note, as it leaves, of every zombie on the screen: those, and no others.
 		const prey = kind === PotionKind.Drone ? HazardVictims.zombies().filter((zombie) => zombie !== target) : null;
-		// Those it will finish — a life left — marked at once, while it is still in the air: the next
-		// shots go to the others. One with more lives the drone only wounds; the player shoots it still.
+		// Those it will finish — no more lives left than it takes — marked at once, while it is still in
+		// the air: the next shots go to the others. One with more lives the drone only wounds; the player
+		// shoots it still.
 		if (prey) {
-			target.doomed = target.lives <= 1;
-			prey.forEach((zombie) => (zombie.doomed = zombie.lives <= 1));
+			target.doomed = target.lives <= this.droneDamage;
+			prey.forEach((zombie) => (zombie.doomed = zombie.lives <= this.droneDamage));
 		}
 		if (!this.projectile) {
 			// Nothing to throw: the hit lands at once.
@@ -596,12 +599,14 @@ export class PlayerAttack extends Component {
 		Sfx.at(Sfx.yes, this.node);
 	}
 
-	/** One life off a zombie, by a yellow potion or its drone: blood, a reel or the fall. */
+	/** `droneDamage` lives off a zombie, by a yellow potion or its drone: blood, a reel or the fall. */
 	private _woundBy(zombie: Zombie, from: Vec3): void {
 		if (!zombie.isValid || zombie.isDead) {
 			return;
 		}
-		zombie.takeHit();
+		for (let i = 0; i < this.droneDamage && !zombie.isDead; i++) {
+			zombie.takeHit();
+		}
 		if (this.zombieBlood) {
 			const at = zombie.node.worldPosition;
 			this.zombieBlood.splash(v3(at.x, at.y + this.aimHeight, at.z), from, zombie.isDead ? this.killSplash : 1);
