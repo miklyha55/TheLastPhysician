@@ -133,18 +133,18 @@ def level12():
     mp.put(6, 3, 'D'); mp.put(17, 6, 'b'); mp.put(2, 10, 'r')
     mp.put(10, 13, 'D'); mp.put(16, 13, 'D'); mp.put(19, 16, 'E')
     mp.put(2, 2, 'P'); mp.put(3, 4, 'C')
-    mp.put(20, 3, 'B'); mp.put(2, 8, 'R'); mp.put(20, 12, 'L'); mp.put(13, 15, 'O')
+    mp.put(20, 3, 'B'); mp.put(2, 8, 'R'); mp.put(20, 12, 'L'); mp.put(13, 14, 'O')
     fire = {}
     cols = (9, 12, 15, 18)
     for i, x in enumerate(cols):
         for y in (2, 4):
             mp.put(x, y, 'F'); fire[(x, y)] = round((i * 1.0 + (0 if y == 2 else 2.5)) % 5, 2)
     for x in (12, 14):
-        mp.put(x, 15, 'F'); fire[(x, 15)] = 0 if x == 12 else 2.5
+        mp.put(x, 14, 'F'); fire[(x, 14)] = 0 if x == 12 else 2.5
     field = [(x, y) for y in (7, 8, 9) for x in range(6, 17)]
     spikes = {}
     for x, y in field:
-        mp.put(x, y, 'S'); spikes[(x, y)] = round(((16 - x) * 0.375) % 3, 3)
+        mp.put(x, y, 'S'); spikes[(x, y)] = round(((x - 6) * 0.375) % 3, 3)  # the wave runs west to east
     populate(mp, top, 'Z', 8, 121, avoid={(20, 3)}); populate(mp, top, 'V', 1, 122)
     populate(mp, (1, 7, 5, 9), 'Z', 2, 123, avoid={(2, 8)})
     populate(mp, (17, 7, 21, 9), 'Z', 2, 124, near_door=2.5)
@@ -153,7 +153,7 @@ def level12():
     populate(mp, top, 'C', 1, 128, near_door=2); populate(mp, low, 'C', 1, 129, near_door=2)
     populate(mp, (17, 7, 21, 9), 'C', 1, 130, near_door=1.5)
     return {"name": "Level_12", "ammo": 3, "map": mp.rows(),
-            "buttons": [[[13, 15], [[16, 13]]]],
+            "buttons": [[[13, 14], [[16, 13]]]],
             "fire": fire, "spikes": spikes,
             "furniture": [["Barrel", 14, 3, 0], ["Barrel", 6, 13, 0], ["Table", 8, 1, 0], ["Crate", 21, 1, 0]]}
 

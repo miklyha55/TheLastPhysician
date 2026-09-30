@@ -66,6 +66,8 @@ export class ZombieGirl extends Zombie {
 	behind: number = 0.3;
 	@property({ tooltip: "She picks a thing up this close to it, past both their radii" })
 	reach: number = 0.15;
+	@property({ tooltip: "She throws only at a player this near; farther, she runs closer with the thing in hand first" })
+	throwRange: number = 3;
 	@property({ tooltip: "With nothing to throw she stays about this far from the player" })
 	keepAway: number = 2.5;
 	@property({ tooltip: "Seconds between looks round for something to throw, with nothing in sight" })
@@ -191,8 +193,9 @@ export class ZombieGirl extends Zombie {
 	}
 
 	/**
-	 * The thing in her hand, the player out of sight: she runs towards them round the walls
-	 * until nothing stands between them, then swings again and throws. Not found within
+	 * The thing in her hand, the player out of sight or too far: she runs towards them round the
+	 * walls until nothing stands between them and they are within `throwRange`, then swings again
+	 * and throws. Not found within
 	 * `seekTime` — the thing drops and she gives them up.
 	 */
 	private _seek(player: PlayerAttack, dt: number): void {
@@ -200,7 +203,7 @@ export class ZombieGirl extends Zombie {
 		carry.seekFor += dt;
 		this._handPoint(_hand);
 		carry.body.node.setWorldPosition(_hand);
-		if (this._sees(player)) {
+		if (this._canThrowAt(player)) {
 			carry.seeking = false;
 			// The swing again, from a little before the release.
 			const from = Math.max(this.grabMoment, this.releaseMoment - this.windup);
@@ -225,6 +228,11 @@ export class ZombieGirl extends Zombie {
 			}
 		}
 		this._follow(this.chaseSpeed, dt);
+	}
+
+	/** The player in plain sight and near enough to throw at. */
+	private _canThrowAt(player: PlayerAttack): boolean {
+		return !!player && Vec3.distance(player.node.worldPosition, this.node.worldPosition) <= this.throwRange && this._sees(player);
 	}
 
 	/** Nothing between her and the player that stands as tall as her: a wall, a shut door. */
@@ -408,9 +416,10 @@ export class ZombieGirl extends Zombie {
 			Vec3.lerp(_at, carry.from, _hand, k * k * (3 - 2 * k));
 			carry.body.node.setWorldPosition(_at);
 			if (share >= this.releaseMoment) {
-				// Out of the hand only at a player in plain sight. Something in the way — she
-				// does not throw: off she runs with it to where the way is clear.
-				if (!this._sees(player)) {
+				// Out of the hand only at a player in plain sight and within `throwRange`. Something
+				// in the way, or too far — she does not throw: off she runs with it, closer, to
+				// where the way is clear.
+				if (!this._canThrowAt(player)) {
 					carry.seeking = true;
 					carry.seekFor = 0;
 					this._path.length = 0;
