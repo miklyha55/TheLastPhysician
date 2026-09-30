@@ -1,4 +1,6 @@
-import { _decorator, Color, Component, Material, Mesh, MeshRenderer, Node, primitives, utils, v3, Vec3 } from "cc";
+import { _decorator, Color, Component, Material, Mesh, MeshRenderer, Node, primitives, screen, utils, v3, Vec3 } from "cc";
+import { CameraManager } from "../managers/camera/CameraManager";
+import { Prewarm } from "../managers/Prewarm";
 import { HazardVictims } from "./HazardVictims";
 import { PlayerAttack } from "./PlayerAttack";
 
@@ -22,6 +24,7 @@ interface Tongue {
 
 const _color = new Color();
 const _at = v3();
+const _screen = v3();
 
 // A pipe in a floor tile that breathes fire. Quiet for `offTime`, then a column of flame for
 // `onTime`, round and round for good. The flame swells up out of the pipe and dies down
@@ -62,20 +65,25 @@ export class FireVent extends Component {
 	@property({ tooltip: "Seconds a tongue of fire lives" })
 	tongueLife: number = 0.55;
 	@property({ tooltip: "Size of a tongue at its largest" })
-	tongueSize: number = 0.26;
+	tongueSize: number = 0.3;
 	@property({ tooltip: "Tongues burning at once, at full strength" })
-	tongues: number = 34;
+	tongues: number = 22;
 	@property({ tooltip: "Turns per second a tongue spins at, degrees" })
 	spinSpeed: number = 420;
 
 	@property({ tooltip: "Sparks in the air at once, at full strength" })
-	sparks: number = 12;
+	sparks: number = 8;
 	@property({ tooltip: "Size of a spark" })
 	sparkSize: number = 0.05;
 	@property({ tooltip: "How much higher than the flame the sparks fly" })
 	sparkReach: number = 1.6;
 	@property({ tooltip: "Width of the glow over the mouth, against the mouth's" })
 	glowScale: number = 2.6;
+
+	@property({ tooltip: "Share of the screen past its edges a vent still burns in: off the screen further, its flame is not drawn (the fire still kills)" })
+	screenMargin: number = 0.2;
+	@property({ tooltip: "Seconds between looks whether the vent is on the screen" })
+	lookEvery: number = 0.2;
 
 	@property coreColor: Color = new Color(255, 240, 170, 255);
 	@property midColor: Color = new Color(255, 140, 30, 255);
@@ -98,6 +106,9 @@ export class FireVent extends Component {
 	private _materials: Material[] = [];
 	private _glow: Node = null;
 	private _glowMaterial: Material = null;
+	/** Is it on the screen — last looked: only then are its tongues moved and drawn. */
+	private _onScreen = true;
+	private _lookIn = 0;
 
 	/** How strong the flame is now: 0 — out, 1 — full. */
 	get strength(): number {
@@ -132,11 +143,23 @@ export class FireVent extends Component {
 		this._glow.setPosition(0, this.mouthHeight + 0.02, 0);
 		this._glow.active = false;
 		this._time = this.phase;
+		// The looks spread out over the vents, not all in one frame.
+		this._lookIn = Math.random() * this.lookEvery;
 	}
 
 	protected update(dt: number): void {
 		this._time += dt;
 		this._strength = this._cycle();
+		// Off the screen the fire burns unseen: it still kills, but no tongue is moved or drawn —
+		// a level's dozens of vents cost only those in sight. Back in sight, it swells up in a
+		// moment, past the screen's edge where the margin hides it.
+		if (!this._visible(dt)) {
+			this._putOut();
+			if (this._strength >= this.killStrength) {
+				this._scorch();
+			}
+			return;
+		}
 		if (this._strength <= 0 && !this._live.length) {
 			// Out, and every tongue burnt away: nothing to do until it lights again.
 			this._debt = this._sparkDebt = 0;
@@ -149,6 +172,47 @@ export class FireVent extends Component {
 		if (this._strength >= this.killStrength) {
 			this._scorch();
 		}
+	}
+
+	/** Is the vent on the screen, or near its edge — looked every `lookEvery`; always during the warm-up (Prewarm). */
+	private _visible(dt: number): boolean {
+		if (Prewarm.active) {
+			return (this._onScreen = true);
+		}
+		if ((this._lookIn -= dt) > 0) {
+			return this._onScreen;
+		}
+		this._lookIn = this.lookEvery;
+		const manager = CameraManager.instance;
+		const camera = manager && manager.cameras[0];
+		if (!camera || !camera.camera) {
+			return (this._onScreen = true);
+		}
+		const size = screen.windowSize;
+		const mx = size.width * this.screenMargin, my = size.height * this.screenMargin;
+		const at = this.node.worldPosition;
+		// The mouth and the top of the flame: either in sight is enough.
+		for (const lift of [0, this.flameHeight]) {
+			_at.set(at.x, at.y + lift, at.z);
+			camera.worldToScreen(_at, _screen);
+			if (_screen.x >= -mx && _screen.x <= size.width + mx && _screen.y >= -my && _screen.y <= size.height + my) {
+				return (this._onScreen = true);
+			}
+		}
+		return (this._onScreen = false);
+	}
+
+	/** Every tongue out at once and the glow off: the vent has gone off the screen. */
+	private _putOut(): void {
+		if (this._live.length) {
+			for (const tongue of this._live) {
+				tongue.renderer.model && (tongue.renderer.model.enabled = false);
+				(tongue.ember ? this._freeSparks : this._free).push(tongue);
+			}
+			this._live.length = 0;
+		}
+		this._debt = this._sparkDebt = 0;
+		this._glow.active && (this._glow.active = false);
 	}
 
 	/** Strength of the flame at this point of the cycle, with its smooth rise and fall. */
