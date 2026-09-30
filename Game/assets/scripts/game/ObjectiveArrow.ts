@@ -1,5 +1,6 @@
 import { _decorator, Color, Component, director, Material, Mesh, MeshRenderer, Node, primitives, utils, v3, Vec3 } from "cc";
 import { Prewarm } from "../managers/Prewarm";
+import { Debris } from "./Debris";
 import { Door } from "./Door";
 import { FloorButton } from "./FloorButton";
 import { Gate } from "./Gate";
@@ -67,6 +68,10 @@ export class ObjectiveArrow extends Component {
 	gateLift: number = 0;
 	@property({ tooltip: "An open door on the way stops glowing once the player is this close to it: going through" })
 	passDistance: number = 0.45;
+	@property({ tooltip: "Width of the glow under the player while something thrown at them is on its way" })
+	threatSize: number = 0.9;
+	@property({ tooltip: "Colour of that glow: the goal's disc, in the red of danger" })
+	threatColor: Color = new Color(255, 60, 40, 110);
 
 	private _node: Node = null;
 	private _material: Material = null;
@@ -97,6 +102,10 @@ export class ObjectiveArrow extends Component {
 	/** The door on the way that glows now, if one does: the arrow hides near it too. */
 	private _wayDoor: Vec3 = null;
 	private _markShown = 0;
+	/** The same disc under the player, red: a thing thrown at them (a zombie girl's) is in the air. */
+	private _threat: Node = null;
+	private _threatMaterial: Material = null;
+	private _threatShown = 0;
 
 	protected start(): void {
 		this._node = new Node("ObjectiveArrow");
@@ -120,11 +129,23 @@ export class ObjectiveArrow extends Component {
 		this._markMaterial.initialize({ effectName: "builtin-unlit", technique: ADD });
 		glow.setSharedMaterial(this._markMaterial, 0);
 		this._mark.setScale(0, 0, 0);
+		// The danger's glow under the player: the goal's disc, red.
+		this._threat = new Node("ThreatMark");
+		director.getScene().addChild(this._threat);
+		const danger = this._threat.addComponent(MeshRenderer);
+		danger.mesh = glow.mesh;
+		danger.shadowCastingMode = MeshRenderer.ShadowCastingMode.OFF;
+		danger.receiveShadow = MeshRenderer.ShadowReceivingMode.OFF;
+		this._threatMaterial = new Material();
+		this._threatMaterial.initialize({ effectName: "builtin-unlit", technique: ADD });
+		danger.setSharedMaterial(this._threatMaterial, 0);
+		this._threat.setScale(0, 0, 0);
 	}
 
 	protected onDestroy(): void {
 		this._node && this._node.isValid && this._node.destroy();
 		this._mark && this._mark.isValid && this._mark.destroy();
+		this._threat && this._threat.isValid && this._threat.destroy();
 	}
 
 	protected lateUpdate(dt: number): void {
@@ -163,6 +184,27 @@ export class ObjectiveArrow extends Component {
 		_color.set(this.color.r, this.color.g, this.color.b, Math.round(this.color.a * this._shown));
 		this._material.setProperty("mainColor", _color);
 		this._glow(alive && this._hasWay, dt);
+		const debris = Debris.instance;
+		this._danger(alive && !!debris && debris.threatening, at, dt);
+	}
+
+	/** Red under the player while a thing thrown at them is in the air; out as soon as it is not. */
+	private _danger(on: boolean, at: Vec3, dt: number): void {
+		// Up at once — the warning is worth nothing late — and out a little slower.
+		const target = on ? 1 : 0;
+		this._threatShown += Math.sign(target - this._threatShown) * Math.min(Math.abs(target - this._threatShown), dt * (on ? 10 : 5));
+		if (this._threatShown <= 0) {
+			this._threat.setScale(0, 0, 0);
+			return;
+		}
+		// A quicker beat than the goal's: alarm, not an invitation.
+		const breath = 0.5 + 0.5 * Math.sin(this._time * Math.PI * 2 * 2.5);
+		const width = this.threatSize * this._threatShown * (0.9 + 0.1 * breath);
+		this._threat.setWorldPosition(at.x, this.height - 0.01 + this.markHeight, at.z);
+		this._threat.setScale(width, 0.01, width);
+		const c = this.threatColor;
+		_color.set(c.r, c.g, c.b, Math.round(c.a * this._threatShown * (0.7 + 0.3 * breath)));
+		this._threatMaterial.setProperty("mainColor", _color);
 	}
 
 	/** The glow under the goal: breathing while it is the goal; out, then over to the next one. */

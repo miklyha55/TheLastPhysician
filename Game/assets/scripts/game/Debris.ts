@@ -103,6 +103,11 @@ export class Debris extends Component {
 
 	readonly bodies: Body[] = [];
 
+	/** Is something thrown at the player on its way — deadly if it lands on them (ObjectiveArrow marks them then). */
+	get threatening(): boolean {
+		return this.bodies.some((body) => body.lethalFor > 0 && !body.held && body.node && body.node.isValid);
+	}
+
 	/** Offered a thing the player touches: returns true when it is taken into the hand, and so not kicked. */
 	grab: (body: Body) => boolean = null;
 
