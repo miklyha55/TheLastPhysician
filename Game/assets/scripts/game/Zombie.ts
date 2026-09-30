@@ -542,10 +542,12 @@ export class Zombie extends Component {
 				}
 			}
 		}
-		// On a blend's length before the strike ends: its last frames still play under the blend into
-		// what comes next. Left to its very end, the finished clip had nothing to blend from, and the
-		// pose jerked.
-		if (this._timer >= Math.max(duration * this.hitMoment, duration - this.crossFade)) {
+		// Live animation: on a blend's length before the strike ends — its last frames still play under
+		// the blend into what comes next; left to its very end, the finished clip had nothing to blend
+		// from, and the pose jerked. Baked animation does not blend at all, a clip cut short jumps: the
+		// strike plays to its last frame, where the pose is back near a stand.
+		const baked = !!this.animation && this.animation.useBakedAnimation;
+		if (this._timer >= Math.max(duration * this.hitMoment, baked ? duration : duration - this.crossFade)) {
 			this._lookAround(player);
 		}
 	}

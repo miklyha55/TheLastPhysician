@@ -1,4 +1,5 @@
 import { Material, MeshRenderer, Node, Texture2D } from "cc";
+import { noShadow } from "./SmallShadows";
 
 // The kinds of potion the player shoots. Pink — the plain one: one life off whoever it lands on.
 // Red — a bomb: it bursts like a barrel, half as wide, killing every zombie in the circle and
@@ -57,6 +58,9 @@ export function paintPotion(node: Node, kind: PotionKind): void {
 	if (!node || !node.isValid) {
 		return;
 	}
+	// Every potion shown comes through here — in a chest, on the floor, in flight, on the back: too
+	// small for a shadow anyone sees (SmallShadows).
+	noShadow(node);
 	for (const renderer of node.getComponentsInChildren(MeshRenderer)) {
 		let base = _base.get(renderer);
 		if (!base) {

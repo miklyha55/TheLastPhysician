@@ -24,6 +24,7 @@ import { HazardVictims } from "./HazardVictims";
 import { PathFinder } from "./PathFinder";
 import { PotionDrone } from "./PotionDrone";
 import { paintPotion, PotionKind } from "./PotionKind";
+import { dropSmallShadows } from "./SmallShadows";
 
 const { ccclass, property } = _decorator;
 
@@ -217,6 +218,8 @@ export class PlayerAttack extends Component {
 		Sfx.preload();
 		// A fresh count for the level: every zombie in it has registered by now (their onLoad).
 		LevelStats.begin(Zombie.all.length);
+		// Small things cast no shadows: before the level's first frame is drawn (SmallShadows).
+		dropSmallShadows();
 		// Everything drawn once behind the loading screen before the level is played.
 		Prewarm.run(GameState.title);
 		if (!carried) {
