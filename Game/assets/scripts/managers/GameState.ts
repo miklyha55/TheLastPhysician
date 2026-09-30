@@ -11,6 +11,7 @@ import { lockPage } from "./PageLock";
 import { Prewarm } from "./Prewarm";
 import { Progress } from "./Progress";
 import { ResultsScreen, ResultsRow } from "./ResultsScreen";
+import { SoundToggles } from "./SoundToggles";
 import { SplashScreen } from "./SplashScreen";
 import { Sfx } from "./audio/Sfx";
 import { Sound } from "./audio/Sound";
@@ -106,6 +107,7 @@ export class GameState {
 				.then(() => {
 					Progress.totals && (GameState._totals = { ...GameState._freshTotals(), ...Progress.totals });
 					GameState._setUpMap();
+					SoundToggles.start(() => LevelMap.canOpen() || LevelMap.shown);
 				});
 		}
 		return GameState._platform;

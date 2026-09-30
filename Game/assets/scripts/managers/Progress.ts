@@ -10,7 +10,8 @@ import { Yandex } from "./Yandex";
 // on the level map; the stack each level was last entered with — potions and keys, bottom to top,
 // laid back on the player whether the level is gone on to, played again from the map, or the
 // game reopened on it; the run's totals, for the final screen after a game played in sittings; and
-// the best stars each level was passed with, for the level map.
+// the best stars each level was passed with, for the level map; and the player's switches for the
+// sounds and the music, so a game muted stays muted on the next visit.
 //
 // One object in memory is the truth for the game, and it is written whole, on events — a level
 // entered, a level passed, the game wiped — never on a timer: the platform limits writes, and the
@@ -30,10 +31,14 @@ export interface ProgressState {
 	totals: { [name: string]: number } | null;
 	/** The best stars each level was passed with, by its index, 1..3; none — not passed yet. */
 	stars: { [level: string]: number };
+	/** The switch for every sound but the music. */
+	sound: boolean;
+	/** The switch for the music. */
+	music: boolean;
 }
 
 function fresh(): ProgressState {
-	return { level: 0, reached: 1, entries: {}, totals: null, stars: {} };
+	return { level: 0, reached: 1, entries: {}, totals: null, stars: {}, sound: true, music: true };
 }
 
 export class Progress {
@@ -114,9 +119,31 @@ export class Progress {
 		Progress._save();
 	}
 
+	/** The player's switch for the sounds, and for the music, as saved. */
+	static get soundOn(): boolean {
+		return Progress._state.sound;
+	}
+
+	static get musicOn(): boolean {
+		return Progress._state.music;
+	}
+
+	/** The switches turned: kept for the next visit. */
+	static setAudio(sound: boolean, music: boolean): void {
+		const state = Progress._state;
+		if (state.sound === sound && state.music === music) {
+			return;
+		}
+		state.sound = sound;
+		state.music = music;
+		Progress._save();
+	}
+
 	/** Everything wiped — "start over" from a death: the levels passed are lost, as it warns. */
 	static wipe(): void {
-		Progress._state = fresh();
+		// The progress, not the player's switches.
+		const { sound, music } = Progress._state;
+		Progress._state = { ...fresh(), sound, music };
 		Progress._save(true);
 	}
 
@@ -193,6 +220,8 @@ export class Progress {
 				/^\d+$/.test(key) && typeof value === "number" && value >= 1 && (state.stars[key] = Math.min(3, Math.floor(value)));
 			}
 		}
+		state.sound = saved.sound !== false;
+		state.music = saved.music !== false;
 		const totals = saved.totals;
 		if (totals && typeof totals === "object") {
 			state.totals = {};

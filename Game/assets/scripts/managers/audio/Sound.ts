@@ -37,6 +37,8 @@ interface Channel {
 	far: number;
 	/** Bumped on every play and stop, so a clip still loading for an old request is not played. */
 	request: number;
+	/** The music's channel: under the music's switch, not the sounds'. */
+	music: boolean;
 }
 
 // Sound for the whole game, from anywhere, with nothing to set up in a scene: the clips are
@@ -69,6 +71,31 @@ export class Sound {
 	private static _unfocused = false;
 	private static _listening = false;
 	private static _following = false;
+	private static _soundOn = true;
+	private static _musicOn = true;
+
+	/** The channel the music plays on: the music's switch is for it, the sounds' for the rest. */
+	static musicId = "music";
+
+	/** The player's switch for every sound but the music. */
+	static get soundOn(): boolean {
+		return Sound._soundOn;
+	}
+
+	static set soundOn(on: boolean) {
+		Sound._soundOn = on;
+		Sound._channels.forEach((channel) => Sound._apply(channel));
+	}
+
+	/** The player's switch for the music. */
+	static get musicOn(): boolean {
+		return Sound._musicOn;
+	}
+
+	static set musicOn(on: boolean) {
+		Sound._musicOn = on;
+		Sound._channels.forEach((channel) => Sound._apply(channel));
+	}
 
 	/** The game's volume, 0..1: what every sound is multiplied by. */
 	static get volume(): number {
@@ -141,7 +168,7 @@ export class Sound {
 	static playOneShot(sound: SoundRef, volume = 1): void {
 		Sound._clip(sound, (clip) => {
 			const source = Sound._oneShotSource();
-			clip && source && !Sound._unfocused && source.playOneShot(clip, Math.max(0, volume) * Sound.volume);
+			clip && source && !Sound._unfocused && Sound._soundOn && source.playOneShot(clip, Math.max(0, volume) * Sound.volume);
 		});
 	}
 
@@ -215,7 +242,8 @@ export class Sound {
 			return;
 		}
 		const heard = channel.at ? Sound.attenuation(channel.at, channel.near, channel.far) : 1;
-		channel.source.volume = Sound._unfocused ? 0 : channel.volume * heard * Sound.volume;
+		const on = channel.music ? Sound._musicOn : Sound._soundOn;
+		channel.source.volume = Sound._unfocused || !on ? 0 : channel.volume * heard * Sound.volume;
 	}
 
 	/** Channels sounding from a place: kept up with the camera and the thing, every frame. */
@@ -276,7 +304,7 @@ export class Sound {
 		if (!channel || !channel.source.isValid) {
 			const child = new Node(`Sound:${id}`);
 			holder && holder.addChild(child);
-			channel = { source: child.addComponent(AudioSource), volume: 1, at: null, near: Sound.near, far: Sound.far, request: channel ? channel.request : 0 };
+			channel = { source: child.addComponent(AudioSource), volume: 1, at: null, near: Sound.near, far: Sound.far, request: channel ? channel.request : 0, music: id === Sound.musicId };
 			channel.source.playOnAwake = false;
 			Sound._channels.set(id, channel);
 		}
