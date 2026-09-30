@@ -134,10 +134,15 @@ export class LevelMap {
 		tile.append(medal, stars, mark);
 		tile.setAttribute("aria-label", `${I18n.t("level.title", entry.index + 1)} — ${mark.textContent}`);
 		if (!entry.locked) {
-			onRelease(tile, () => {
-				LevelMap.hide();
-				!entry.here && LevelMap.onPick && LevelMap.onPick(entry.index);
-			});
+			// In the list that scrolls: a swipe over the tiles pans it, only a tap picks.
+			onRelease(
+				tile,
+				() => {
+					LevelMap.hide();
+					!entry.here && LevelMap.onPick && LevelMap.onPick(entry.index);
+				},
+				true,
+			);
 		}
 		return tile;
 	}
@@ -266,7 +271,7 @@ const STYLE = `
 	border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 18px; cursor: pointer;
 	background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
 	box-shadow: 0 4px 0 rgba(22, 16, 45, 0.9);
-	color: #fff; font-family: inherit;
+	color: #fff; font-family: inherit; touch-action: pan-y;
 	transition: scale 80ms ease-out; -webkit-tap-highlight-color: transparent;
 }
 .tlp-map__tile:active { scale: 0.94; }
