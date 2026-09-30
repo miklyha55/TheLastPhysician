@@ -19,6 +19,8 @@ export class AnimationController extends Component {
 	@property(AnimationClip) shootingClip: AnimationClip = null;
 	@property({ tooltip: "Playback speed of the shooting clip; 2 — a shot takes half the clip's time" })
 	shootingSpeed: number = 1;
+	@property({ tooltip: "Playback speed of the run clip — raised with the running speed (PlayerMovement) so the feet keep to the floor and the steps (Footsteps) to the feet" })
+	runSpeed: number = 1.15;
 	@property({ tooltip: "Blend between clips, seconds" })
 	crossFade: number = 0.2;
 
@@ -46,6 +48,8 @@ export class AnimationController extends Component {
 	}
 
 	protected start(): void {
+		const run = this.animation && this.animation.getState(RUN);
+		run && (run.speed = this.runSpeed);
 		const shooting = this.animation && this.animation.getState(SHOOTING);
 		if (shooting) {
 			shooting.wrapMode = AnimationClip.WrapMode.Normal;

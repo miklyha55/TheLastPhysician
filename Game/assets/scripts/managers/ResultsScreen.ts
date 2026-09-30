@@ -75,6 +75,9 @@ export class ResultsScreen {
 		ResultsScreen._title.textContent = title;
 		ResultsScreen._title.classList.toggle("tlp-results__title--lost", !!lost);
 		ResultsScreen._subtitle.textContent = subtitle;
+		// The death card and the question after it take each other's place: the same room for the
+		// line under the title, short or long, so the card keeps its height and nothing jumps.
+		ResultsScreen._subtitle.classList.toggle("tlp-results__subtitle--pair", !!lost);
 		ResultsScreen._pressed = false;
 		ResultsScreen._shownAt = performance.now();
 		const bar = ResultsScreen._buttons;
@@ -197,6 +200,8 @@ export class ResultsScreen {
 	text-align: center; color: #c9b8ff; font-size: clamp(11px, 3.4vmin, 14px); font-weight: 700; margin: 6px 0 clamp(10px, 3.5vmin, 18px);
 	letter-spacing: 0.12em; text-transform: uppercase; flex-shrink: 0;
 }
+/* Two lines' room whatever it says: the cards that replace one another are of one height. */
+.tlp-results__subtitle--pair { line-height: 1.25; min-height: 2.5em; display: flex; align-items: center; justify-content: center; }
 .tlp-results__rows {
 	display: flex; flex-direction: column; gap: clamp(4px, 1.5vmin, 8px); margin-bottom: clamp(12px, 4vmin, 22px);
 	min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
@@ -215,7 +220,10 @@ export class ResultsScreen {
 .tlp-results__row--minor .tlp-results__value { color: #ffcf4a; font-size: 15px; }
 .tlp-results__buttons { display: flex; gap: 10px; flex-shrink: 0; }
 .tlp-results__button {
-	display: block; flex: 1; min-width: 0; padding: clamp(11px, 3.6vmin, 16px) 6px; border: none; border-radius: 18px; cursor: pointer;
+	/* One height, words or a picture on it: a card's buttons stay where the last card's were. */
+	display: flex; align-items: center; justify-content: center; flex: 1; min-width: 0;
+	height: clamp(50px, 14vmin, 64px); padding: 0 6px; box-sizing: border-box; line-height: 1;
+	border: none; border-radius: 18px; cursor: pointer;
 	white-space: nowrap;
 	background: linear-gradient(180deg, #8dff5e 0%, #36c22a 100%);
 	color: #fff; font-size: clamp(15px, 5vmin, 22px); font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase;
@@ -242,7 +250,7 @@ export class ResultsScreen {
 	.tlp-results__rows { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: row dense; align-content: start; gap: 3px 6px; margin-bottom: 10px; }
 	.tlp-results__row { padding: 4px 10px; font-size: 13px; }
 	.tlp-results__value { font-size: 15px; }
-	.tlp-results__button { padding: 10px 6px; font-size: 17px; }
+	.tlp-results__button { height: 46px; padding: 0 6px; font-size: 17px; }
 	.tlp-results__buttons { width: min(380px, 100%); align-self: center; }
 	/* The small line of how belongs under "killed": the whole width, so it does not stray. */
 	.tlp-results__row--minor { grid-column: 1 / -1; padding: 1px 10px 1px 40px; font-size: 12px; }

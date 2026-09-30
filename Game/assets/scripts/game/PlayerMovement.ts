@@ -12,7 +12,7 @@ const { ccclass, property } = _decorator;
 @ccclass("PlayerMovement")
 export class PlayerMovement extends Component {
 	@property({ tooltip: "Units per second" })
-	speed: number = 2;
+	speed: number = 2.3;
 	@property({ type: Node, tooltip: "Camera the joystick is relative to; empty — screen up is −Z" })
 	camera: Node = null;
 	@property({ tooltip: "Share of the speed left while wading through slime" })

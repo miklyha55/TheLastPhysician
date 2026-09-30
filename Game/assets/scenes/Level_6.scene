@@ -29706,9 +29706,9 @@
     ],
     "value": {
       "__type__": "cc.Vec3",
-      "x": 6.466,
+      "x": 6.4,
       "y": 0,
-      "z": -1.039
+      "z": -3.013
     }
   },
   {
@@ -35926,6 +35926,7 @@
       "__expectedType__": "cc.AnimationClip"
     },
     "shootingSpeed": 2,
+    "runSpeed": 1.15,
     "crossFade": 0.2,
     "_id": "08rAqO4uBNN6lv/1QweS/K"
   },
@@ -36279,7 +36280,7 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "speed": 2,
+    "speed": 2.3,
     "camera": {
       "__id__": 32
     },
@@ -36469,14 +36470,14 @@
     "lives": 1,
     "ammo": 3,
     "shootRadius": 3,
-    "fireInterval": 0.5,
+    "fireInterval": 0.75,
     "shotMoment": 0.4,
     "projectileSpeed": 6,
     "barrelShotSpeed": 10,
     "arcHeight": 0.5,
     "spinSpeed": 720,
     "aimHeight": 0.4,
-    "droneSpeed": 5,
+    "droneSpeed": 4,
     "droneHeight": 0.5,
     "droneReach": 0.35,
     "closeKillDistance": 0.9,

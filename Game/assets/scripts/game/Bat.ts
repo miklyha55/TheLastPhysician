@@ -60,6 +60,9 @@ export class Bat extends Zombie {
 	private _heading = v3();
 	private _to = v3();
 	private _aim = v3();
+	/** Seconds on the way home without headway. */
+	private _stuck = 0;
+	private _wayAt = v3();
 
 	get flies(): boolean {
 		return true;
@@ -105,11 +108,28 @@ export class Bat extends Zombie {
 		this._play(FLY);
 	}
 
-	/** Back up to the perch — whatever lost it the player. */
+	/**
+	 * Back up to the perch — whatever lost it the player. The way back goes round the walls as a
+	 * zombie's would: the chase may have taken it through a door, and straight home is then a wall.
+	 */
 	protected _goHome(): void {
 		this._homing = true;
 		this._mode = Mode.Hunt;
+		this._routeHome();
 		this._play(FLY);
+	}
+
+	/** The corners to fly through to the perch; straight at it when there is no search or no way. */
+	private _routeHome(): void {
+		const finder = this._finder();
+		if (!finder || !finder.find(this.node.worldPosition, this._home, this._path) || !this._path.length) {
+			this._path.length = 0;
+			this._path.push(this._home.clone());
+		}
+		// The last corner is the perch itself, where it hangs.
+		this._path[this._path.length - 1].set(this._home);
+		this._stuck = 0;
+		this._wayAt.set(this.node.worldPosition);
 	}
 
 	protected _updateHunt(player: PlayerAttack, dt: number): void {
@@ -151,9 +171,18 @@ export class Bat extends Zombie {
 		const at = this.node.worldPosition;
 		const left = Math.hypot(this._home.x - at.x, this._home.z - at.z);
 		if (left > this.perchReach) {
-			this._flyTo(this._home, this.wanderSpeed, dt, 0);
+			// Corners passed drop off; the last one is the perch.
+			while (this._path.length > 1 && Math.hypot(this._path[0].x - at.x, this._path[0].z - at.z) < 0.08) {
+				this._path.shift();
+			}
+			this._flyTo(this._path.length ? this._path[0] : this._home, this.wanderSpeed, dt, 0);
 			// Up to the perch's height only once nearly under it: over the room it flies low.
 			this._climb(left < 1 ? this.hangHeight : this.flyHeight, dt);
+			// Held up against something the way did not know of: the way is found again.
+			const moved = Math.hypot(at.x - this._wayAt.x, at.z - this._wayAt.z);
+			this._wayAt.set(at);
+			this._stuck = moved >= this.wanderSpeed * dt * 0.3 ? 0 : this._stuck + dt;
+			this._stuck >= 0.5 && this._routeHome();
 			return;
 		}
 		this.node.setWorldPosition(this._home.x, at.y, this._home.z);
