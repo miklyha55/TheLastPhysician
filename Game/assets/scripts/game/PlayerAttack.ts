@@ -1,4 +1,4 @@
-import { _decorator, AnimationClip, Component, instantiate, math, Node, Prefab, SkeletalAnimation, v3, Vec3, Vec2 } from "cc";
+import { _decorator, AnimationClip, Color, Component, instantiate, math, Node, Prefab, SkeletalAnimation, v3, Vec3, Vec2 } from "cc";
 import { PREVIEW } from "cc/env";
 import GameEvent from "../enums/GameEvent";
 import { CameraManager } from "../managers/camera/CameraManager";
@@ -24,12 +24,14 @@ import { Footsteps } from "./Footsteps";
 import { HazardVictims } from "./HazardVictims";
 import { PathFinder } from "./PathFinder";
 import { PotionDrone } from "./PotionDrone";
-import { paintPotion, PotionKind } from "./PotionKind";
+import { paintPotion, potionColor, PotionKind } from "./PotionKind";
 import { dropSmallShadows } from "./SmallShadows";
 
 const { ccclass, property } = _decorator;
 
 const DEATH = "death";
+/** The colour of the liquid of the potion that just broke. */
+const _liquid = new Color();
 
 /**
  * The potions the game starts with, from the bottom — the first shot — up: the second a yellow one,
@@ -566,14 +568,17 @@ export class PlayerAttack extends Component {
 		const explosives = Explosives.instance;
 		// Whatever it is, a potion on someone knocks.
 		alive && Sfx.at(Sfx.bulletHit, at);
+		// The flash and the glass in the colour of what was in it.
+		const color = potionColor(kind, _liquid);
 		if (kind === PotionKind.Bomb && explosives) {
 			// Red: a barrel's blast, smaller.
-			explosives.bomb(at, from);
+			explosives.bomb(at, from, color);
 		} else if (kind === PotionKind.Drone) {
-			// Yellow: one life off the one it was thrown at, as the rest along its chain.
+			// Yellow: it breaks on the one it was thrown at, one life off it, as the rest along its chain.
+			explosives && explosives.glassBurst(at, from, color);
 			alive && this._woundBy(target, from);
 		} else if (explosives) {
-			explosives.potionBurst(at, from, target);
+			explosives.potionBurst(at, from, target, color);
 		} else if (alive) {
 			target.takeHit();
 			this.zombieBlood && this.zombieBlood.splash(at, from, target.isDead ? this.killSplash : 1);

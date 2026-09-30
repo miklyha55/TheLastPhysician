@@ -13,9 +13,16 @@ interface Blast {
 	coreMaterial: Material;
 	smokeMaterial: Material;
 	life: number;
+	/** The flash's colour for this burst: its own, or the one it was set off with. */
+	flash: Color;
+	/** And its smoke's: its own, or a pale one of the colour it was set off with. */
+	haze: Color;
 }
 
 const _color = new Color();
+/** A tinted burst's smoke: this share of the colour, the rest a pale grey — lighter than the flash. */
+const SMOKE_TINT = 0.6;
+const SMOKE_PALE = 225;
 
 // A burst of fire, the way ThroughTheDeadCity's Explosions does it: a glowing core that swells
 // and dies away, and a shell of smoke that swells with it and fades more slowly, so a smoky
@@ -49,17 +56,31 @@ export class Explosions extends Component {
 		for (let i = 0; i < this.pool; i++) {
 			const core = this._shell(root, sphere, ADD);
 			const smoke = this._shell(root, sphere, BLEND);
-			this._blasts.push({ core: core.node, smoke: smoke.node, coreMaterial: core.material, smokeMaterial: smoke.material, life: 0 });
+			this._blasts.push({ core: core.node, smoke: smoke.node, coreMaterial: core.material, smokeMaterial: smoke.material, life: 0, flash: new Color(), haze: new Color() });
 		}
 	}
 
-	/** Sets off a burst at a point. */
-	burst(at: Vec3): void {
+	/**
+	 * Sets off a burst at a point; `color` — in that colour, not its own (a potion's liquid): the
+	 * flash in it, the smoke round it a pale shade of it, as the pink smoke was of the pink flash.
+	 */
+	burst(at: Vec3, color: Color = null): void {
 		if (!this._blasts.length) {
 			return;
 		}
 		const blast = this._blasts[this._next];
 		this._next = (this._next + 1) % this._blasts.length;
+		blast.flash.set(color || this.flashColor);
+		if (color) {
+			blast.haze.set(
+				Math.round(color.r * SMOKE_TINT + SMOKE_PALE * (1 - SMOKE_TINT)),
+				Math.round(color.g * SMOKE_TINT + SMOKE_PALE * (1 - SMOKE_TINT)),
+				Math.round(color.b * SMOKE_TINT + SMOKE_PALE * (1 - SMOKE_TINT)),
+				255,
+			);
+		} else {
+			blast.haze.set(this.smokeColor);
+		}
 		blast.core.setWorldPosition(at);
 		blast.smoke.setWorldPosition(at);
 		blast.life = this.life;
@@ -89,11 +110,11 @@ export class Explosions extends Component {
 		// The core swells and dies faster than the shell: a ball of smoke is what stays.
 		const core = grown * 0.75;
 		blast.core.setScale(core, core, core);
-		this._fade(blast.coreMaterial, this.flashColor, share * share);
+		this._fade(blast.coreMaterial, blast.flash, share * share);
 		blast.smoke.setScale(grown, grown, grown);
 		// The smoke thickens as the fire dies: none at the flash, thickest halfway, gone at the end —
 		// so the first frames are fire, not a grey ball over it.
-		this._fade(blast.smokeMaterial, this.smokeColor, 4 * share * (1 - share) * this.smokeOpacity);
+		this._fade(blast.smokeMaterial, blast.haze, 4 * share * (1 - share) * this.smokeOpacity);
 	}
 
 	private _shell(root: Node, mesh: any, technique: number): { node: Node; material: Material } {

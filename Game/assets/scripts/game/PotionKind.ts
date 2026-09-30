@@ -1,7 +1,7 @@
-import { Material, MeshRenderer, Node, Texture2D } from "cc";
+import { Color, Material, MeshRenderer, Node, Texture2D } from "cc";
 import { noShadow } from "./SmallShadows";
 
-// The kinds of potion the player shoots. Pink — the plain one: one life off whoever it lands on.
+// The kinds of potion the player shoots. Green — the plain one: one life off whoever it lands on.
 // Red — a bomb: it bursts like a barrel, half as wide, killing every zombie in the circle and
 // setting off the barrels in it; the player it spares. Yellow — a drone: a life off the one it is
 // thrown at, then it flies on round the walls to every other zombie that was on the screen the
@@ -33,11 +33,18 @@ export function rollPotionKind(chance: { bomb: number; drone: number } = DROP_CH
 
 /** The palette cell the liquid takes (gun_albedo.png, 8 cells in a row). */
 const LIQUID_CELL = 6;
-/** The liquid of each kind; the plain one keeps the palette's own pink. */
+/** The liquid of each kind — and the colour its burst flashes and its glass flies in (Explosives). */
 const LIQUID: { [kind: number]: number[] } = {
+	[PotionKind.Plain]: [96, 232, 112], // lime green: the arrow's green, over the palette's own pink
 	[PotionKind.Bomb]: [236, 44, 34],
 	[PotionKind.Drone]: [255, 185, 25], // amber: an orange leaning to yellow
 };
+
+/** The colour of a kind's liquid, for what shows it besides the potion: its flash, its glass. */
+export function potionColor(kind: PotionKind, out: Color = new Color()): Color {
+	const rgb = LIQUID[kind] || LIQUID[PotionKind.Plain];
+	return out.set(rgb[0], rgb[1], rgb[2], 255);
+}
 /** The palette as it is on disk, for when its pixels cannot be read back from the texture. */
 const PALETTE = [
 	[58, 64, 82],
@@ -53,7 +60,7 @@ const PALETTE = [
 const _materials = new Map<Material, Map<number, Material>>();
 const _base = new WeakMap<MeshRenderer, Material>();
 
-/** Paints a potion's liquid the colour of its kind; the plain kind puts its own material back. */
+/** Paints a potion's liquid the colour of its kind — every kind, the plain one too: the palette's own is pink. */
 export function paintPotion(node: Node, kind: PotionKind): void {
 	if (!node || !node.isValid) {
 		return;
@@ -70,7 +77,7 @@ export function paintPotion(node: Node, kind: PotionKind): void {
 			}
 			_base.set(renderer, base);
 		}
-		const material = kind === PotionKind.Plain ? base : kindMaterial(base, kind);
+		const material = kindMaterial(base, kind);
 		material && renderer.sharedMaterial !== material && renderer.setSharedMaterial(material, 0);
 	}
 }

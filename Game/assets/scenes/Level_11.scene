@@ -51825,7 +51825,7 @@
     ],
     "value": {
       "__type__": "cc.Vec3",
-      "x": -2,
+      "x": -2.666,
       "y": 0,
       "z": 2
     }
@@ -53381,7 +53381,7 @@
       "__type__": "cc.Vec3",
       "x": 6.061,
       "y": 0,
-      "z": -6.395
+      "z": -5.092
     }
   },
   {
@@ -63915,6 +63915,14 @@
     "markHeight": 0.03,
     "gateLift": 0,
     "passDistance": 0.45,
+    "threatSize": 0.9,
+    "threatColor": {
+      "__type__": "cc.Color",
+      "r": 255,
+      "g": 60,
+      "b": 40,
+      "a": 110
+    },
     "_id": "a9iua/rt5J1bLddb5HfBe2"
   },
   {

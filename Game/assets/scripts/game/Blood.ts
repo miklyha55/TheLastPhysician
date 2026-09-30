@@ -51,18 +51,14 @@ export class Blood extends Component {
 
 	private _drops: Drop[] = [];
 	private _next = 0;
+	/** A material for every colour a splash was asked in, its own among them: one batch each. */
+	private _materials = new Map<string, Material>();
 
 	protected start(): void {
 		const root = new Node(`Blood ${this.color.toHEX()}`);
 		(this.node.parent || this.node).addChild(root);
 		const mesh = utils.MeshUtils.createMesh(primitives.box());
-		const material = new Material();
-		material.initialize({ effectName: "builtin-standard", defines: { USE_INSTANCING: true } });
-		material.setProperty("mainColor", this.color);
-		material.setProperty("roughness", 0.45);
-		material.setProperty("metallic", 0);
-		const glow = new Color(this.color.r * this.glow, this.color.g * this.glow, this.color.b * this.glow, 255);
-		material.setProperty("emissive", glow);
+		const material = this._material(this.color);
 		for (let i = 0; i < this.poolSize; i++) {
 			const node = new Node("Drop");
 			root.addChild(node);
@@ -76,14 +72,32 @@ export class Blood extends Component {
 		}
 	}
 
+	/** The drops' material in `color`: made once for every colour, instanced, with the glow. */
+	private _material(color: Color): Material {
+		const key = color.toHEX();
+		let material = this._materials.get(key);
+		if (!material) {
+			material = new Material();
+			material.initialize({ effectName: "builtin-standard", defines: { USE_INSTANCING: true } });
+			material.setProperty("mainColor", color);
+			material.setProperty("roughness", 0.45);
+			material.setProperty("metallic", 0);
+			material.setProperty("emissive", new Color(color.r * this.glow, color.g * this.glow, color.b * this.glow, 255));
+			this._materials.set(key, material);
+		}
+		return material;
+	}
+
 	/**
 	 * A splash out of the point that was hit, flying on the way the blow came from `from`.
-	 * `scale` makes it bigger — a killing blow splashes more.
+	 * `scale` makes it bigger — a killing blow splashes more. `color` — in that colour, not its own
+	 * (a potion's glass, the colour of its liquid).
 	 */
-	splash(at: Vec3, from: Vec3, scale: number = 1): void {
+	splash(at: Vec3, from: Vec3, scale: number = 1, color: Color = null): void {
 		if (!this._drops.length) {
 			return;
 		}
+		const material = this._material(color || this.color);
 		_direction.set(at.x - from.x, 0, at.z - from.z);
 		if (_direction.lengthSqr() < 1e-6) {
 			_direction.set(0, 0, 1);
@@ -112,6 +126,7 @@ export class Blood extends Component {
 			drop.node.setScale(drop.size, drop.size, drop.size);
 			Quat.fromEuler(_rotation, drop.spin.x, drop.spin.y, drop.spin.z);
 			drop.node.setWorldRotation(_rotation);
+			drop.renderer.sharedMaterial !== material && drop.renderer.setSharedMaterial(material, 0);
 			drop.renderer.model && (drop.renderer.model.enabled = true);
 		}
 	}

@@ -1,4 +1,4 @@
-import { _decorator, Component, v3, Vec3 } from "cc";
+import { _decorator, Color, Component, v3, Vec3 } from "cc";
 import { CameraManager } from "../managers/camera/CameraManager";
 import { Blood } from "./Blood";
 import { Body, Debris } from "./Debris";
@@ -7,11 +7,14 @@ import { PlayerAttack } from "./PlayerAttack";
 import { Zombie } from "./Zombie";
 import { LevelStats } from "../managers/LevelStats";
 import { Sfx } from "../managers/audio/Sfx";
+import { potionColor, PotionKind } from "./PotionKind";
+
+const _plain = new Color();
 
 const { ccclass, property } = _decorator;
 
 // Potions bursting and barrels blowing up, the way ThroughTheDeadCity blows things up.
-// A potion that lands bursts — a pink flash and glass flying — and every zombie within
+// A potion that lands bursts — a flash and glass flying in the colour of its liquid — and every zombie within
 // `splashRadius` loses a life (the one it was thrown at splashes, the rest only reel); an explosive barrel in that circle goes off. A barrel's blast
 // kills every zombie in `blastRadius` — the player it spares — throws the loose things
 // about, shakes the camera, and sets off the barrels lying within `chainRadius` one after
@@ -68,9 +71,8 @@ export class Explosives extends Component {
 	 * A potion bursts at `at`, having flown from `from`, on `direct` — the zombie it was thrown
 	 * at. Only that one splashes; the others caught by the burst just lose a life and reel.
 	 */
-	potionBurst(at: Vec3, from: Vec3, direct: Zombie = null): void {
-		this.potionFlash && this.potionFlash.burst(at);
-		this.potionShards && this.potionShards.splash(at, from);
+	potionBurst(at: Vec3, from: Vec3, direct: Zombie = null, color: Color = null): void {
+		this.glassBurst(at, from, color);
 		const player = PlayerAttack.instance;
 		for (const zombie of Zombie.all.slice()) {
 			if (zombie.isDead || !this._within(zombie.node.worldPosition, at, this.splashRadius)) {
@@ -86,6 +88,17 @@ export class Explosives extends Component {
 		for (const body of this._barrelsNear(at, this.splashRadius)) {
 			this.explode(body);
 		}
+	}
+
+	/**
+	 * The look of a potion breaking, nothing more: its flash and its glass flying, in `color` — the
+	 * colour of its liquid; none — the scene's own. The yellow one breaks so on the one it is thrown at.
+	 */
+	glassBurst(at: Vec3, from: Vec3, color: Color = null): void {
+		// Unsaid, the plain potion's: the scene's own colours are the old pink.
+		color = color || potionColor(PotionKind.Plain, _plain);
+		this.potionFlash && this.potionFlash.burst(at, color);
+		this.potionShards && this.potionShards.splash(at, from, 1, color);
 	}
 
 	/** A barrel blows up — once; asking again for one already gone does nothing. */
@@ -133,10 +146,11 @@ export class Explosives extends Component {
 	 * A red potion bursts at `at`, having flown from `from`: a barrel's blast, `bombScale` of its
 	 * size — every zombie in the circle dies, a barrel in it goes off; the player it spares.
 	 */
-	bomb(at: Vec3, from: Vec3): void {
+	bomb(at: Vec3, from: Vec3, color: Color = null): void {
 		const radius = this.blastRadius * this.bombScale;
 		this.barrelFire && this.barrelFire.burst(at);
-		this.potionShards && this.potionShards.splash(at, from);
+		// Over the fire, the red of the potion: its flash and its glass.
+		this.glassBurst(at, from, color);
 		Sfx.at(Sfx.explosion, at);
 		const camera = CameraManager.instance;
 		camera && camera.shake(this.shake * this.bombScale, this.shakeFor);
