@@ -209,7 +209,15 @@ export class AnimationController extends Component {
 		state.wrapMode = AnimationClip.WrapMode.Loop;
 	}
 
+	/**
+	 * The player held in place — a throw, a barrel and the shot at it, the moment after the blast
+	 * (PlayerActions): the stick may be down, but no running is shown while the feet stand; the run
+	 * starts with the moving itself, as the hold is let go (`release`).
+	 */
+	locked = false;
+
 	private _play(name: string): void {
+		this.locked && name === RUN && (name = IDLE);
 		if (this._override || !this.animation || this._current === name || !this.animation.getState(name)) {
 			return;
 		}

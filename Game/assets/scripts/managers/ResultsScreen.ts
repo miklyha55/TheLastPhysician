@@ -21,6 +21,8 @@ export interface ResultsButton {
 	primary?: boolean;
 	/** A picture in place of the words; the words stay as its label. */
 	icon?: ButtonIcon;
+	/** An ad comes before what it does: the mark of one beside the picture. */
+	ad?: boolean;
 	onClick: () => void;
 }
 
@@ -85,7 +87,7 @@ export class ResultsScreen {
 		for (const spec of buttons) {
 			const button = document.createElement("button");
 			button.className = "tlp-results__button" + (spec.primary ? "" : " tlp-results__button--quiet");
-			spec.icon ? iconButton(button, spec.icon, spec.text) : (button.textContent = spec.text);
+			spec.icon ? iconButton(button, spec.icon, spec.text, spec.ad) : (button.textContent = spec.text);
 			onRelease(button, () => {
 				if (ResultsScreen._pressed || performance.now() - ResultsScreen._shownAt < ResultsScreen.armDelay * 1000) {
 					return;

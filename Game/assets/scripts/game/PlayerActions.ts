@@ -523,6 +523,8 @@ export class PlayerActions extends Component {
 		this._movement && (this._movement.locked = locked);
 		this.faceDirection && (this.faceDirection.locked = locked);
 		this._attack && (this._attack.busy = locked);
+		// The legs held with the feet: no run shown while standing, the run and the move let go together.
+		this.animationController && (this.animationController.locked = locked);
 		if (!locked && this.animationController && !(this._attack && this._attack.isDead)) {
 			this.animationController.release();
 		}

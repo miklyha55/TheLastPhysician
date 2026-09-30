@@ -18,12 +18,23 @@ const ICONS: { [name in ButtonIcon]: string } = {
 	back: SVG(`<path d="M9.5 15 4 9.5 9.5 4" ${LINE}/><path d="M4.5 9.5h10a5.5 5.5 0 0 1 0 11H11" ${LINE}/>`),
 };
 
-/** Puts `icon` on `button` in place of its words, and keeps the words as its label. */
-export function iconButton(button: HTMLButtonElement, icon: ButtonIcon, text: string): void {
+/**
+ * The mark of an ad, the way ThroughTheDeadCity puts it by its "once more": a play sign in a
+ * rounded frame — a video will come first. Beside the button's own picture, a little smaller.
+ */
+const AD = SVG(
+	`<rect x="2.6" y="2.6" width="18.8" height="18.8" rx="5" fill="none" stroke="#fff" stroke-width="2.4"/><path d="M9.9 8.2 16.2 12l-6.3 3.8z" fill="#fff" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>`,
+).replace("<svg ", '<svg class="tlp-iconbutton__ad" ');
+
+/**
+ * Puts `icon` on `button` in place of its words, and keeps the words as its label; `ad` — an ad
+ * comes before what it does: its mark beside the picture.
+ */
+export function iconButton(button: HTMLButtonElement, icon: ButtonIcon, text: string, ad = false): void {
 	button.classList.add("tlp-iconbutton");
 	button.setAttribute("aria-label", text);
 	button.title = text;
-	button.innerHTML = ICONS[icon];
+	button.innerHTML = ICONS[icon] + (ad ? AD : "");
 }
 
 /** The look of the pictures, once for every screen. */
@@ -41,6 +52,8 @@ export function iconStyle(): void {
 	filter: drop-shadow(0 2px 0 #1d7a14);
 }
 .tlp-results__button--quiet.tlp-iconbutton svg, .tlp-splash__button--quiet.tlp-iconbutton svg { filter: drop-shadow(0 2px 0 #2b2160); }
+.tlp-iconbutton { gap: clamp(8px, 2.4vmin, 12px); }
+.tlp-iconbutton svg.tlp-iconbutton__ad { width: clamp(22px, 6.4vmin, 30px); height: clamp(22px, 6.4vmin, 30px); }
 `;
 	document.head.appendChild(style);
 }

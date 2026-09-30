@@ -416,7 +416,7 @@ export class GameState {
 			[],
 			[
 				{ text: I18n.t("death.fromStart"), onClick: () => GameState._confirmFromStart() },
-				{ text: I18n.t("death.again"), primary: true, icon: "replay", onClick: () => GameState._again() },
+				{ text: I18n.t("death.again"), primary: true, icon: "replay", ad: true, onClick: () => GameState._again() },
 			],
 			true,
 		);
