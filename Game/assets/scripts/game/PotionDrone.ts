@@ -2,7 +2,7 @@ import { math, Node, tween, v3, Vec3 } from "cc";
 import type { PathFinder } from "./PathFinder";
 import type { Zombie } from "./Zombie";
 
-// A green potion after its first hit: a drone. It keeps the zombies that were on the screen the
+// A yellow potion after its first hit: a drone. It keeps the zombies that were on the screen the
 // moment it was thrown — those and no others — and flies to them one after another, the nearest
 // next, the way round the walls as a zombie would walk it, and takes a life off each it reaches. A zombie
 // dead meanwhile is struck off; one it cannot get to, or does not reach in `giveUp` seconds, it

@@ -2,7 +2,7 @@ import { Material, MeshRenderer, Node, Texture2D } from "cc";
 
 // The kinds of potion the player shoots. Pink — the plain one: one life off whoever it lands on.
 // Red — a bomb: it bursts like a barrel, half as wide, killing every zombie in the circle and
-// setting off the barrels in it; the player it spares. Green — a drone: a life off the one it is
+// setting off the barrels in it; the player it spares. Yellow — a drone: a life off the one it is
 // thrown at, then it flies on round the walls to every other zombie that was on the screen the
 // moment it was thrown, one after another, and takes a life off each; whoever comes into sight
 // later it leaves.
@@ -35,7 +35,7 @@ const LIQUID_CELL = 6;
 /** The liquid of each kind; the plain one keeps the palette's own pink. */
 const LIQUID: { [kind: number]: number[] } = {
 	[PotionKind.Bomb]: [236, 44, 34],
-	[PotionKind.Drone]: [70, 232, 64],
+	[PotionKind.Drone]: [255, 185, 25], // amber: an orange leaning to yellow
 };
 /** The palette as it is on disk, for when its pixels cannot be read back from the texture. */
 const PALETTE = [

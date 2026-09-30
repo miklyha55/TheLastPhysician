@@ -157,7 +157,7 @@ export class Zombie extends Component {
 	}
 
 	/**
-	 * A green potion's drone is on its way to it: as good as dead, so the player does not shoot at
+	 * A yellow potion's drone is on its way to it: as good as dead, so the player does not shoot at
 	 * it again. Taken off if the drone leaves it after all.
 	 */
 	doomed = false;

@@ -31,7 +31,7 @@ export class Chest extends Component {
 	count: number = 5;
 	@property({ tooltip: "Of them, red ones — bombs" })
 	bombs: number = 0;
-	@property({ tooltip: "Of them, green ones — drones" })
+	@property({ tooltip: "Of them, yellow ones — drones" })
 	drones: number = 0;
 	@property({ tooltip: "Potions over those laid in it are heaped on top of them: the height each layer of the heap adds" })
 	heapStep: number = 0.05;

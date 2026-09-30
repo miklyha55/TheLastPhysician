@@ -394,6 +394,10 @@ L[20] = {"name": "Level_20", "ammo": 3, "barrels": True, "map": [
  "spikes": {(10, 13): 0, (14, 13): 1.5, **{(c, 14): (0 if c % 2 else 1.5) for c in range(10, 15)}},
  "furniture": [["Table", 21, 13, 0], ["Shelf", 1, 12, 0]]}
 
+# Levels 11-15 drawn 2026-09-30 (act2.py); the game keeps 11 and 12 (LEVEL_COUNT), the rest stay unbuilt.
+from act2 import specs as _act2
+L.update(_act2())
+
 out = {}
 
 import random as _random
@@ -804,7 +808,6 @@ def _route(m):
 
 # Heads placed by hand, where the level's author wants them: they replace the ones found by the rules.
 GARGOYLES = {
-    11: {(0, 7): 'E', (7, 7): 'E', (13, 7): 'E'},  # the corridor's west end and the snake's upper walls, each firing down its stretch
 }
 
 
@@ -1204,7 +1207,7 @@ def spikes_taken_out(doc, extras, n):
 
 
 # The game is the first ten levels; the specs past them are kept, not built.
-LEVEL_COUNT = 10
+LEVEL_COUNT = 12
 
 for n in sorted(k for k in L if k <= LEVEL_COUNT):
     if n in PENDULUMS: place_pendulums(L[n], PENDULUMS[n])
@@ -1212,7 +1215,7 @@ for n in sorted(k for k in L if k <= LEVEL_COUNT):
     if n in WALL_SPIKES: place_wall_spikes(L[n], WALL_SPIKES[n])
     if n in GIRLS: place_girls(L[n], GIRLS[n])
     if n <= 10: scale_up(L[n], 1.4, 100 + n)
-    scale_down(L[n], 1.4)
+    if n <= 10: scale_down(L[n], 1.4)  # the new ones are drawn with their final counts
     if L[n].get('barrels'): place_barrels(L[n])
     barrels_at_crowds(L[n])
     barrels_by_hand(L[n], n)

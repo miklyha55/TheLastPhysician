@@ -30,7 +30,7 @@ const { ccclass, property } = _decorator;
 const DEATH = "death";
 
 /**
- * The potions the game starts with, from the bottom — the first shot — up: the second a green one,
+ * The potions the game starts with, from the bottom — the first shot — up: the second a yellow one,
  * the third a red one, so the player meets both early; the rest plain.
  */
 const START_KINDS = [PotionKind.Plain, PotionKind.Drone, PotionKind.Bomb];
@@ -106,11 +106,11 @@ export class PlayerAttack extends Component {
 	spinSpeed: number = 720;
 	@property({ tooltip: "Height above a zombie's feet the potion flies at" })
 	aimHeight: number = 0.4;
-	@property({ tooltip: "A green potion's drone: units per second" })
+	@property({ tooltip: "A yellow potion's drone: units per second" })
 	droneSpeed: number = 5;
-	@property({ tooltip: "A green potion's drone: height over the floor it flies at" })
+	@property({ tooltip: "A yellow potion's drone: height over the floor it flies at" })
 	droneHeight: number = 0.5;
-	@property({ tooltip: "A green potion's drone: how near it comes to a zombie to kill it" })
+	@property({ tooltip: "A yellow potion's drone: how near it comes to a zombie to kill it" })
 	droneReach: number = 0.35;
 	@property({ tooltip: "A zombie shot down this near, units, and the player cries \"yes!\"" })
 	closeKillDistance: number = 0.9;
@@ -514,7 +514,7 @@ export class PlayerAttack extends Component {
 			// Red: a barrel's blast, smaller.
 			explosives.bomb(at, from);
 		} else if (kind === PotionKind.Drone) {
-			// Green: one life off the one it was thrown at, as the rest along its chain.
+			// Yellow: one life off the one it was thrown at, as the rest along its chain.
 			alive && this._woundBy(target, from);
 		} else if (explosives) {
 			explosives.potionBurst(at, from, target);
@@ -535,7 +535,7 @@ export class PlayerAttack extends Component {
 		Sfx.at(Sfx.yes, this.node);
 	}
 
-	/** One life off a zombie, by a green potion or its drone: blood, a reel or the fall. */
+	/** One life off a zombie, by a yellow potion or its drone: blood, a reel or the fall. */
 	private _woundBy(zombie: Zombie, from: Vec3): void {
 		if (!zombie.isValid || zombie.isDead) {
 			return;
@@ -549,7 +549,7 @@ export class PlayerAttack extends Component {
 		!zombie.isDead && (zombie.doomed = false);
 	}
 
-	/** A green potion's first hit done: on it flies to the rest of what it saw. */
+	/** A yellow potion's first hit done: on it flies to the rest of what it saw. */
 	private _launchDrone(node: Node, prey: Zombie[]): void {
 		if (!this._droneFinder && this._walls) {
 			this._droneFinder = new PathFinder(this._walls, 0.25);

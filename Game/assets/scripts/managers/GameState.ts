@@ -232,8 +232,9 @@ export class GameState {
 						held && director.resume();
 						// Saved further on: the game goes on there, with what the player took into it —
 						// the start screen gone under the loading one.
-						const saved = Progress.level;
-						if (saved > 0 && saved < GameState.levels.length && saved !== GameState._level) {
+						// Saved on a level the game no longer has (there were more once): the last one.
+						const saved = Math.min(Progress.level, GameState.levels.length - 1);
+						if (saved > 0 && saved !== GameState._level) {
 							Yandex.loaded();
 							GameState._begun = true;
 							Sfx.playMusic();
