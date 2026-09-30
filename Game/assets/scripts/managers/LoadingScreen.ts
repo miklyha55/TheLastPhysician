@@ -1,6 +1,9 @@
 // A loading screen in the page itself, over the game's canvas: it hides the switch from one
 // level scene to the next. Dark, with a spinning ring, the name of what is coming and a bar
-// that fills as the scene loads. It fades in, and fades out once the new scene is up and warmed
+// that fills as the scene loads. The ring spins on a layer of its own, turned by the system and
+// not by the page: the scene's making holds the page up for a long moment, and on iOS a ring
+// turned by the page stood still for all of it. Its glow is on a frame that does not turn — a
+// shadow on the turning layer sends WebKit back to the page for every frame. It fades in, and fades out once the new scene is up and warmed
 // up (Prewarm). Where
 // there is no page — a native build — it does nothing and the scene simply changes.
 export class LoadingScreen {
@@ -28,14 +31,14 @@ export class LoadingScreen {
 		LoadingScreen._title.textContent = title;
 		LoadingScreen.progress(0);
 		// Up at once, no fade: it comes on a button, and a screen fading in over another fading out
-		// lets the game flicker through between them. The scene is let go a moment later, once the
-		// cover has been drawn.
+		// lets the game flicker through between them.
 		root.style.transition = "none";
 		root.style.display = "flex";
 		root.classList.add("tlp-loading--shown");
 		void root.offsetWidth;
 		root.style.transition = "";
-		setTimeout(onShown, 50);
+		// The scene let go once the cover has been drawn — and its ring is turning on its own layer.
+		LoadingScreen.afterFrames(2, onShown);
 	}
 
 	/** Covers the game at once, no fade — the very start, before anything has been seen. */
@@ -63,6 +66,24 @@ export class LoadingScreen {
 		if (LoadingScreen._bar) {
 			LoadingScreen._bar.style.width = `${Math.round(Math.max(0, Math.min(1, share)) * 100)}%`;
 		}
+	}
+
+	/**
+	 * `action` after `frames` of the page have been drawn — the screen as it is now shown before a
+	 * long piece of work. A folded tab draws no frames: a timer stands in, so nothing waits for ever.
+	 */
+	static afterFrames(frames: number, action: () => void): void {
+		let done = false;
+		const run = () => {
+			if (!done) {
+				done = true;
+				action();
+			}
+		};
+		const timer = setTimeout(run, 100 * frames);
+		const step = (left: number) =>
+			left <= 0 ? (clearTimeout(timer), run()) : requestAnimationFrame(() => step(left - 1));
+		typeof requestAnimationFrame !== "undefined" ? step(frames) : run();
 	}
 
 	/** Called whenever it goes and uncovers the game: a level is there to play. */
@@ -98,12 +119,17 @@ export class LoadingScreen {
 	font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 .tlp-loading--shown { opacity: 1; }
-.tlp-loading__ring {
+.tlp-loading__halo {
 	width: 64px; height: 64px; border-radius: 50%;
+	box-shadow: 0 0 24px rgba(125, 255, 90, 0.25);
+}
+.tlp-loading__ring {
+	width: 64px; height: 64px; border-radius: 50%; box-sizing: border-box;
 	border: 5px solid rgba(255, 255, 255, 0.08);
 	border-top-color: #7dff5a; border-right-color: #ff5ab4;
+	will-change: transform; transform: translateZ(0);
+	-webkit-backface-visibility: hidden; backface-visibility: hidden;
 	animation: tlp-spin 0.9s linear infinite;
-	box-shadow: 0 0 24px rgba(125, 255, 90, 0.25);
 }
 .tlp-loading__title {
 	color: #e9ecf5; font-size: 22px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
@@ -118,13 +144,16 @@ export class LoadingScreen {
 	background: linear-gradient(90deg, #7dff5a, #ff5ab4);
 	transition: width 0.15s linear;
 }
-@keyframes tlp-spin { to { transform: rotate(360deg); } }
+@keyframes tlp-spin { from { transform: translateZ(0) rotate(0deg); } to { transform: translateZ(0) rotate(360deg); } }
 `;
 		document.head.appendChild(style);
 		const root = document.createElement("div");
 		root.className = "tlp-loading";
+		const halo = document.createElement("div");
+		halo.className = "tlp-loading__halo";
 		const ring = document.createElement("div");
 		ring.className = "tlp-loading__ring";
+		halo.appendChild(ring);
 		const title = document.createElement("div");
 		title.className = "tlp-loading__title";
 		const track = document.createElement("div");
@@ -132,7 +161,7 @@ export class LoadingScreen {
 		const bar = document.createElement("div");
 		bar.className = "tlp-loading__bar";
 		track.appendChild(bar);
-		root.append(ring, title, track);
+		root.append(halo, title, track);
 		document.body.appendChild(root);
 		LoadingScreen._root = root;
 		LoadingScreen._title = title;

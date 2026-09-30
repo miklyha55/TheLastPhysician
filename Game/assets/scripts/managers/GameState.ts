@@ -605,14 +605,18 @@ export class GameState {
 						return;
 					}
 					GameState._carried = carried;
-					const started = director.loadScene(scene, () => {
-						// Uncovered by the level's warm-up once it is done (Prewarm); a scene that has
-						// none is uncovered as soon as it has drawn its first frame.
-						director.once(Director.EVENT_AFTER_DRAW, () => !Prewarm.active && LoadingScreen.hide());
+					// The bar drawn full and the ring handed to the system before the scene is made: the
+					// making holds the page up for a long moment, and the screen must be up to date before it.
+					LoadingScreen.afterFrames(2, () => {
+						const started = director.loadScene(scene, () => {
+							// Uncovered by the level's warm-up once it is done (Prewarm); a scene that has
+							// none is uncovered as soon as it has drawn its first frame.
+							director.once(Director.EVENT_AFTER_DRAW, () => !Prewarm.active && LoadingScreen.hide());
+						});
+						if (!started) {
+							GameState._fail(scene, null);
+						}
 					});
-					if (!started) {
-						GameState._fail(scene, null);
-					}
 				},
 			);
 		});

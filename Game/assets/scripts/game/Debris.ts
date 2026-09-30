@@ -29,6 +29,8 @@ export interface Body {
 	/** In slow motion while this lasts, seconds: its flight runs `slowScale` times its speed, on the same arc. */
 	slowFor: number;
 	slowScale: number;
+	/** Thrown over something low: what stands no taller than this it flies through, till it comes down. */
+	overLow: number;
 	safeX: number;
 	safeZ: number;
 }
@@ -39,6 +41,11 @@ interface Mover {
 	speed: number;
 	zombie: Zombie;
 }
+
+/** How far over what stands in its way a thrown thing is meant to go: frames are coarser than the reckoning. */
+const CLEAR_MARGIN = 0.04;
+/** How far from the hand what stands in the way is left to be flown through, not over: no arc rises that fast. */
+const AT_HAND = 0.35;
 
 const _r = v3();
 const _point = v3();
@@ -184,6 +191,7 @@ export class Debris extends Component {
 			lethalFor: 0,
 			slowFor: 0,
 			slowScale: 1,
+			overLow: 0,
 			safeX: null,
 			safeZ: null,
 		};
@@ -247,10 +255,98 @@ export class Debris extends Component {
 		body.ignoreFor = grace;
 		body.lethalFor = 0;
 		body.slowFor = 0;
+		body.overLow = 0;
 		body.velocity.set(dirX * speed, speed * lift, dirZ * speed);
 		body.angular.set(-dirZ * spin, 0, dirX * spin);
 		body.asleep = false;
 		body.idle = 0;
+	}
+
+	/**
+	 * The share of `speed` upwards a throw from `from` towards (dirX, dirZ) needs to go over what
+	 * stands low in its way — a chest, a table, a bed — before it reaches, `span` along the
+	 * floor, a zombie standing at `targetY`: `lift` if it clears all that already, more if it
+	 * must — but never so much it would pass over the zombie's head (bodyHeight), and no more than
+	 * `maxLift`. Worked out on this physics' own flight and by the same rule a flying thing passes
+	 * over what stands (_collideWalls). Something taller than `over` in the way — a wall — no lob
+	 * can go over: `lift` as it is.
+	 */
+	clearLift(body: Body, from: Vec3, dirX: number, dirZ: number, span: number, speed: number, lift: number, maxLift: number, over: number, targetY: number): number {
+		const walls = this._walls;
+		if (!walls || speed <= 0 || span <= 0) {
+			return lift;
+		}
+		const reach = this._reach(body);
+		// What stands in the way, every 10 cm, taller at a margin than it is — by the thing's own
+		// size. What is right at the hand no arc can rise over in time: it flies through that (overLow).
+		const tops: number[] = [];
+		const STEP = 0.1;
+		for (let s = STEP; s < span; s += STEP) {
+			const top = walls.topNear(from.x + dirX * s, from.z + dirZ * s, body.radius);
+			if (top > over) {
+				return lift;
+			}
+			tops.push(top < 0 || s < AT_HAND ? -Infinity : top + CLEAR_MARGIN);
+		}
+		if (!tops.some((top) => top > -Infinity)) {
+			return lift;
+		}
+		const headTop = targetY + this.bodyHeight - CLEAR_MARGIN;
+		// The flight at a share upwards: does it go over everything, and is it low enough at the zombie.
+		const fly = (share: number): { clears: boolean; low: boolean } => {
+			const dt = 1 / 120;
+			const keep = Math.exp(-this.linearDamping * dt);
+			let x = 0;
+			let y = from.y;
+			let vx = speed;
+			let vy = speed * share;
+			let next = 0;
+			let clears = true;
+			for (let time = 0; time < 3; time += dt) {
+				vy -= this.gravity * dt;
+				vx *= keep;
+				vy *= keep;
+				x += vx * dt;
+				y += vy * dt;
+				for (; next < tops.length && (next + 1) * STEP <= x; next++) {
+					y - reach <= tops[next] && (clears = false);
+				}
+				if (x >= span) {
+					return { clears, low: y <= headTop };
+				}
+			}
+			return { clears: false, low: false };
+		};
+		if (fly(lift).clears || !fly(lift).low) {
+			return lift;
+		}
+		// The highest the throw may go and still strike the zombie.
+		let top = maxLift;
+		if (!fly(maxLift).low) {
+			let low = lift;
+			let high = maxLift;
+			for (let i = 0; i < 12; i++) {
+				const mid = (low + high) / 2;
+				fly(mid).low ? (low = mid) : (high = mid);
+			}
+			top = low;
+		}
+		if (!fly(top).clears) {
+			return top; // as high as it may; what it still meets low it flies through (overLow)
+		}
+		// The lowest arc that goes over: the throw stays as flat as it can.
+		let low = lift;
+		let high = top;
+		for (let i = 0; i < 12; i++) {
+			const mid = (low + high) / 2;
+			fly(mid).clears ? (high = mid) : (low = mid);
+		}
+		return high;
+	}
+
+	/** How far down a thing reaches from its middle, whichever way it is turned. */
+	private _reach(body: Body): number {
+		return Math.max(-body.boxMin.x, body.boxMax.x, -body.boxMin.y, body.boxMax.y, -body.boxMin.z, body.boxMax.z);
 	}
 
 	/** The loose thing the player is touching now, or null. */
@@ -502,6 +598,8 @@ export class Debris extends Component {
 					if (position.y + _r.y >= 0) {
 						continue;
 					}
+					// Down on the floor: the flight over is done, what stands stops it again.
+					body.overLow = 0;
 					Vec3.cross(_pointVelocity, body.angular, _r).add(body.velocity);
 					const normalSpeed = _pointVelocity.y;
 					if (normalSpeed >= 0) {
@@ -563,9 +661,16 @@ export class Debris extends Component {
 		const position = body.node.worldPosition.clone();
 		// Flying higher than what stands there — a table, a bench — it passes over it. Its lowest
 		// point whichever way it is turned: as far down as its box reaches from its middle.
-		const reach = Math.max(-body.boxMin.x, body.boxMax.x, -body.boxMin.y, body.boxMax.y, -body.boxMin.z, body.boxMax.z);
-		if (position.y - reach > this._walls.topNear(position.x, position.z, body.radius + this._walls.radius)) {
+		const reach = this._reach(body);
+		const top = this._walls.topNear(position.x, position.z, body.radius + this._walls.radius);
+		if (position.y - reach > top) {
 			return;
+		}
+		// Thrown over a chest, a table, a bed: through what is that low, on its way up and over.
+		if (body.overLow > 0) {
+			if (top <= body.overLow) {
+				return;
+			}
 		}
 		this._before.set(position);
 		this._walls.pushOut(position);

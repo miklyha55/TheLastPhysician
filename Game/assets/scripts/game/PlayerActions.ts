@@ -85,6 +85,10 @@ export class PlayerActions extends Component {
 	throwLift: number = 0.32;
 	@property({ tooltip: "Tumble of a thrown piece, radians per second" })
 	throwSpin: number = 8;
+	@property({ tooltip: "Something no taller than this between the player and the target — a chest, a table, a bed — the throw goes over in a higher arc" })
+	lobOver: number = 0.8;
+	@property({ tooltip: "The highest share of the speed upwards a throw is lifted to, to go over something" })
+	lobMaxLift: number = 1.2;
 	@property({ tooltip: "Seconds after a throw before the next piece is picked up" })
 	throwCooldown: number = 0.38;
 	@property({ tooltip: "Seconds a thrown piece does not touch the thrower" })
@@ -299,16 +303,17 @@ export class PlayerActions extends Component {
 			this.animationController && this.animationController.aim(this.aimMoment);
 			return;
 		}
-		Debris.instance.launch(
-			toss.body,
-			dirX / length,
-			dirZ / length,
-			barrel ? this.barrelPower : this.throwPower,
-			barrel ? this.barrelLift : this.throwLift,
-			this.throwSpin,
-			this.node,
-			this.throwGrace,
-		);
+		const power = barrel ? this.barrelPower : this.throwPower;
+		let lift = barrel ? this.barrelLift : this.throwLift;
+		// A chest, a table, a bed between the player and the zombie: over it, not into it — in an arc
+		// high enough, and through what is right at the hand, where no arc rises in time.
+		const atZombie = toss.target.isValid && !toss.target.isDead;
+		if (atZombie) {
+			const span = length - toss.target.radius - toss.body.radius;
+			lift = Debris.instance.clearLift(toss.body, from, dirX / length, dirZ / length, span, power, lift, this.lobMaxLift, this.lobOver, toss.target.node.worldPosition.y);
+		}
+		Debris.instance.launch(toss.body, dirX / length, dirZ / length, power, lift, this.throwSpin, this.node, this.throwGrace);
+		atZombie && (toss.body.overLow = this.lobOver);
 	}
 
 	// --- a thrown barrel, shot in the air
