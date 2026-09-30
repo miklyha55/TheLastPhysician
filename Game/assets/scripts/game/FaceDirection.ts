@@ -1,11 +1,12 @@
-import { _decorator, Component, math, Node, v3, Vec2, Vec3 } from "cc";
+import { _decorator, Component, math, Node, Quat, v3, Vec2, Vec3 } from "cc";
 import GameEvent from "../enums/GameEvent";
 import { gameEventTarget } from "../plugins/GameEventTarget";
 
 const { ccclass, property } = _decorator;
 
 // Turns the node around Y to face the joystick direction on the floor. When the knob is
-// released the node keeps the way it was facing.
+// released the node keeps the way it was facing. Every turn goes by quaternions, the short way
+// round, at `turnSpeed`: never the long way, never a jump from one Euler angle to another.
 @ccclass("FaceDirection")
 export class FaceDirection extends Component {
 	@property({ type: Node, tooltip: "Camera the joystick is relative to; empty — screen up is −Z" })
@@ -28,7 +29,9 @@ export class FaceDirection extends Component {
 	private _locked = false;
 	private _held: Vec2 = new Vec2();
 
-	private _targetYaw: number = null;
+	/** Where it turns to; null — nowhere yet. */
+	private _target: Quat = null;
+	private _now = new Quat();
 	private _forward: Vec3 = v3();
 	private _right: Vec3 = v3();
 	private _world: Vec3 = v3();
@@ -56,12 +59,7 @@ export class FaceDirection extends Component {
 		Vec3.multiplyScalar(this._world, this._right, direction.x);
 		Vec3.scaleAndAdd(this._world, this._world, this._forward, direction.y);
 		// World yaw that turns local +Z onto the direction, then into the parent's frame.
-		const worldYaw = math.toDegree(Math.atan2(this._world.x, this._world.z)) + this.yawOffset;
-		const parentYaw = this.node.parent ? this.node.parent.eulerAngles.y : 0;
-		this._targetYaw = worldYaw - parentYaw;
-		if (this.turnSpeed <= 0) {
-			this._setYaw(this._targetYaw);
-		}
+		this._turnTo(math.toDegree(Math.atan2(this._world.x, this._world.z)));
 	}
 
 	/** Turns to face a point on the floor, the way a joystick push towards it would. */
@@ -72,27 +70,36 @@ export class FaceDirection extends Component {
 		if (dx * dx + dz * dz < 1e-8) {
 			return;
 		}
-		const worldYaw = math.toDegree(Math.atan2(dx, dz)) + this.yawOffset;
-		const parentYaw = this.node.parent ? this.node.parent.eulerAngles.y : 0;
-		this._targetYaw = worldYaw - parentYaw;
-		if (this.turnSpeed <= 0) {
-			this._setYaw(this._targetYaw);
-		}
+		this._turnTo(math.toDegree(Math.atan2(dx, dz)));
 	}
 
 	protected update(dt: number): void {
-		if (this._targetYaw === null || this.turnSpeed <= 0) {
+		if (!this._target || this.turnSpeed <= 0) {
 			return;
 		}
-		const current = this.node.eulerAngles.y;
-		const delta = ((this._targetYaw - current + 540) % 360) - 180;
+		// The angle left between the two, the short way (|dot| — q and −q are the same turn).
+		const now = this.node.getRotation(this._now);
+		const dot = Math.min(1, Math.abs(Quat.dot(now, this._target)));
+		const left = math.toDegree(2 * Math.acos(dot));
 		const step = this.turnSpeed * dt;
-		this._setYaw(Math.abs(delta) <= step ? this._targetYaw : current + Math.sign(delta) * step);
+		if (left <= step || left < 1e-3) {
+			this.node.setRotation(this._target);
+			return;
+		}
+		// slerp goes the short way round of itself.
+		Quat.slerp(now, now, this._target, step / left);
+		this.node.setRotation(now);
 	}
 
-	private _setYaw(yaw: number): void {
+	/** To face `worldYaw`, degrees around Y in the world: its rotation in the parent's frame, and there at once with no turn speed. */
+	private _turnTo(worldYaw: number): void {
+		const parentYaw = this.node.parent ? this.node.parent.eulerAngles.y : 0;
 		const euler = this.node.eulerAngles;
-		this.node.setRotationFromEuler(euler.x, yaw, euler.z);
+		this._target = this._target || new Quat();
+		Quat.fromEuler(this._target, euler.x, worldYaw + this.yawOffset - parentYaw, euler.z);
+		if (this.turnSpeed <= 0) {
+			this.node.setRotation(this._target);
+		}
 	}
 
 	// The camera's forward and right flattened onto the floor.

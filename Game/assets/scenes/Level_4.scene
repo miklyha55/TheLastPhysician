@@ -32189,7 +32189,7 @@
     "camera": {
       "__id__": 32
     },
-    "turnSpeed": 0,
+    "turnSpeed": 1080,
     "yawOffset": 0,
     "_id": "11G/6Hn+JFqoPEwSD2Vapm"
   },
@@ -32775,6 +32775,7 @@
     "droneSpeed": 4,
     "droneHeight": 0.5,
     "droneReach": 0.35,
+    "droneDamage": 2,
     "closeKillDistance": 0.9,
     "cheerGap": 1,
     "orbitSpeed": 20,
@@ -33042,6 +33043,8 @@
     "throwPower": 5,
     "throwLift": 0.32,
     "throwSpin": 8,
+    "lobOver": 0.8,
+    "lobMaxLift": 1.2,
     "throwCooldown": 0.38,
     "throwGrace": 0.5,
     "grabNear": 0.38,
