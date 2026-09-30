@@ -1,9 +1,12 @@
 // The game's language, the way ThroughTheDeadCity picks it: the platform's, told once as the game
 // starts, and never switched inside the game — Yandex Games wants no switch in the game and no
-// two languages on one screen. Russian and English: whatever else the platform says goes to
-// English. Outside the platform the browser's language stands in, and `?lang=` in the address
-// overrides both, for checking. Every text the game shows is asked for here by its key, at the
+// two languages on one screen. Russian and English: Belarusian, Kazakh, Ukrainian and Uzbek go to
+// Russian, whatever else the platform says to English. Outside the platform the browser's
+// language stands in, and `?lang=` in the address overrides both, for checking. Every text the game shows is asked for here by its key, at the
 // moment it is shown.
+
+/** Languages of the platform whose players read Russian: Belarusian, Kazakh, Ukrainian, Uzbek. */
+const RUSSIAN_TOO = ["be", "kk", "uk", "uz"];
 
 type Text = string | ((...args: (string | number)[]) => string);
 
@@ -115,7 +118,11 @@ export class I18n {
 	/** A code from the platform or the browser, brought to one the game knows; anything else is English. */
 	static pick(code: string): string {
 		const wanted = String(code || "").slice(0, 2).toLowerCase();
-		return I18n.languages.indexOf(wanted) >= 0 ? wanted : "en";
+		if (I18n.languages.indexOf(wanted) >= 0) {
+			return wanted;
+		}
+		// The platform's players whose other language is Russian get Russian, not English.
+		return RUSSIAN_TOO.indexOf(wanted) >= 0 ? "ru" : "en";
 	}
 
 	/**
