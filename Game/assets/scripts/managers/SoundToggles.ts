@@ -8,7 +8,7 @@ import { Progress } from "./Progress";
 // the platform's cloud with the progress, so a game muted stays muted on the next visit.
 //
 // They are there when the map's button is — while a level is being played with the player on
-// their feet — and over the map while it is open.
+// their feet — and go with it while the map is open.
 
 export class SoundToggles {
 	private static _root: HTMLDivElement = null;
@@ -37,8 +37,16 @@ export class SoundToggles {
 		SoundToggles._show();
 
 		// Checked a few times a second, as the map's button: the screens that hide them come and go
-		// from many places.
-		setInterval(() => (root.hidden = !visible()), 200);
+		// from many places. The map, whose button sits beside them, says so at once (refresh).
+		SoundToggles._visible = visible;
+		setInterval(() => SoundToggles.refresh(), 200);
+	}
+
+	private static _visible: () => boolean = null;
+
+	/** Shown or hidden as they may be now, at once — not at the next check. */
+	static refresh(): void {
+		SoundToggles._root && SoundToggles._visible && (SoundToggles._root.hidden = !SoundToggles._visible());
 	}
 
 	private static _button(icon: string, flip: () => void): HTMLButtonElement {

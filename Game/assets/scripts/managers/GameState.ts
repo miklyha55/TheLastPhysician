@@ -108,7 +108,7 @@ export class GameState {
 				.then(() => {
 					Progress.totals && (GameState._totals = { ...GameState._freshTotals(), ...Progress.totals });
 					GameState._setUpMap();
-					SoundToggles.start(() => LevelMap.canOpen() || LevelMap.shown);
+					SoundToggles.start(() => !LevelMap.shown && LevelMap.canOpen());
 				});
 		}
 		return GameState._platform;
@@ -181,11 +181,13 @@ export class GameState {
 				GameState._mapHeld = !director.isPaused();
 				GameState._mapHeld && director.pause();
 				Yandex.pause();
-				return;
+			} else {
+				GameState._mapHeld && director.resume();
+				GameState._mapHeld = false;
+				GameState._running() && Yandex.play();
 			}
-			GameState._mapHeld && director.resume();
-			GameState._mapHeld = false;
-			GameState._running() && Yandex.play();
+			// The sound switches go and come back with the map's button, at once.
+			SoundToggles.refresh();
 		};
 		LevelMap.onPick = (index) => {
 			if (GameState._loading || index < 0 || index >= GameState.levels.length) {

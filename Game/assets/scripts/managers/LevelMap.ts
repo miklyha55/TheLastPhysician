@@ -61,10 +61,13 @@ export class LevelMap {
 		LevelMap._build();
 		// Checked a few times a second: the screens that hide it — the start, a card, the loading —
 		// come and go from many places, and none of them need know about the button.
-		LevelMap._watch = setInterval(() => {
-			const can = !LevelMap._shown && !!LevelMap.canOpen && LevelMap.canOpen();
-			LevelMap._button.hidden = !can;
-		}, 200) as unknown as number;
+		LevelMap._watch = setInterval(() => LevelMap._check(), 200) as unknown as number;
+	}
+
+	/** The button shown or hidden as the map may be opened now. */
+	private static _check(): void {
+		const can = !LevelMap._shown && !!LevelMap.canOpen && LevelMap.canOpen();
+		LevelMap._button.hidden = !can;
 	}
 
 	static show(): void {
@@ -90,6 +93,8 @@ export class LevelMap {
 		// The keys back to the game: the focus was on the map.
 		focusGame();
 		LevelMap.onToggle && LevelMap.onToggle(false);
+		// Back at once, not at the next check: the world goes on again in onToggle.
+		LevelMap._check();
 	}
 
 	private static _fill(): void {

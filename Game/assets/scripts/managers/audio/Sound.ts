@@ -24,6 +24,9 @@ export interface SoundOptions {
 /** A sound: a path in the sound bundle ("walk/walk1"), or the clip itself. */
 export type SoundRef = string | AudioClip;
 
+/** Seconds a sound may take to start before it counts as stuck. */
+const STALL = 3;
+
 const _focus = v3();
 const _forward = v3();
 
@@ -148,8 +151,13 @@ export class Sound {
 		channel.near = options.near === undefined ? Sound.near : options.near;
 		channel.far = options.far === undefined ? Sound.far : options.far;
 		Sound._clip(sound, (clip) => {
-			if (channel.request !== request || !clip) {
+			if (channel.request !== request) {
 				return; // stopped, or played again, while it loaded
+			}
+			if (!clip) {
+				// No clip — nothing will ever end: whoever waits for the end hears it now.
+				options.onEnded && !options.loop && options.onEnded();
+				return;
 			}
 			const source = channel.source;
 			source.stop();
@@ -161,7 +169,67 @@ export class Sound {
 				source.node.off(AudioSource.EventType.ENDED);
 				source.node.once(AudioSource.EventType.ENDED, () => channel.request === request && options.onEnded());
 			}
+			Sound._guard(channel, request, clip, options, false);
 		});
+	}
+
+	/**
+	 * A play that never starts, caught. The engine loads a clip's player once more after the clip
+	 * itself, and a failed load or decode there it swallows: the play waits in its queue for ever,
+	 * the time stays at 0, no end ever comes — and whoever follows the track (the intro's text)
+	 * stands still on its first letter. Not started in STALL seconds: once more, from a fresh
+	 * load; not again — counted as played to its end, so nothing waits on it.
+	 */
+	private static _guard(channel: Channel, request: number, clip: AudioClip, options: SoundOptions, retried: boolean): void {
+		setTimeout(() => {
+			const source = channel.source;
+			if (channel.request !== request || !source || !source.isValid || source.clip !== clip) {
+				return; // stopped, played again, or moved to another scene's node
+			}
+			// A folded tab stops the sound on purpose: not a stall, asked again later.
+			if (Sound._started(source) || (typeof document !== "undefined" && document.hidden)) {
+				!Sound._started(source) && Sound._guard(channel, request, clip, options, retried);
+				return;
+			}
+			if (!retried) {
+				console.warn(`Sound: "${clip.name}" did not start — loaded once more`);
+				Sound._wake();
+				source.stop();
+				source.clip = null; // the player dropped: the next clip loads a new one
+				source.clip = clip;
+				source.loop = !!options.loop;
+				Sound._apply(channel);
+				source.play();
+				Sound._guard(channel, request, clip, options, true);
+				return;
+			}
+			console.warn(`Sound: "${clip.name}" did not start — given up`);
+			source.stop();
+			options.onEnded && !options.loop && options.onEnded();
+		}, STALL * 1000);
+	}
+
+	/** Has the source really begun to play: its time has moved. */
+	private static _started(source: AudioSource): boolean {
+		return source.playing || source.currentTime > 0;
+	}
+
+	/**
+	 * The browser's sound woken, if it sleeps. It falls asleep with a folded tab, an ad, a call on
+	 * the phone; the engine wakes it only on a finger or the mouse let go over the canvas — a
+	 * player on the keys, or on the page's buttons, would never wake it.
+	 */
+	private static _wake(): void {
+		let context: AudioContext = null;
+		Sound._channels.forEach((channel) => {
+			// The engine keeps its context to itself; a player's volume node knows it.
+			const player = channel.source && channel.source.isValid && (channel.source as any)._player;
+			const web = player && player._player;
+			context = context || (web && web._gainNode && web._gainNode.context) || null;
+		});
+		if (context && context.state !== "running" && context.resume) {
+			context.resume().catch(() => null);
+		}
 	}
 
 	/** A short sound that overlaps with the others and cannot be stopped: a shot, a hit, a blast. */
@@ -432,6 +500,8 @@ export class Sound {
 			window.addEventListener("blur", () => focus(false));
 			window.addEventListener("focus", () => focus(true));
 			for (const event of ["pointerdown", "keydown"]) window.addEventListener(event, () => focus(true), { capture: true });
+			// Any gesture may wake the sound: the browser lets it only from one.
+			for (const event of ["pointerup", "touchend", "keydown", "click"]) window.addEventListener(event, () => Sound._wake(), { capture: true });
 		}
 	}
 }
