@@ -28,6 +28,8 @@ const GAIN: { [path: string]: number } = {
 	"explosion": 0.4, // −9.7 dB; down from its −14 level by ear
 	"intro/intro_eng": 0.98, // −17.8
 	"intro/intro_ru": 0.98, // −17.8
+	"message_end_eng": 0.98, // as the intro: the same voice
+	"message_end_ru": 0.98,
 	"jump": 0.32, // −13.2
 	"music/music_final": 0.12, // −13.7; down by ear, twice
 	"music/music_game": 0.11, // −12.6; down by ear, twice
@@ -109,6 +111,11 @@ export const Sfx = {
 		return I18n.language === "ru" ? "intro/intro_ru" : "intro/intro_eng";
 	},
 
+	/** The end message, before the final screen: in the game's language, as the intro. */
+	get endMessage(): string {
+		return I18n.language === "ru" ? "message_end_ru" : "message_end_eng";
+	},
+
 	/** A file's own volume in the mix. */
 	gain(path: string): number {
 		return GAIN[path] === undefined ? 1 : GAIN[path];
@@ -144,7 +151,7 @@ export const Sfx = {
 
 	/** Loads what plays often, so its first time is not late. */
 	preload(): void {
-		Sound.preload([...Sfx.walk, ...Sfx.zombie, Sfx.explosion, Sfx.jump, Sfx.playerDie, Sfx.shoot, Sfx.throw, Sfx.getPotion, Sfx.getKey, Sfx.doorOpen, Sfx.doorClose, Sfx.chestClose, Sfx.gateOpen, Sfx.propHit, Sfx.girlThrow, Sfx.zombieAttack, Sfx.levelResults, Sfx.bat, Sfx.yes, Sfx.bulletHit]);
+		Sound.preload([...Sfx.walk, ...Sfx.zombie, Sfx.explosion, Sfx.jump, Sfx.playerDie, Sfx.shoot, Sfx.throw, Sfx.getPotion, Sfx.getKey, Sfx.doorOpen, Sfx.doorClose, Sfx.chestClose, Sfx.gateOpen, Sfx.propHit, Sfx.girlThrow, Sfx.zombieAttack, Sfx.levelResults, Sfx.bat, Sfx.yes, Sfx.bulletHit, Sfx.endMessage]);
 	},
 
 	_musicPath: "music/music_game",

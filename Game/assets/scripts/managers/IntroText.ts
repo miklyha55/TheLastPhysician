@@ -280,7 +280,7 @@ const STYLE = `
 }
 .tlp-radiotext--on { opacity: 1; }
 .tlp-radiotext__line {
-	margin: 0; padding: 10px 16px; box-sizing: border-box;
+	margin: 0; padding: 22px 16px; box-sizing: border-box;
 	border-radius: 14px;
 	background: rgba(36, 26, 71, 0.82);
 	border: 2px solid rgba(255, 207, 74, 0.55);
@@ -303,6 +303,7 @@ const STYLE = `
 	cursor: pointer; -webkit-tap-highlight-color: transparent;
 	transition: transform 80ms ease-out;
 }
+/* The line kept clear of the round cross on the plate's corner: it reaches 20px into the plate. */
 .tlp-radiotext__plate { position: relative; }
 .tlp-skipx {
 	position: absolute; z-index: 1; top: -18px; right: -14px; pointer-events: auto;
@@ -321,10 +322,10 @@ const STYLE = `
 .tlp-skip__label:active { transform: scale(0.94); }
 @media (max-width: 560px) {
 	.tlp-radiotext { bottom: calc(112px + env(safe-area-inset-bottom)); width: min(90vw, 560px); }
-	.tlp-radiotext__line { font-size: 13px; padding: 8px 12px; }
+	.tlp-radiotext__line { font-size: 13px; padding: 22px 12px; }
 }
 @media (max-height: 460px) {
 	.tlp-radiotext { bottom: calc(22px + env(safe-area-inset-bottom)); width: min(70vw, 520px); }
-	.tlp-radiotext__line { font-size: 13px; padding: 7px 12px; }
+	.tlp-radiotext__line { font-size: 13px; padding: 22px 12px; }
 }
 `;

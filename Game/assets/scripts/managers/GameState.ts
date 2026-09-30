@@ -4,6 +4,7 @@ import GameEvent from "../enums/GameEvent";
 import { gameEventTarget } from "../plugins/GameEventTarget";
 import { LevelMap, LevelMapEntry } from "./LevelMap";
 import { LevelStats } from "./LevelStats";
+import { EndMessage } from "./EndMessage";
 import { I18n } from "./I18n";
 import { Intro } from "./Intro";
 import { LoadingScreen } from "./LoadingScreen";
@@ -346,7 +347,8 @@ export class GameState {
 		director.pause();
 		Yandex.pause();
 		if (last) {
-			GameState._showFinal();
+			// First the end message on black, then — at its end, or skipped — the final screen.
+			EndMessage.play(() => GameState._showFinal());
 			return;
 		}
 		Sfx.ui(Sfx.levelResults);
