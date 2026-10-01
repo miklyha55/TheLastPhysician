@@ -27,7 +27,7 @@ const SCRIPTS: { [language: string]: IntroScript } = {
 /** The channel the voice plays on. */
 const CHANNEL = "endMessage";
 /** Seconds of the black coming up before the voice starts. */
-const FADE_IN = 0.6;
+const FADE_IN = 1;
 /** Seconds of the black melting away off the final screen. */
 const FADE_OUT = 0.6;
 /** Seconds from the start of the speech till the skip button shows. */
@@ -42,6 +42,7 @@ export class EndMessage {
 	private static _veil: HTMLDivElement = null;
 	private static _speaking = false;
 	private static _onDone: () => void = null;
+	private static _onCovered: () => void = null;
 	private static _timers: number[] = [];
 	private static _listening = false;
 
@@ -49,24 +50,30 @@ export class EndMessage {
 		return EndMessage._speaking;
 	}
 
-	/** The black, the voice and its words; `onDone` — the final screen, put up under the black before it goes. */
-	static play(onDone: () => void): void {
+	/**
+	 * The black, the voice and its words; `onCovered` — the black is all over the game (the world
+	 * may stop then, out of sight); `onDone` — the final screen, put up under the black before it goes.
+	 */
+	static play(onDone: () => void, onCovered: () => void = null): void {
 		if (EndMessage._speaking) {
 			return;
 		}
 		if (typeof document === "undefined" || !document.body) {
+			onCovered && onCovered();
 			onDone();
 			return;
 		}
 		EndMessage._listen();
 		EndMessage._speaking = true;
 		EndMessage._onDone = onDone;
+		EndMessage._onCovered = onCovered;
 		const veil = EndMessage._build();
 		veil.hidden = false;
 		requestAnimationFrame(() => veil.classList.add("tlp-endmsg--on"));
 		// The music down under the voice, as under the intro's.
 		Sfx.duckMusic(true);
 		EndMessage._later(FADE_IN, () => {
+			EndMessage._covered();
 			let started = false;
 			Sound.play(Sfx.endMessage, { id: CHANNEL, volume: Sfx.gain(Sfx.endMessage), onEnded: () => EndMessage._finish() });
 			// The text follows the track, not a timer of its own.
@@ -97,6 +104,8 @@ export class EndMessage {
 		Sound.stop(CHANNEL);
 		EndMessage._text.stop(now);
 		Sfx.duckMusic(false);
+		// Skipped before the black was all up: the world stops all the same.
+		EndMessage._covered();
 		// The final screen first, under the black, and only then the black goes: or the game
 		// itself would flash between them.
 		const done = EndMessage._onDone;
@@ -105,6 +114,13 @@ export class EndMessage {
 		const veil = EndMessage._veil;
 		veil.classList.remove("tlp-endmsg--on");
 		setTimeout(() => !EndMessage._speaking && (veil.hidden = true), FADE_OUT * 1000);
+	}
+
+	/** The black is all over the game: told once. */
+	private static _covered(): void {
+		const covered = EndMessage._onCovered;
+		EndMessage._onCovered = null;
+		covered && covered();
 	}
 
 	private static _later(seconds: number, action: () => void): void {

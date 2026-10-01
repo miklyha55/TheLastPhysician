@@ -346,13 +346,18 @@ export class GameState {
 		!last && Progress.enter(next, carried);
 		// The results first, the game held still under them; on with the button.
 		GameState._loading = true;
-		director.pause();
 		Yandex.pause();
 		if (last) {
-			// First the end message on black, then — at its end, or skipped — the final screen.
-			EndMessage.play(() => GameState._showFinal());
+			// First the end message on black, then — at its end, or skipped — the final screen. The
+			// world goes on under the black as it comes up, and stands still only once it is all
+			// black: stopped at once, it froze mid-step and the fade looked like a jerk.
+			EndMessage.play(
+				() => GameState._showFinal(),
+				() => director.pause(),
+			);
 			return;
 		}
+		director.pause();
 		Sfx.ui(Sfx.levelResults);
 		ResultsScreen.show(
 			GameState._level >= 0 ? I18n.t("level.passed", GameState._level + 1) : I18n.t("level.passedPlain"),
