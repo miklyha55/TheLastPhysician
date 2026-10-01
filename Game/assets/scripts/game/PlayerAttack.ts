@@ -154,9 +154,9 @@ export class PlayerAttack extends Component {
 	/** Set while the player throws something or jumps: no shot is started meanwhile. */
 	busy = false;
 
-	/** The zombie being aimed at now, or null. */
+	/** The zombie being aimed at now, or null — never one already doomed: what flies at it finishes it. */
 	get target(): Zombie {
-		return this._target && this._target.isValid && !this._target.isDead ? this._target : null;
+		return this._target && this._target.isValid && !this._target.isDead && !this._target.doomed ? this._target : null;
 	}
 
 	/** The nearest zombie that could be shot at now, or null — what a throw is aimed at. */
@@ -371,7 +371,11 @@ export class PlayerAttack extends Component {
 			} else if ((this._throwIn -= dt) < 0) {
 				this._throwIn = -1;
 				// The potion is spent only now, as it leaves the gun: a shot broken off costs nothing.
-				if (this._throwAt && this._throwAt.isValid && !this._throwAt.isDead && this.ammo > 0) {
+				// Doomed meanwhile — a thrown thing or a drone is on its way to finish it: the shot is not
+				// wasted on it, and the next one comes at once.
+				if (this._throwAt && this._throwAt.isValid && !this._throwAt.isDead && this._throwAt.doomed) {
+					this._cooldown = 0;
+				} else if (this._throwAt && this._throwAt.isValid && !this._throwAt.isDead && this.ammo > 0) {
 					this.ammo--;
 					LevelStats.thrown++;
 					// The lowest goes, whatever it is: its kind is the shot's.
@@ -443,6 +447,9 @@ export class PlayerAttack extends Component {
 		if (prey) {
 			target.doomed = target.lives <= this.droneDamage;
 			prey.forEach((zombie) => (zombie.doomed = zombie.lives <= this.droneDamage));
+		} else {
+			// The others alike: a red one kills all round it; a green one takes a life — the last, it finishes.
+			target.doomed = kind === PotionKind.Bomb || target.lives <= 1;
 		}
 		if (!this.projectile) {
 			// Nothing to throw: the hit lands at once.
@@ -589,6 +596,9 @@ export class PlayerAttack extends Component {
 			this.zombieBlood && this.zombieBlood.splash(at, from, target.isDead ? this.killSplash : 1);
 		}
 		near && target.isDead && this.cheer();
+		// Still standing — it had more lives than was thought: a target like any other again. (A
+		// drone's own are let go by _woundBy, as it flies on.)
+		kind !== PotionKind.Drone && target.isValid && !target.isDead && (target.doomed = false);
 	}
 
 	/** The player's "yes!" — a close kill, a barrel gone off; not twice within `cheerGap`. */

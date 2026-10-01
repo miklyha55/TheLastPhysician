@@ -89,6 +89,8 @@ export class PlayerActions extends Component {
 	lobOver: number = 0.8;
 	@property({ tooltip: "The highest share of the speed upwards a throw is lifted to, to go over something" })
 	lobMaxLift: number = 1.2;
+	@property({ tooltip: "Seconds a zombie a piece is thrown at counts as doomed at the most, if the piece neither hits nor comes down" })
+	flightWatch: number = 2.5;
 	@property({ tooltip: "Seconds after a throw before the next piece is picked up" })
 	throwCooldown: number = 0.38;
 	@property({ tooltip: "Seconds a thrown piece does not touch the thrower" })
@@ -148,6 +150,8 @@ export class PlayerActions extends Component {
 	private _throw: Throw = null;
 	private _jump: Jump = null;
 	private _blast: Blast = null;
+	/** Pieces thrown at zombies and still flying: their zombies are doomed till they come down. */
+	private _flights: { body: Body; target: Zombie; time: number }[] = [];
 	private _cooldown = 0;
 	private _dir = v3();
 	private _probe = v3();
@@ -179,6 +183,7 @@ export class PlayerActions extends Component {
 	}
 
 	protected update(dt: number): void {
+		this._watchFlights(dt);
 		// A barrel in the air: its shot is timed from the moment it left the hand, while the
 		// throw clip may still be playing out.
 		if (this._blast) {
@@ -264,6 +269,12 @@ export class PlayerActions extends Component {
 	private _release(): void {
 		const toss = this._throw;
 		toss.released = true;
+		// Doomed during the swing — a drone or a potion is on its way to finish it: the piece goes at
+		// another, if there is one; it is not spent on a dead zombie.
+		if (toss.target.isValid && !toss.target.isDead && toss.target.doomed) {
+			const other = this._attack.nearestTarget();
+			other && (toss.target = other);
+		}
 		Sfx.at(Sfx.throw, this.node);
 		toss.picked = true;
 		const from = this.hand ? Vec3.add(this._at, this.hand.worldPosition, this.holdOffset) : this._at.set(this.node.worldPosition);
@@ -287,6 +298,8 @@ export class PlayerActions extends Component {
 			const to = this._arcEnd(toss.target, v3());
 			const distance = Vec3.distance(from, to);
 			const spin = v3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().multiplyScalar(this.barrelSpin);
+			// Its blast kills all round the zombie: doomed from now, till the barrel is gone (_endBlast).
+			toss.target.doomed = true;
 			this._blast = {
 				body: toss.body,
 				target: toss.target,
@@ -313,7 +326,12 @@ export class PlayerActions extends Component {
 			lift = Debris.instance.clearLift(toss.body, from, dirX / length, dirZ / length, span, power, lift, this.lobMaxLift, this.lobOver, toss.target.node.worldPosition.y);
 		}
 		Debris.instance.launch(toss.body, dirX / length, dirZ / length, power, lift, this.throwSpin, this.node, this.throwGrace);
-		atZombie && (toss.body.overLow = this.lobOver);
+		if (atZombie) {
+			toss.body.overLow = this.lobOver;
+			// It kills what it hits: the zombie it is thrown at is doomed while it flies (_watchFlights).
+			toss.target.doomed = true;
+			this._flights.push({ body: toss.body, target: toss.target, time: 0 });
+		}
 	}
 
 	// --- a thrown barrel, shot in the air
@@ -389,6 +407,7 @@ export class PlayerActions extends Component {
 	/** No shot after all: the barrel falls where it is, a loose thing again. */
 	private _dropBarrel(): void {
 		const blast = this._blast;
+		blast && this._spare(blast.target, true);
 		if (blast && blast.body.node.isValid && Debris.instance && Debris.instance.bodies.indexOf(blast.body) >= 0) {
 			Debris.instance.launch(blast.body, 0, 0, 0, 0, 0, this.node, this.throwGrace);
 		}
@@ -401,10 +420,42 @@ export class PlayerActions extends Component {
 	}
 
 	private _endBlast(): void {
+		const target = this._blast && this._blast.target;
 		this._blast = null;
+		this._spare(target);
 		if (!this._throw) {
 			this._lock(false);
 		}
+	}
+
+	/**
+	 * Pieces thrown at zombies, watched till they come down: hit, the zombie is dead; missed —
+	 * fallen, taken up again, gone, or `flightWatch` seconds on — it is a target like any other again.
+	 */
+	private _watchFlights(dt: number): void {
+		const dead = !this._attack || this._attack.isDead;
+		for (let i = this._flights.length - 1; i >= 0; i--) {
+			const flight = this._flights[i];
+			flight.time += dt;
+			const body = flight.body;
+			const over = dead || !body.node.isValid || body.held || body.asleep || flight.time >= this.flightWatch;
+			if (!flight.target.isValid || flight.target.isDead) {
+				this._flights.splice(i, 1);
+			} else if (over) {
+				this._spare(flight.target);
+				this._flights.splice(i, 1);
+			}
+		}
+	}
+
+	/** A zombie something was on its way to finish, and did not: a target again — unless something else still is. */
+	private _spare(zombie: Zombie, barrelDropped = false): void {
+		if (!zombie || !zombie.isValid || zombie.isDead) {
+			return;
+		}
+		const still = this._flights.some((flight) => flight.target === zombie && flight.time < this.flightWatch && flight.body.node.isValid && !flight.body.asleep && !flight.body.held);
+		const blast = !barrelDropped && this._blast && this._blast.target === zombie && this._blast.body.node.isValid;
+		!still && !blast && (zombie.doomed = false);
 	}
 
 	private _explosive(body: Body): boolean {
