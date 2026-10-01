@@ -69,7 +69,11 @@ export class EndMessage {
 		EndMessage._onCovered = onCovered;
 		const veil = EndMessage._build();
 		veil.hidden = false;
-		requestAnimationFrame(() => veil.classList.add("tlp-endmsg--on"));
+		// Its clear state worked out before the black is asked for: shown and turned black in the
+		// same breath, a browser may skip the transition — the screen went black at one frame.
+		void veil.getBoundingClientRect();
+		void getComputedStyle(veil).opacity;
+		veil.classList.add("tlp-endmsg--on");
 		// The music down under the voice, as under the intro's.
 		Sfx.duckMusic(true);
 		EndMessage._later(FADE_IN, () => {
@@ -87,6 +91,14 @@ export class EndMessage {
 			EndMessage._later(START_WAIT, () => started || EndMessage._finish());
 			EndMessage._later(MAX_WAIT, () => EndMessage._finish());
 		});
+	}
+
+	/**
+	 * The black and its look made ahead, at the start of the game: made at the moment it is
+	 * needed, the page restyles itself in the middle of the fade.
+	 */
+	static prepare(): void {
+		typeof document !== "undefined" && document.body && EndMessage._build();
 	}
 
 	/** Skipped: the voice stops, the final screen at once. */

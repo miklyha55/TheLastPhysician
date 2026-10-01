@@ -109,6 +109,7 @@ export class GameState {
 					Progress.totals && (GameState._totals = { ...GameState._freshTotals(), ...Progress.totals });
 					GameState._setUpMap();
 					SoundToggles.start(() => !LevelMap.shown && LevelMap.canOpen());
+					EndMessage.prepare();
 				});
 		}
 		return GameState._platform;
