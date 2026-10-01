@@ -92,6 +92,7 @@ export class CameraManager extends Component {
 			return;
 		}
 
+		this._dt = dt;
 		if (this._orbitSpeed && this.followTarget) {
 			Vec3.rotateY(this._distance, this._distance, Vec3.ZERO, math.toRadian(this._orbitSpeed * dt));
 		}
@@ -254,12 +255,7 @@ export class CameraManager extends Component {
 
 				camera.node.getWorldRotation(this._currentRotation);
 
-				Quat.slerp(
-					this._currentRotation,
-					this._currentRotation,
-					this._targetRotation,
-					this.lerpRatio
-				);
+				Quat.slerp(this._currentRotation, this._currentRotation, this._targetRotation, this._smoothing());
 				camera.node.setWorldRotation(this._currentRotation);
 			} else {
 				Quat.fromEuler(
@@ -323,7 +319,7 @@ export class CameraManager extends Component {
 				this._baseSet = true;
 			}
 			if (this._isStart) {
-				Vec3.lerp(this._cameraBase, this._cameraBase, target, this.lerpRatio);
+				Vec3.lerp(this._cameraBase, this._cameraBase, target, this._smoothing());
 			} else {
 				this._cameraBase.set(target);
 			}
@@ -331,6 +327,17 @@ export class CameraManager extends Component {
 			this._shakeStep(this._cameraAt);
 			camera.node.setWorldPosition(this._cameraAt);
 		});
+	}
+
+	/**
+	 * `lerpRatio` is the share closed in a frame at 60 a second; a frame longer or shorter closes
+	 * as much as that many 60ths would. Taken per frame as it was, the follow and the death's
+	 * orbit sped up and slowed down with every uneven frame — on a phone, a jerky orbit.
+	 */
+	private _dt = 1 / 60;
+	private _smoothing(): number {
+		const frames = Math.min(this._dt * 60, 6);
+		return 1 - Math.pow(1 - math.clamp01(this.lerpRatio), frames);
 	}
 
 	private _shakeStep(at: Vec3): void {
