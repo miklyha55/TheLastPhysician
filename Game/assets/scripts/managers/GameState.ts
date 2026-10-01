@@ -234,6 +234,11 @@ export class GameState {
 
 	/** What the loading screen calls the level being played. */
 	static get title(): string {
+		// The game's opening, before "play": it always opens on the first level's scene, while where the
+		// player stopped is still on its way from the cloud — no number, or "level 1" flashed up first.
+		if (!GameState._begun) {
+			return "";
+		}
 		return GameState._level >= 0 ? I18n.t("level.title", GameState._level + 1) : "";
 	}
 
