@@ -27,7 +27,9 @@ interface Carry {
 	length: number;
 	grabbed: boolean;
 	released: boolean;
-	/** The player hidden at the moment to throw: she runs with it, looking for a clear line. */
+	/** The swing is on: once it is, the thing goes, wherever the player has gone meanwhile. */
+	committed: boolean;
+	/** The player hidden or too far once it was in her hand: she runs with it, looking for a clear line. */
 	seeking: boolean;
 	/** Seconds spent looking. */
 	seekFor: number;
@@ -140,8 +142,10 @@ export class ZombieGirl extends Zombie {
 		this._trackPlayer(player, dt);
 		if (this._carry) {
 			const carry = this._carry;
-			// Gone, or run too far off: the thing drops and she gives them up.
-			if (!carry.released && (!player || player.isDead || Vec3.distance(player.node.worldPosition, this.node.worldPosition) > this.loseRadius)) {
+			// Gone, or run too far off before the swing: the thing drops and she gives them up. A swing
+			// begun is finished — the thing goes, wherever they have run.
+			const away = !player || player.isDead || (!carry.committed && Vec3.distance(player.node.worldPosition, this.node.worldPosition) > this.loseRadius);
+			if (!carry.released && away) {
 				this._interrupt();
 				this._goHome();
 				return;
@@ -205,6 +209,7 @@ export class ZombieGirl extends Zombie {
 		carry.body.node.setWorldPosition(_hand);
 		if (this._canThrowAt(player)) {
 			carry.seeking = false;
+			carry.committed = true;
 			// The swing again, from a little before the release.
 			const from = Math.max(this.grabMoment, this.releaseMoment - this.windup);
 			carry.time = carry.length * from;
@@ -395,7 +400,7 @@ export class ZombieGirl extends Zombie {
 		Debris.instance.hold(item);
 		this._item = null;
 		const length = this._duration(THROW);
-		this._carry = { body: item, from: item.node.worldPosition.clone(), time: 0, length, grabbed: false, released: false, seeking: false, seekFor: 0 };
+		this._carry = { body: item, from: item.node.worldPosition.clone(), time: 0, length, grabbed: false, released: false, committed: false, seeking: false, seekFor: 0 };
 		this._hunt = Hunt.Throw;
 		this._play(THROW, true);
 	}
@@ -409,16 +414,10 @@ export class ZombieGirl extends Zombie {
 			if (share >= this.grabMoment) {
 				carry.grabbed = true;
 			}
-			// Down to it, the thing rising to the hand; once in the hand, it goes with it.
-			const from = this.grabMoment * 0.5;
-			const k = carry.grabbed ? 1 : Math.max(0, (share - from) / Math.max(this.grabMoment - from, 1e-3));
-			this._handPoint(_hand);
-			Vec3.lerp(_at, carry.from, _hand, k * k * (3 - 2 * k));
-			carry.body.node.setWorldPosition(_at);
-			if (share >= this.releaseMoment) {
-				// Out of the hand only at a player in plain sight and within `throwRange`. Something
-				// in the way, or too far — she does not throw: off she runs with it, closer, to
-				// where the way is clear.
+			// In her hand, the swing about to begin: the one moment she decides. The player in plain
+			// sight and within `throwRange` — she swings, and the thing goes whatever they do then;
+			// hidden or too far — off she runs with it first, closer, to where the way is clear.
+			if (carry.grabbed && !carry.committed) {
 				if (!this._canThrowAt(player)) {
 					carry.seeking = true;
 					carry.seekFor = 0;
@@ -427,6 +426,15 @@ export class ZombieGirl extends Zombie {
 					this._play("run");
 					return;
 				}
+				carry.committed = true;
+			}
+			// Down to it, the thing rising to the hand; once in the hand, it goes with it.
+			const from = this.grabMoment * 0.5;
+			const k = carry.grabbed ? 1 : Math.max(0, (share - from) / Math.max(this.grabMoment - from, 1e-3));
+			this._handPoint(_hand);
+			Vec3.lerp(_at, carry.from, _hand, k * k * (3 - 2 * k));
+			carry.body.node.setWorldPosition(_at);
+			if (share >= this.releaseMoment) {
 				this._launch(carry, player);
 			}
 		}
