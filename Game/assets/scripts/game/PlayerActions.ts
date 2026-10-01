@@ -362,7 +362,9 @@ export class PlayerActions extends Component {
 			return;
 		}
 		this._fly(blast, dt);
-		this.faceDirection && this.faceDirection.faceTowards(node.worldPosition);
+		// At where it will be shot, over the zombie — not at the barrel itself: it leaves the hand at
+		// the player's side, and following it swung them from the hand's angle round to the zombie.
+		this.faceDirection && this.faceDirection.faceTowards(blast.to);
 		if (blast.shot) {
 			return;
 		}

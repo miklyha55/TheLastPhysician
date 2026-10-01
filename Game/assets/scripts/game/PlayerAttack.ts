@@ -394,6 +394,12 @@ export class PlayerAttack extends Component {
 			PREVIEW && this._explainNoShot(dt, false);
 			return;
 		}
+		// Throwing, jumping, a barrel in the air to be shot: the player is turned by that (PlayerActions)
+		// — at the barrel, at the one the piece is for — not swung round to the nearest zombie behind.
+		if (this.busy) {
+			PREVIEW && this._explainNoShot(dt, false);
+			return;
+		}
 		this.faceDirection && this.faceDirection.faceTowards(this._target.node.worldPosition);
 		if (!ready) {
 			PREVIEW && this._explainNoShot(dt, this._throwIn >= 0);
