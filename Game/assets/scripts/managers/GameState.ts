@@ -483,7 +483,7 @@ export class GameState {
 		GameState._attempt = 1;
 		GameState._entry = null;
 		GameState._totals = GameState._freshTotals();
-		// All from the start, as at the first launch: the intro speaks again on the first level.
+		// All from the start; the intro, heard once a session, is only cut off if it is still going.
 		Intro.reset();
 		// The game's own tune again, if the final one was playing.
 		Sfx.playMusic();

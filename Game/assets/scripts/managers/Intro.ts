@@ -13,7 +13,7 @@ import { Sound } from "./audio/Sound";
 // the speech go. It speaks in the background — the controls are never taken — with the music
 // down under it. Skipped with the button over the text, or Escape. Once a session: dying on the
 // first level is common, and hearing the same speech after every restart would be a punishment;
-// "from scratch" plays the game as the first time, and the intro with it. Leaving the level mid-
+// "from scratch" does not bring it back either — like the controls hint, it is said once. Leaving the level mid-
 // speech cuts it off. Should the sound not start — refused, missing, stalled — the intro quietly
 // counts as over and holds nothing.
 
@@ -96,12 +96,14 @@ export class Intro {
 		Intro._release();
 	}
 
-	/** The game from scratch: the intro plays again when the first level opens. */
+	/**
+	 * The game from scratch: whatever of the intro is going stops. Heard once, it is not heard
+	 * again — once a session, as the controls hint.
+	 */
 	static reset(): void {
 		Intro._forgetWakeup();
 		Sound.stop(CHANNEL);
 		Intro._release();
-		Intro._played = false;
 		Intro._state = "idle";
 	}
 
