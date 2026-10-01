@@ -477,7 +477,8 @@ export class PlayerAttack extends Component {
 		}
 		this.ammo--;
 		LevelStats.thrown++;
-		this.stack && this.stack.pop();
+		// The one off the top of the stack: it flies in its own colour, as every shot does.
+		const kind = this.stack ? this.stack.pop() : PotionKind.Plain;
 		const at = barrel.node.worldPosition;
 		const start = (this.muzzle ? this.muzzle.worldPosition : this.node.worldPosition).clone();
 		const aim = at.clone();
@@ -491,8 +492,9 @@ export class PlayerAttack extends Component {
 		const node = this._spare.pop() || instantiate(this.projectile);
 		node.setParent(this.projectileParent || this.node.parent);
 		node.active = true;
+		paintPotion(node, kind);
 		node.setWorldPosition(start);
-		this._shots.push({ node, target: null, barrel, kind: PotionKind.Plain, prey: null, start, aim, time: 0, duration, height: 0 });
+		this._shots.push({ node, target: null, barrel, kind, prey: null, start, aim, time: 0, duration, height: 0 });
 		return true;
 	}
 
