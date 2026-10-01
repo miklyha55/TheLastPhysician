@@ -33,6 +33,8 @@ export class Footsteps extends Component {
 	volume: number = 1;
 
 	private _feet: Foot[] = [];
+	/** Which of the steps' sounds comes next. */
+	private _step = 0;
 	private _movement: PlayerMovement = null;
 	private _direction = v3();
 
@@ -73,7 +75,9 @@ export class Footsteps extends Component {
 			// Down and no further: the foot has landed.
 			if (walking && foot.falling && !falling && onFloor && foot.since >= this.gap) {
 				foot.since = 0;
-				Sfx.at(Sfx.walk, foot.node, this.volume);
+				// The steps' sounds in turn, round and round: picked at random, the same one came twice
+				// running and the gait limped.
+				Sfx.at(Sfx.walk[this._step++ % Sfx.walk.length], foot.node, this.volume);
 			}
 			foot.falling = falling;
 			foot.last = height;

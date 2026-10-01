@@ -9,6 +9,9 @@ import { LevelStats } from "../managers/LevelStats";
 import { Sfx } from "../managers/audio/Sfx";
 import { potionColor, PotionKind } from "./PotionKind";
 
+/** How loud a barrel goes off, against the explosion sound's own level in the mix (Sfx). */
+const BARREL_VOLUME = 0.7;
+
 const _plain = new Color();
 
 const { ccclass, property } = _decorator;
@@ -114,7 +117,8 @@ export class Explosives extends Component {
 		const ground = body.node.worldPosition.clone();
 		const at = v3(ground.x, ground.y + this.fireHeight, ground.z);
 		this.barrelFire && this.barrelFire.burst(at);
-		Sfx.at(Sfx.explosion, at);
+		// A barrel's blast a little under the explosion's own level in the mix; a red potion's keeps it.
+		Sfx.at(Sfx.explosion, at, BARREL_VOLUME);
 		this.barrelShards && this.barrelShards.splash(at, v3(at.x, at.y - 1, at.z), 1.5);
 		const camera = CameraManager.instance;
 		camera && camera.shake(this.shake, this.shakeFor);
